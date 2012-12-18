@@ -4,10 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -18,6 +18,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 
 import com.google.code.morphia.annotations.Entity;
@@ -57,32 +58,17 @@ public class CriteriaBuilder extends AbstractProcessor {
         cfg.setObjectWrapper(new DefaultObjectWrapper());
         cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/templates"));
         Template temp = cfg.getTemplate("criteria.ftl");
-
         Set<TypeElement> elements = ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(Entity.class));
         for (TypeElement typeElement : elements) {
           String name = typeElement.getSimpleName().toString();
           String pkg = getPackageName(typeElement);
-          List<? extends Element> enclosedElements = typeElement.getEnclosedElements();
           TreeMap<String, Object> map = new TreeMap<String, Object>();
           map.put("name", name);
           map.put("package", pkg);
           map.put("fqcn", typeElement.getQualifiedName().toString());
-          Set<Field> fields = new HashSet<>();
-          for (Element enclosedElement : enclosedElements) {
-            if (enclosedElement instanceof VariableElement) {
-              VariableElement field = (VariableElement) enclosedElement;
-              Set<Modifier> modifiers = field.getModifiers();
-              if (!modifiers.contains(Modifier.STATIC)) {
-                if (!findAnnotations(field)) {
-                  Field e = new Field(field.asType().toString(), field.getSimpleName().toString());
-                  fields.add(e);
-                }
-              }
-            }
-            map.put("fields", fields);
-          }
-          File source = new File(String.format("target/generated-sources/apt/main/java/%s/criteria/%sCriteria.java",
-              pkg.replace('.', '/'), name));
+          Set<Field> fields = getFields(typeElement, map);
+          File source = new File(
+              String.format("src/main/generated/%s/criteria/%sCriteria.java", pkg.replace('.', '/'), name));
           source.getParentFile().mkdirs();
           try (PrintWriter out = new PrintWriter(source)) {
             temp.process(map, out);
@@ -97,26 +83,52 @@ public class CriteriaBuilder extends AbstractProcessor {
     }
   }
 
+  private Set<Field> getFields(TypeElement typeElement, TreeMap<String, Object> map) {
+    Set<Field> fields = new TreeSet<>();
+    while (typeElement != null) {
+      List<? extends Element> enclosedElements = typeElement.getEnclosedElements();
+      for (Element enclosedElement : enclosedElements) {
+        if (enclosedElement instanceof VariableElement) {
+          VariableElement field = (VariableElement) enclosedElement;
+          if (validField(field)) {
+            fields.add(new Field(field.asType().toString(), field.getSimpleName().toString()));
+          }
+        }
+        map.put("fields", fields);
+      }
+      TypeMirror superclass = typeElement.getSuperclass();
+      typeElement = (TypeElement) env.getTypeUtils().asElement(superclass);
+    }
+    return fields;
+  }
+
   private String getPackageName(TypeElement typeElement) {
     QualifiedNameable enclosingElement = (QualifiedNameable) typeElement.getEnclosingElement();
-    while(!(enclosingElement instanceof PackageElement)){
+    while (!(enclosingElement instanceof PackageElement)) {
       enclosingElement = (QualifiedNameable) enclosingElement.getEnclosingElement();
     }
     return enclosingElement.getQualifiedName().toString();
   }
 
-  private boolean findAnnotations(VariableElement field) {
+  private boolean validField(VariableElement field) {
+    Set<Modifier> modifiers = field.getModifiers();
+    if (modifiers.contains(Modifier.STATIC)) {
+      return false;
+    }
+
     Class[] types = { NotSaved.class, Transient.class };
     for (Class type : types) {
       if (field.getAnnotation(type) != null) {
-        return true;
+        return false;
       }
     }
-    return false;
+    return true;
   }
 
-  public static class Field {
+  public static class Field implements Comparable<Field> {
+
     public String name;
+
     public String type;
 
     public Field(String type, String name) {
@@ -140,6 +152,11 @@ public class CriteriaBuilder extends AbstractProcessor {
       sb.append(", type='").append(type).append('\'');
       sb.append('}');
       return sb.toString();
+    }
+
+    @Override
+    public int compareTo(Field o) {
+      return name.compareTo(o.name);
     }
   }
 }
