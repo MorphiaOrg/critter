@@ -40,6 +40,11 @@ public class CriteriaBuilder extends AbstractProcessor {
   }
 
   @Override
+  public Set<String> getSupportedOptions() {
+    return Collections.singleton("outputDirectory");
+  }
+
+  @Override
   public Set<String> getSupportedAnnotationTypes() {
     return Collections.singleton(Entity.class.getName());
   }
@@ -62,18 +67,20 @@ public class CriteriaBuilder extends AbstractProcessor {
         for (TypeElement typeElement : elements) {
           String name = typeElement.getSimpleName().toString();
           String pkg = getPackageName(typeElement);
-          TreeMap<String, Object> map = new TreeMap<String, Object>();
+          TreeMap<String, Object> map = new TreeMap<>();
           map.put("name", name);
           map.put("package", pkg);
           map.put("fqcn", typeElement.getQualifiedName().toString());
-          Set<Field> fields = getFields(typeElement, map);
-          File source = new File(
-              String.format("src/main/generated/%s/criteria/%sCriteria.java", pkg.replace('.', '/'), name));
+          map.put("fields", getFields(typeElement));
+
+          File source = new File(getOutputDirectory(),
+              String.format("%s/criteria/%sCriteria.java", pkg.replace('.', '/'), name));
           source.getParentFile().mkdirs();
           try (PrintWriter out = new PrintWriter(source)) {
             temp.process(map, out);
           }
         }
+
         return true;
       } catch (IOException | TemplateException e) {
         throw new RuntimeException(e.getMessage(), e);
@@ -83,7 +90,12 @@ public class CriteriaBuilder extends AbstractProcessor {
     }
   }
 
-  private Set<Field> getFields(TypeElement typeElement, TreeMap<String, Object> map) {
+  private String getOutputDirectory() {
+    String outputDirectory = env.getOptions().get("outputDirectory");
+    return outputDirectory == null ? "src/main/java" : outputDirectory;
+  }
+
+  private Set<Field> getFields(TypeElement typeElement) {
     Set<Field> fields = new TreeSet<>();
     while (typeElement != null) {
       List<? extends Element> enclosedElements = typeElement.getEnclosedElements();
@@ -94,7 +106,6 @@ public class CriteriaBuilder extends AbstractProcessor {
             fields.add(new Field(field.asType().toString(), field.getSimpleName().toString()));
           }
         }
-        map.put("fields", fields);
       }
       TypeMirror superclass = typeElement.getSuperclass();
       typeElement = (TypeElement) env.getTypeUtils().asElement(superclass);
