@@ -32,3 +32,28 @@ Include the dependency in your pom.xml like this:
         <artifactId>critter</artifactId>
         <version>VERSION</version>
     </dependency>
+
+What difference does it make?
+-----------------------------
+Before critter, your criteria might look something like this:
+
+    com.google.code.morphia.query.Query<Query> query = ds.createQuery(Query.class);
+    query.and(
+      query.criteria("bookmark").equal(bookmark),
+      query.criteria("database").equal(database)
+    );
+
+But using critter, it would look like this:
+
+    QueryCriteria criteria = new QueryCriteria(datastore);
+    criteria.and(
+      criteria.bookmark().equal(bookmark),
+      criteria.database().equal(database)
+    );
+    Query query = criteria.query().get();
+
+Notice how bookmark() and database() methods were created based on the model object Query's fields.  The comparison
+methods you're familiar with from morphia's criteria API are all there but now only take the type of the field itself.
+With this code in place if the model object changes, the code above runs the risk of failing to compile allowing you to
+catch model/query conflicts at compile rather than waiting for things to fail at runtime (or in your tests if you're
+lucky enough to those).
