@@ -24,3 +24,11 @@ processing for whatever reason, you can add the following to your pom.xml to ena
 For now, it generates straight in to src/main/java.  It's a little less than ideal.  I'd rather have it generate in to
 say, src/main/generated/critter, but maven wasn't cooperating and it wasn't that big of a deal.  The packages for the
 generated classes are computed by the packages of the entity objects so their sequestered packagewise in any case.
+
+Include the dependency in your pom.xml like this:
+
+    <dependency>
+        <groupId>com.antwerkz.critter</groupId>
+        <artifactId>critter</artifactId>
+        <version>VERSION</version>
+    </dependency>
