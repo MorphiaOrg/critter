@@ -1,12 +1,21 @@
 package com.antwerkz.critter;
 
 import com.google.code.morphia.query.FieldEnd;
+import com.google.code.morphia.query.Query;
 
-public class TypeSafeFieldEnd<T, V> {
+public class TypeSafeFieldEnd<T, Q, V> {
+
+  private Query< Q> query;
+
   private FieldEnd<T> fieldEnd;
 
-  public TypeSafeFieldEnd(FieldEnd<T> fieldEnd) {
+  public TypeSafeFieldEnd(Query< Q> query, FieldEnd<T> fieldEnd) {
+    this.query = query;
     this.fieldEnd = fieldEnd;
+  }
+
+  public Query<Q> query() {
+    return query;
   }
 
   public T exists() {

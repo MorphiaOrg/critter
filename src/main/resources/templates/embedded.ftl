@@ -14,32 +14,17 @@ import ${field.type};
 
 public class ${name}Criteria {
   private Query<${fqcn}> query;
+  private String prefix;
 
-  public Query<${fqcn}> query() {
-    return query;
+  public ${name}Criteria(Query query, String prefix) {
+    this.query = query;
+    this.prefix = prefix;
   }
 
-  public ${name}Criteria(Datastore ds) {
-    query = ds.find(${fqcn}.class);
-  }
-
-  public CriteriaContainer or(Criteria... criteria) {
-    return query.or(criteria);
-  }
-
-  public CriteriaContainer and(Criteria... criteria) {
-    return query.and(criteria);
-  }
 <#list fields as field>
 
   public TypeSafeFieldEnd<? extends CriteriaContainer, ${fqcn}, ${field.type}> ${field.name}() {
-    return new TypeSafeFieldEnd<>(query, query.criteria("${field.name}"));
-  }
-</#list>
-<#list embeddeds as embed>
-
-  public ${embed.type}Criteria ${embed.name}() {
-    return new ${embed.type}Criteria(query, "${embed.name}");
+    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + ".${field.name}"));
   }
 </#list>
 }
