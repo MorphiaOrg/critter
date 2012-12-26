@@ -57,3 +57,5 @@ methods you're familiar with from morphia's criteria API are all there but now o
 With this code in place if the model object changes, the code above runs the risk of failing to compile allowing you to
 catch model/query conflicts at compile rather than waiting for things to fail at runtime (or in your tests if you're
 lucky enough to those).
+
+You can see a working example in the [tests](https://github.com/evanchooly/critter/tree/master/src/test).
