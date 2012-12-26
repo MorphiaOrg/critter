@@ -16,32 +16,32 @@ import java.util.Set;
 
 @Test
 public class CriteriaTest {
-  public void invoice() throws UnknownHostException {
-    Datastore ds = getDatastore();
-    ds.save(new Invoice(new Date(2012, 12, 21, 13, 15), new Person("John", "Doe"),
-      new Item("ball", 5.0), new Item("skateboard", 17.35)));
-    ds.save(new Invoice(new Date(2006, 3, 4, 8, 7), new Person("Jeff", "Johnson"), new Item("movie", 29.95)));
-    ds.save(new Invoice(new Date(2007, 8, 16, 19, 27), new Person("Sally", "Ride"),
-      new Item("kleenex", 3.49), new Item("cough and cold syrup", 5.61)));
+    public void invoice() throws UnknownHostException {
+        Datastore ds = getDatastore();
+        ds.save(new Invoice(new Date(2012, 12, 21, 13, 15), new Person("John", "Doe"),
+                new Item("ball", 5.0), new Item("skateboard", 17.35)));
+        ds.save(new Invoice(new Date(2006, 3, 4, 8, 7), new Person("Jeff", "Johnson"), new Item("movie", 29.95)));
+        ds.save(new Invoice(new Date(2007, 8, 16, 19, 27), new Person("Sally", "Ride"),
+                new Item("kleenex", 3.49), new Item("cough and cold syrup", 5.61)));
 
-    Invoice name = ds.createQuery(Invoice.class).field("person.first").equal("John").get();
-    InvoiceCriteria invoiceCriteria = new InvoiceCriteria(ds);
-    invoiceCriteria.person().first().equal("John");
-    Invoice invoice = invoiceCriteria.query().get();
-    Assert.assertEquals(name, invoice);
-    Assert.assertEquals(name.getPerson().getLast(), "Doe");
+        InvoiceCriteria invoiceCriteria = new InvoiceCriteria(ds);
+        invoiceCriteria.person().first().equal("John");
+        Invoice invoice = invoiceCriteria.query().get();
 
-    Invoice person = ds.createQuery(Invoice.class).field("person.first").equal("John").get();
+        Invoice name = ds.createQuery(Invoice.class).field("person.first").equal("John").get();
+        Assert.assertEquals(name, invoice);
+        Assert.assertEquals(name.getPerson().getLast(), "Doe");
 
-    Assert.assertNotNull(person);
-  }
+        Invoice person = ds.createQuery(Invoice.class).field("person.first").equal("John").get();
+        Assert.assertNotNull(person);
+    }
 
-  private Datastore getDatastore() throws UnknownHostException {
-    Mongo mongo = new Mongo();
-    DB critter = mongo.getDB("critter");
-    critter.dropDatabase();
-    Set<Class> classes = new HashSet<>();
-    classes.add(Invoice.class);
-    return new Morphia(classes).createDatastore(mongo, "critter");
-  }
+    private Datastore getDatastore() throws UnknownHostException {
+        Mongo mongo = new Mongo();
+        DB critter = mongo.getDB("critter");
+        critter.dropDatabase();
+        Set<Class> classes = new HashSet<>();
+        classes.add(Invoice.class);
+        return new Morphia(classes).createDatastore(mongo, "critter");
+    }
 }
