@@ -5,6 +5,7 @@ import com.google.code.morphia.Datastore;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
+import com.google.code.morphia.query.QueryImpl;
 import org.bson.types.ObjectId;
 <#--
 <#list fields as field>
@@ -34,6 +35,11 @@ public class ${name}Criteria {
 
   public TypeSafeFieldEnd<? extends CriteriaContainer, ${fqcn}, ${field.type}> ${field.name}() {
     return new TypeSafeFieldEnd<>(query, query.criteria("${field.name}"));
+  }
+
+  public ${name}Criteria distinct${field.name?cap_first}() {
+    ((QueryImpl) query).getCollection().distinct("${field.name}");
+    return this;
   }
 </#list>
 <#list embeddeds as embed>
