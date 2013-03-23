@@ -8,10 +8,9 @@ import java.util.Set;
 import com.antwerkz.critter.Invoice.Address;
 import com.antwerkz.critter.Invoice.Person;
 import com.antwerkz.critter.criteria.InvoiceCriteria;
-import com.google.code.morphia.Morphia;
 import com.google.code.morphia.Datastore;
+import com.google.code.morphia.Morphia;
 import com.mongodb.DB;
-import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -37,7 +36,7 @@ public class CriteriaTest {
     invoiceCriteria.person(john);
     Invoice invoice = invoiceCriteria.query().get();
 
-    Invoice doe = ds.createQuery(Invoice.class).filter("person =", new DBRef(ds.getDB(), "Person", john.getId())).get();
+    Invoice doe = ds.createQuery(Invoice.class).filter("person =", john).get();
     Assert.assertEquals(invoice, doe);
     Assert.assertEquals(doe.getPerson().getLast(), "Doe");
     Assert.assertEquals(invoice.getPerson().getLast(), "Doe");

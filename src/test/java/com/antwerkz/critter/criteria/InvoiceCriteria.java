@@ -2,13 +2,10 @@ package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
-import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
-import com.mongodb.DBRef;
-import org.bson.types.ObjectId;
 
 public class InvoiceCriteria {
   private Query<com.antwerkz.critter.Invoice> query;
@@ -72,14 +69,7 @@ public class InvoiceCriteria {
   }
 
   public InvoiceCriteria person(com.antwerkz.critter.Invoice.Person reference) {
-    DBRef value = new DBRef( ds.getDB(), getCollection(reference), reference.getId());
-    query.filter("person = ", value);
+    query.filter("person = ", reference);
     return this;
   }
-
-  private String getCollection(final Object entity) {
-    String value = entity.getClass().getAnnotation(Entity.class).value();
-    return ".".equals(value) ? entity.getClass().getSimpleName() : value;
-  }
-
 }

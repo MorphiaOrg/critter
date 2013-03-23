@@ -55,15 +55,8 @@ public class ${name}Criteria {
 <#list references as reference>
 
   public ${name}Criteria ${reference.name}(${reference.type} reference) {
-    DBRef value = new DBRef( ds.getDB(), getCollection(reference), reference.getId());
-    query.filter("${reference.name} = ", value);
+    query.filter("${reference.name} = ", reference);
     return this;
   }
 </#list>
-
-  private String getCollection(final Object entity) {
-    String value = entity.getClass().getAnnotation(Entity.class).value();
-    return ".".equals(value) ? entity.getClass().getSimpleName() : value;
-  }
-
 }

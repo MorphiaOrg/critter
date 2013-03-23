@@ -57,10 +57,4 @@ public class Invoice_PersonCriteria {
     ((QueryImpl) query).getCollection().distinct("last");
     return this;
   }
-
-  private String getCollection(final Object entity) {
-    String value = entity.getClass().getAnnotation(Entity.class).value();
-    return ".".equals(value) ? entity.getClass().getSimpleName() : value;
-  }
-
 }
