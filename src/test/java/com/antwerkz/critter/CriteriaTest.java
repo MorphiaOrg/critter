@@ -42,7 +42,13 @@ public class CriteriaTest {
     Assert.assertEquals(doe.getPerson().getLast(), "Doe");
     Assert.assertEquals(invoice.getPerson().getLast(), "Doe");
 
-    Assert.assertNotNull(ds.createQuery(Invoice.class).field("address.city").equal("Chicago").get());
+    Invoice query = ds.createQuery(Invoice.class).field("address.city").equal("Chicago").get();
+    Assert.assertNotNull(query);
+    invoiceCriteria = new InvoiceCriteria(ds);
+    invoiceCriteria.address().city().equal("Chicago");
+    Invoice critter = invoiceCriteria.query().get();
+    Assert.assertNotNull(critter);
+    Assert.assertEquals(critter, query);
   }
 
   private Datastore getDatastore() throws UnknownHostException {
