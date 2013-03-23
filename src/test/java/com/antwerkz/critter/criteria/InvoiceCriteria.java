@@ -2,20 +2,24 @@ package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
+import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
+import com.mongodb.DBRef;
 import org.bson.types.ObjectId;
 
 public class InvoiceCriteria {
   private Query<com.antwerkz.critter.Invoice> query;
+  private Datastore ds;
 
   public Query<com.antwerkz.critter.Invoice> query() {
     return query;
   }
 
   public InvoiceCriteria(Datastore ds) {
+    this.ds = ds;
     query = ds.find(com.antwerkz.critter.Invoice.class);
   }
 
@@ -63,7 +67,19 @@ public class InvoiceCriteria {
     return this;
   }
 
-  public com.antwerkz.critter.criteria.Invoice_PersonCriteria person() {
-    return new com.antwerkz.critter.criteria.Invoice_PersonCriteria(query, "person");
+  public com.antwerkz.critter.criteria.Invoice_AddressCriteria address() {
+    return new com.antwerkz.critter.criteria.Invoice_AddressCriteria(query, "address");
   }
+
+  public InvoiceCriteria person(com.antwerkz.critter.Invoice.Person reference) {
+    DBRef value = new DBRef( ds.getDB(), getCollection(reference), reference.getId());
+    query.filter("person = ", value);
+    return this;
+  }
+
+  private String getCollection(final Object entity) {
+    String value = entity.getClass().getAnnotation(Entity.class).value();
+    return ".".equals(value) ? entity.getClass().getSimpleName() : value;
+  }
+
 }

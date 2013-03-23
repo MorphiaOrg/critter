@@ -2,10 +2,12 @@ package ${package}.criteria;
 
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
+import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
+import com.mongodb.DBRef;
 import org.bson.types.ObjectId;
 <#--
 <#list fields as field>
@@ -15,12 +17,14 @@ import ${field.type};
 
 public class ${name}Criteria {
   private Query<${fqcn}> query;
+  private Datastore ds;
 
   public Query<${fqcn}> query() {
     return query;
   }
 
   public ${name}Criteria(Datastore ds) {
+    this.ds = ds;
     query = ds.find(${fqcn}.class);
   }
 
@@ -48,4 +52,18 @@ public class ${name}Criteria {
     return new ${embed.type}Criteria(query, "${embed.name}");
   }
 </#list>
+<#list references as reference>
+
+  public ${name}Criteria ${reference.name}(${reference.type} reference) {
+    DBRef value = new DBRef( ds.getDB(), getCollection(reference), reference.getId());
+    query.filter("${reference.name} = ", value);
+    return this;
+  }
+</#list>
+
+  private String getCollection(final Object entity) {
+    String value = entity.getClass().getAnnotation(Entity.class).value();
+    return ".".equals(value) ? entity.getClass().getSimpleName() : value;
+  }
+
 }

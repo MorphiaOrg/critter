@@ -1,106 +1,167 @@
 package com.antwerkz.critter;
 
-import com.google.code.morphia.annotations.Embedded;
-import com.google.code.morphia.annotations.Entity;
-import com.google.code.morphia.annotations.Id;
-import org.bson.types.ObjectId;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.google.code.morphia.annotations.Embedded;
+import com.google.code.morphia.annotations.Entity;
+import com.google.code.morphia.annotations.Id;
+import com.google.code.morphia.annotations.Reference;
+import org.bson.types.ObjectId;
+
 @Entity
 public class Invoice {
+  @Id
+  private ObjectId id = new ObjectId();
+
+  private Date date;
+
+  @Reference
+  private Person person;
+
+  @Embedded
+  private Address address;
+
+  private Double total = 0.0;
+
+  private List<Item> items;
+
+  public Invoice() {
+  }
+
+  public Invoice(Date date, Person person, Address address, Item... items) {
+    this.date = date;
+    this.person = person;
+    this.address = address;
+    for (Item item : items) {
+      add(item);
+    }
+  }
+
+  public Date getDate() {
+    return date;
+  }
+
+  public void setDate(Date date) {
+    this.date = date;
+  }
+
+  public Person getPerson() {
+    return person;
+  }
+
+  public Double getTotal() {
+    return total;
+  }
+
+  public void add(Item item) {
+    if (items == null) {
+      items = new ArrayList<>();
+    }
+    items.add(item);
+    total += item.getPrice();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Invoice invoice = (Invoice) o;
+    if (!id.equals(invoice.id)) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return id.hashCode();
+  }
+
+  @Entity
+  public static class Person {
     @Id
-    private ObjectId id = new ObjectId();
-    private Date date;
-    @Embedded
-    private Person person;
-    private Double total = 0.0;
-    private List<Item> items;
+    private ObjectId id;
 
-    public Invoice() {
+    private String first;
+
+    private String last;
+
+    public Person() {
     }
 
-    public Invoice(Date date, Person person, Item... items) {
-        this.date = date;
-        this.person = person;
-        for (Item item : items) {
-            add(item);
-        }
+    public Person(String first, String last) {
+      this.first = first;
+      this.last = last;
     }
 
-    public Date getDate() {
-        return date;
+    public ObjectId getId() {
+      return id;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setId(final ObjectId id) {
+      this.id = id;
     }
 
-    public Person getPerson() {
-        return person;
+    public String getFirst() {
+      return first;
     }
 
-    public Double getTotal() {
-        return total;
+    public void setFirst(String first) {
+      this.first = first;
     }
 
-    public void add(Item item) {
-        if (items == null) {
-            items = new ArrayList<>();
-        }
-        items.add(item);
-        total += item.getPrice();
+    public String getLast() {
+      return last;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Invoice invoice = (Invoice) o;
-        if (!id.equals(invoice.id)) {
-            return false;
-        }
-        return true;
+    public void setLast(String last) {
+      this.last = last;
+    }
+  }
+
+  @Embedded
+  public static class Address {
+    private String city;
+    private String state;
+    private String zip;
+
+    public Address() {
     }
 
-    @Override
-    public int hashCode() {
-        return id.hashCode();
+    public Address(final String city, final String state, final String zip) {
+      this.city = city;
+      this.state = state;
+      this.zip = zip;
     }
 
-    @Embedded
-    public static class Person {
-        private String first;
-        private String last;
-
-        public Person() {
-        }
-
-        public Person(String first, String last) {
-            this.first = first;
-            this.last = last;
-        }
-
-        public String getFirst() {
-            return first;
-        }
-
-        public void setFirst(String first) {
-            this.first = first;
-        }
-
-        public String getLast() {
-            return last;
-        }
-
-        public void setLast(String last) {
-            this.last = last;
-        }
+    public String getCity() {
+      return city;
     }
+
+    public void setCity(final String city) {
+      this.city = city;
+    }
+
+    public String getState() {
+      return state;
+    }
+
+    public void setState(final String state) {
+      this.state = state;
+    }
+
+    public String getZip() {
+      return zip;
+    }
+
+    public void setZip(final String zip) {
+      this.zip = zip;
+    }
+  }
 }
