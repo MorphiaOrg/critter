@@ -7,8 +7,6 @@ import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
-import com.mongodb.DBRef;
-import org.bson.types.ObjectId;
 <#--
 <#list fields as field>
 import ${field.type};
