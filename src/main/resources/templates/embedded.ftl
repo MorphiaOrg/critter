@@ -26,5 +26,10 @@ public class ${name}Criteria {
   public TypeSafeFieldEnd<? extends CriteriaContainer, ${fqcn}, ${field.type}> ${field.name}() {
     return new TypeSafeFieldEnd<>(query, query.criteria(prefix + ".${field.name}"));
   }
+
+  public ${name}Criteria ${field.name}(${field.type} value) {
+    new TypeSafeFieldEnd<>(query, query.criteria(prefix + ".${field.name}")).equal(value);
+    return this;
+  }
 </#list>
 }

@@ -2,6 +2,7 @@ package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
+import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
@@ -32,6 +33,11 @@ public class InvoiceCriteria {
     return new TypeSafeFieldEnd<>(query, query.criteria("date"));
   }
 
+  public InvoiceCriteria date(java.util.Date value) {
+    new TypeSafeFieldEnd<>(query, query.criteria("date")).equal(value);
+    return this;
+  }
+
   public InvoiceCriteria distinctDate() {
     ((QueryImpl) query).getCollection().distinct("date");
     return this;
@@ -39,6 +45,11 @@ public class InvoiceCriteria {
 
   public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Invoice, org.bson.types.ObjectId> id() {
     return new TypeSafeFieldEnd<>(query, query.criteria("id"));
+  }
+
+  public InvoiceCriteria id(org.bson.types.ObjectId value) {
+    new TypeSafeFieldEnd<>(query, query.criteria("id")).equal(value);
+    return this;
   }
 
   public InvoiceCriteria distinctId() {
@@ -50,6 +61,11 @@ public class InvoiceCriteria {
     return new TypeSafeFieldEnd<>(query, query.criteria("items"));
   }
 
+  public InvoiceCriteria items(java.util.List<com.antwerkz.critter.Item> value) {
+    new TypeSafeFieldEnd<>(query, query.criteria("items")).equal(value);
+    return this;
+  }
+
   public InvoiceCriteria distinctItems() {
     ((QueryImpl) query).getCollection().distinct("items");
     return this;
@@ -57,6 +73,11 @@ public class InvoiceCriteria {
 
   public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Invoice, java.lang.Double> total() {
     return new TypeSafeFieldEnd<>(query, query.criteria("total"));
+  }
+
+  public InvoiceCriteria total(java.lang.Double value) {
+    new TypeSafeFieldEnd<>(query, query.criteria("total")).equal(value);
+    return this;
   }
 
   public InvoiceCriteria distinctTotal() {

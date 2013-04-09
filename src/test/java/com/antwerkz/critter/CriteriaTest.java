@@ -44,7 +44,7 @@ public class CriteriaTest {
     Invoice query = ds.createQuery(Invoice.class).field("address.city").equal("Chicago").get();
     Assert.assertNotNull(query);
     invoiceCriteria = new InvoiceCriteria(ds);
-    invoiceCriteria.address().city().equal("Chicago");
+    invoiceCriteria.address().city("Chicago");
     Invoice critter = invoiceCriteria.query().get();
     Assert.assertNotNull(critter);
     Assert.assertEquals(critter, query);

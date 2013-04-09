@@ -21,7 +21,17 @@ public class ItemCriteria {
     return new TypeSafeFieldEnd<>(query, query.criteria(prefix + ".name"));
   }
 
+  public ItemCriteria name(java.lang.String value) {
+    new TypeSafeFieldEnd<>(query, query.criteria(prefix + ".name")).equal(value);
+    return this;
+  }
+
   public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Item, java.lang.Double> price() {
     return new TypeSafeFieldEnd<>(query, query.criteria(prefix + ".price"));
+  }
+
+  public ItemCriteria price(java.lang.Double value) {
+    new TypeSafeFieldEnd<>(query, query.criteria(prefix + ".price")).equal(value);
+    return this;
   }
 }

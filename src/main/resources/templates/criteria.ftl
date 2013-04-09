@@ -39,6 +39,11 @@ public class ${name}Criteria {
     return new TypeSafeFieldEnd<>(query, query.criteria("${field.name}"));
   }
 
+  public ${name}Criteria ${field.name}(${field.type} value) {
+    new TypeSafeFieldEnd<>(query, query.criteria("${field.name}")).equal(value);
+    return this;
+  }
+
   public ${name}Criteria distinct${field.name?cap_first}() {
     ((QueryImpl) query).getCollection().distinct("${field.name}");
     return this;
