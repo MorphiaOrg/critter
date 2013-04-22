@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -35,7 +34,6 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
 public class CriteriaBuilder extends AbstractProcessor {
-  private ProcessingEnvironment env;
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
@@ -53,13 +51,8 @@ public class CriteriaBuilder extends AbstractProcessor {
   }
 
   @Override
-  public void init(final ProcessingEnvironment processingEnv) {
-    env = processingEnv;
-  }
-
-  @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-    final TypeElement element = env.getElementUtils().getTypeElement(Entity.class.getName());
+    final TypeElement element = processingEnv.getElementUtils().getTypeElement(Entity.class.getName());
     if (annotations.contains(element)) {
       try {
         Configuration cfg = new Configuration();
@@ -85,7 +78,6 @@ public class CriteriaBuilder extends AbstractProcessor {
   private void generate(Template temp, TypeElement typeElement) throws TemplateException, IOException {
     String pkg = getPackageName(typeElement);
     String name = typeElement.getQualifiedName().toString().replace(pkg + ".", "");
-    String enclosingElement = typeElement.getEnclosingElement().toString();
     if (name.indexOf('.') != -1) {
       // nested
       name = name.replace('.', '_');
@@ -104,7 +96,7 @@ public class CriteriaBuilder extends AbstractProcessor {
   }
 
   private String getOutputDirectory() {
-    String outputDirectory = env.getOptions().get("outputDirectory");
+    String outputDirectory = processingEnv.getOptions().get("outputDirectory");
     return outputDirectory == null ? "src/main/java" : outputDirectory;
   }
 
@@ -126,11 +118,9 @@ public class CriteriaBuilder extends AbstractProcessor {
               references.add(new Field(field.asType().toString(), field.getSimpleName().toString()));
             }
           }
-
         }
       }
-      TypeMirror superclass = typeElement.getSuperclass();
-      typeElement = (TypeElement) env.getTypeUtils().asElement(superclass);
+      typeElement = (TypeElement) processingEnv.getTypeUtils().asElement(typeElement.getSuperclass());
     }
     map.put("fields", fields);
     map.put("embeddeds", embeds);
