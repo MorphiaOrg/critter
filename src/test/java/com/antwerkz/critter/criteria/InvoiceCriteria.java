@@ -2,7 +2,6 @@ package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
-import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
@@ -38,6 +37,15 @@ public class InvoiceCriteria {
     return this;
   }
 
+  public InvoiceCriteria orderByDate() {
+    return orderByDate(true);
+  }
+
+  public InvoiceCriteria orderByDate(boolean ascending) {
+    query.order((!ascending ? "-" : "") + "date");
+    return this;
+  }
+
   public InvoiceCriteria distinctDate() {
     ((QueryImpl) query).getCollection().distinct("date");
     return this;
@@ -49,6 +57,15 @@ public class InvoiceCriteria {
 
   public InvoiceCriteria id(org.bson.types.ObjectId value) {
     new TypeSafeFieldEnd<>(query, query.criteria("id")).equal(value);
+    return this;
+  }
+
+  public InvoiceCriteria orderById() {
+    return orderById(true);
+  }
+
+  public InvoiceCriteria orderById(boolean ascending) {
+    query.order((!ascending ? "-" : "") + "id");
     return this;
   }
 
@@ -66,6 +83,15 @@ public class InvoiceCriteria {
     return this;
   }
 
+  public InvoiceCriteria orderByItems() {
+    return orderByItems(true);
+  }
+
+  public InvoiceCriteria orderByItems(boolean ascending) {
+    query.order((!ascending ? "-" : "") + "items");
+    return this;
+  }
+
   public InvoiceCriteria distinctItems() {
     ((QueryImpl) query).getCollection().distinct("items");
     return this;
@@ -77,6 +103,15 @@ public class InvoiceCriteria {
 
   public InvoiceCriteria total(java.lang.Double value) {
     new TypeSafeFieldEnd<>(query, query.criteria("total")).equal(value);
+    return this;
+  }
+
+  public InvoiceCriteria orderByTotal() {
+    return orderByTotal(true);
+  }
+
+  public InvoiceCriteria orderByTotal(boolean ascending) {
+    query.order((!ascending ? "-" : "") + "total");
     return this;
   }
 

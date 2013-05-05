@@ -38,6 +38,15 @@ public class Invoice_PersonCriteria {
     return this;
   }
 
+  public Invoice_PersonCriteria orderByFirst() {
+    return orderByFirst(true);
+  }
+
+  public Invoice_PersonCriteria orderByFirst(boolean ascending) {
+    query.order((!ascending ? "-" : "") + "first");
+    return this;
+  }
+
   public Invoice_PersonCriteria distinctFirst() {
     ((QueryImpl) query).getCollection().distinct("first");
     return this;
@@ -52,6 +61,15 @@ public class Invoice_PersonCriteria {
     return this;
   }
 
+  public Invoice_PersonCriteria orderById() {
+    return orderById(true);
+  }
+
+  public Invoice_PersonCriteria orderById(boolean ascending) {
+    query.order((!ascending ? "-" : "") + "id");
+    return this;
+  }
+
   public Invoice_PersonCriteria distinctId() {
     ((QueryImpl) query).getCollection().distinct("id");
     return this;
@@ -63,6 +81,15 @@ public class Invoice_PersonCriteria {
 
   public Invoice_PersonCriteria last(java.lang.String value) {
     new TypeSafeFieldEnd<>(query, query.criteria("last")).equal(value);
+    return this;
+  }
+
+  public Invoice_PersonCriteria orderByLast() {
+    return orderByLast(true);
+  }
+
+  public Invoice_PersonCriteria orderByLast(boolean ascending) {
+    query.order((!ascending ? "-" : "") + "last");
     return this;
   }
 

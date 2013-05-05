@@ -44,6 +44,15 @@ public class ${name}Criteria {
     return this;
   }
 
+  public ${name}Criteria orderBy${field.name?cap_first}() {
+    return orderBy${field.name?cap_first}(true);
+  }
+
+  public ${name}Criteria orderBy${field.name?cap_first}(boolean ascending) {
+    query.order((!ascending ? "-" : "") + "${field.name}");
+    return this;
+  }
+
   public ${name}Criteria distinct${field.name?cap_first}() {
     ((QueryImpl) query).getCollection().distinct("${field.name}");
     return this;
