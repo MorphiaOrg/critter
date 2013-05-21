@@ -52,10 +52,12 @@ public class CriteriaTest {
     PersonCriteria criteria = new PersonCriteria(getDatastore());
     criteria.first("Jim");
     criteria.last("Beam");
-    criteria.update()
+    Assert.assertEquals(criteria.update()
         .age(30L)
-        .update();
-    UpdateOperations<Person> updateOperations = getDatastore().createUpdateOperations(Person.class);
+        .update().getUpdatedCount(), 0);
+    Assert.assertEquals(criteria.update()
+        .age(30L)
+        .upsert().getInsertedCount(), 1);
   }
 
   private Datastore getDatastore() throws UnknownHostException {

@@ -8,6 +8,7 @@ import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
+import com.google.code.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
 
 
@@ -144,20 +145,20 @@ public class InvoiceCriteria {
       updateOperations = ds.createUpdateOperations(com.antwerkz.critter.Invoice.class);
     }
 
-    public void update() {
-      ds.update(query(), updateOperations, false);
+    public UpdateResults<com.antwerkz.critter.Invoice> update() {
+      return ds.update(query(), updateOperations, false);
     }
 
-    public void update(WriteConcern wc) {
-      ds.update(query(), updateOperations, false, wc);
+    public UpdateResults<com.antwerkz.critter.Invoice> update(WriteConcern wc) {
+      return ds.update(query(), updateOperations, false, wc);
     }
 
-    public void upsert() {
-      ds.update(query(), updateOperations, true);
+    public UpdateResults<com.antwerkz.critter.Invoice> upsert() {
+      return ds.update(query(), updateOperations, true);
     }
 
-    public void upsert(WriteConcern wc) {
-      ds.update(query(), updateOperations, true, wc);
+    public UpdateResults<com.antwerkz.critter.Invoice> upsert(WriteConcern wc) {
+      return ds.update(query(), updateOperations, true, wc);
     }
 
     public InvoiceUpdater date(java.util.Date value) {

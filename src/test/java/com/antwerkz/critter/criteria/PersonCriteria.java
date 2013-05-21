@@ -1,6 +1,5 @@
 package com.antwerkz.critter.criteria;
 
-import com.antwerkz.critter.Person;
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.query.Criteria;
@@ -136,20 +135,20 @@ public class PersonCriteria {
       updateOperations = ds.createUpdateOperations(com.antwerkz.critter.Person.class);
     }
 
-    public UpdateResults<Person> update() {
+    public UpdateResults<com.antwerkz.critter.Person> update() {
       return ds.update(query(), updateOperations, false);
     }
 
-    public void update(WriteConcern wc) {
-      ds.update(query(), updateOperations, false, wc);
+    public UpdateResults<com.antwerkz.critter.Person> update(WriteConcern wc) {
+      return ds.update(query(), updateOperations, false, wc);
     }
 
-    public void upsert() {
-      ds.update(query(), updateOperations, true);
+    public UpdateResults<com.antwerkz.critter.Person> upsert() {
+      return ds.update(query(), updateOperations, true);
     }
 
-    public void upsert(WriteConcern wc) {
-      ds.update(query(), updateOperations, true, wc);
+    public UpdateResults<com.antwerkz.critter.Person> upsert(WriteConcern wc) {
+      return ds.update(query(), updateOperations, true, wc);
     }
 
     public PersonUpdater age(java.lang.Long value) {
