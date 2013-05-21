@@ -10,6 +10,7 @@ import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
 import com.google.code.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 
 
 public class InvoiceCriteria {
@@ -23,6 +24,14 @@ public class InvoiceCriteria {
   public InvoiceCriteria(Datastore ds) {
     this.ds = ds;
     query = ds.find(com.antwerkz.critter.Invoice.class);
+  }
+
+  public WriteResult delete() {
+     return ds.delete(query());
+  }
+
+  public WriteResult delete(WriteConcern wc) {
+     return ds.delete(query(), wc);
   }
 
   public CriteriaContainer or(Criteria... criteria) {

@@ -10,9 +10,9 @@ import com.antwerkz.critter.criteria.InvoiceCriteria;
 import com.antwerkz.critter.criteria.PersonCriteria;
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
-import com.google.code.morphia.query.UpdateOperations;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.WriteResult;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -52,12 +52,15 @@ public class CriteriaTest {
     PersonCriteria criteria = new PersonCriteria(getDatastore());
     criteria.first("Jim");
     criteria.last("Beam");
+    criteria.delete();
+
     Assert.assertEquals(criteria.update()
         .age(30L)
         .update().getUpdatedCount(), 0);
     Assert.assertEquals(criteria.update()
         .age(30L)
         .upsert().getInsertedCount(), 1);
+    WriteResult delete = getDatastore().delete(criteria.query());
   }
 
   private Datastore getDatastore() throws UnknownHostException {

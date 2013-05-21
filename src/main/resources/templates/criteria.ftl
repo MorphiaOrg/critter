@@ -10,6 +10,7 @@ import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
 import com.google.code.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 
 <#--
 <#list fields as field>
@@ -28,6 +29,14 @@ public class ${name}Criteria {
   public ${name}Criteria(Datastore ds) {
     this.ds = ds;
     query = ds.find(${fqcn}.class);
+  }
+
+  public WriteResult delete() {
+     return ds.delete(query());
+  }
+
+  public WriteResult delete(WriteConcern wc) {
+     return ds.delete(query(), wc);
   }
 
   public CriteriaContainer or(Criteria... criteria) {
