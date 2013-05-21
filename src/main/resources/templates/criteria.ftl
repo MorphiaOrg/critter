@@ -7,6 +7,10 @@ import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
+import com.google.code.morphia.query.UpdateOperations;
+import com.google.code.morphia.query.UpdateResults;
+import com.mongodb.WriteConcern;
+
 <#--
 <#list fields as field>
 import ${field.type};
@@ -71,4 +75,39 @@ public class ${name}Criteria {
     return this;
   }
 </#list>
+
+  public ${name}Updater update() {
+    return new ${name}Updater();
+  }
+
+  public class ${name}Updater {
+    UpdateOperations<${fqcn}> updateOperations;
+
+    public ${name}Updater() {
+      updateOperations = ds.createUpdateOperations(${fqcn}.class);
+    }
+
+    public UpdateResults<${fqcn}> update() {
+      return ds.update(query(), updateOperations, false);
+    }
+
+    public UpdateResults<${fqcn}> update(WriteConcern wc) {
+      return ds.update(query(), updateOperations, false, wc);
+    }
+
+    public UpdateResults<${fqcn}> upsert() {
+      return ds.update(query(), updateOperations, true);
+    }
+
+    public UpdateResults<${fqcn}> upsert(WriteConcern wc) {
+      return ds.update(query(), updateOperations, true, wc);
+    }
+
+  <#list fields as field>
+    public ${name}Updater ${field.name}(${field.type} value) {
+      updateOperations.set("${field.name}", value);
+      return this;
+    }
+  </#list>
+  }
 }

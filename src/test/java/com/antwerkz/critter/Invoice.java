@@ -83,48 +83,6 @@ public class Invoice {
     return id.hashCode();
   }
 
-  @Entity
-  public static class Person {
-    @Id
-    private ObjectId id;
-
-    private String first;
-
-    private String last;
-
-    public Person() {
-    }
-
-    public Person(String first, String last) {
-      this.first = first;
-      this.last = last;
-    }
-
-    public ObjectId getId() {
-      return id;
-    }
-
-    public void setId(final ObjectId id) {
-      this.id = id;
-    }
-
-    public String getFirst() {
-      return first;
-    }
-
-    public void setFirst(String first) {
-      this.first = first;
-    }
-
-    public String getLast() {
-      return last;
-    }
-
-    public void setLast(String last) {
-      this.last = last;
-    }
-  }
-
   @Embedded
   public static class Address {
     private String city;

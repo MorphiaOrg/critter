@@ -2,10 +2,14 @@ package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
+import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
+import com.google.code.morphia.query.UpdateOperations;
+import com.mongodb.WriteConcern;
+
 
 public class InvoiceCriteria {
   private Query<com.antwerkz.critter.Invoice> query;
@@ -124,8 +128,53 @@ public class InvoiceCriteria {
     return new com.antwerkz.critter.criteria.Invoice_AddressCriteria(query, "address");
   }
 
-  public InvoiceCriteria person(com.antwerkz.critter.Invoice.Person reference) {
+  public InvoiceCriteria person(com.antwerkz.critter.Person reference) {
     query.filter("person = ", reference);
     return this;
+  }
+
+  public InvoiceUpdater update() {
+    return new InvoiceUpdater();
+  }
+
+  public class InvoiceUpdater {
+    UpdateOperations<com.antwerkz.critter.Invoice> updateOperations;
+
+    public InvoiceUpdater() {
+      updateOperations = ds.createUpdateOperations(com.antwerkz.critter.Invoice.class);
+    }
+
+    public void update() {
+      ds.update(query(), updateOperations, false);
+    }
+
+    public void update(WriteConcern wc) {
+      ds.update(query(), updateOperations, false, wc);
+    }
+
+    public void upsert() {
+      ds.update(query(), updateOperations, true);
+    }
+
+    public void upsert(WriteConcern wc) {
+      ds.update(query(), updateOperations, true, wc);
+    }
+
+    public InvoiceUpdater date(java.util.Date value) {
+      updateOperations.set("date", value);
+      return this;
+    }
+    public InvoiceUpdater id(org.bson.types.ObjectId value) {
+      updateOperations.set("id", value);
+      return this;
+    }
+    public InvoiceUpdater items(java.util.List<com.antwerkz.critter.Item> value) {
+      updateOperations.set("items", value);
+      return this;
+    }
+    public InvoiceUpdater total(java.lang.Double value) {
+      updateOperations.set("total", value);
+      return this;
+    }
   }
 }
