@@ -30,7 +30,7 @@ Include the dependency in your pom.xml like this:
     <dependency>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter</artifactId>
-        <version>VERSION</version>
+        <version>1.2.0</version>
     </dependency>
 
 What difference does it make?
@@ -47,8 +47,8 @@ But using critter, it would look like this:
 
     QueryCriteria criteria = new QueryCriteria(datastore);
     criteria.and(
-      criteria.bookmark().equal(bookmark),
-      criteria.database().equal(database)
+      criteria.bookmark(bookmark),
+      criteria.database(database)
     );
     Query query = criteria.query().get();
 
