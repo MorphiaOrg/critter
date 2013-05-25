@@ -10,6 +10,7 @@ import com.antwerkz.critter.criteria.InvoiceCriteria;
 import com.antwerkz.critter.criteria.PersonCriteria;
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
+import com.google.code.morphia.query.Query;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
@@ -54,13 +55,20 @@ public class CriteriaTest {
     criteria.last("Beam");
     criteria.delete();
 
-    Assert.assertEquals(criteria.update()
+    Assert.assertEquals(criteria.getUpdater()
         .age(30L)
         .update().getUpdatedCount(), 0);
-    Assert.assertEquals(criteria.update()
+    Assert.assertEquals(criteria.getUpdater()
         .age(30L)
         .upsert().getInsertedCount(), 1);
-    WriteResult delete = getDatastore().delete(criteria.query());
+
+    criteria.getUpdater().incAge().update();
+    Assert.assertEquals(criteria.query().get().getAge().longValue(), 31L);
+
+    Query<Person> query = criteria.query();
+    System.out.println("query = " + query);
+    WriteResult delete = getDatastore().delete(query);
+    Assert.assertNull(delete.getError());
   }
 
   private Datastore getDatastore() throws UnknownHostException {
