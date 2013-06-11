@@ -15,15 +15,15 @@
  */
 package com.antwerkz.critter;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Reference;
 import org.bson.types.ObjectId;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Entity
 public class Invoice {
@@ -36,7 +36,7 @@ public class Invoice {
   private Person person;
 
   @Embedded
-  private Address address;
+  private List<Address> addresses;
 
   private Double total = 0.0;
 
@@ -45,10 +45,10 @@ public class Invoice {
   public Invoice() {
   }
 
-  public Invoice(Date date, Person person, Address address, Item... items) {
+  public Invoice(Date date, Person person, List<Address> addresses, Item... items) {
     this.date = date;
     this.person = person;
-    this.address = address;
+    this.addresses = addresses;
     for (Item item : items) {
       add(item);
     }

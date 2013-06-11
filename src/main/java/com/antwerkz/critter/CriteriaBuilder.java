@@ -15,16 +15,19 @@
  */
 package com.antwerkz.critter;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import com.google.code.morphia.annotations.Embedded;
+import com.google.code.morphia.annotations.Entity;
+import com.google.code.morphia.annotations.NotSaved;
+import com.google.code.morphia.annotations.Reference;
+import com.google.code.morphia.annotations.Transient;
+import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Type.ClassType;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
@@ -36,17 +39,16 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-
-import com.google.code.morphia.annotations.Embedded;
-import com.google.code.morphia.annotations.Entity;
-import com.google.code.morphia.annotations.NotSaved;
-import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.annotations.Transient;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class CriteriaBuilder extends AbstractProcessor {
 
@@ -103,7 +105,7 @@ public class CriteriaBuilder extends AbstractProcessor {
     map.put("fqcn", typeElement.getQualifiedName().toString());
     getFields(typeElement, map);
     File source = new File(getOutputDirectory(),
-        String.format("%s/criteria/%sCriteria.java", pkg.replace('.', '/'), name));
+                              String.format("%s/criteria/%sCriteria.java", pkg.replace('.', '/'), name));
     source.getParentFile().mkdirs();
     try (PrintWriter out = new PrintWriter(source)) {
       temp.process(map, out);
@@ -143,8 +145,20 @@ public class CriteriaBuilder extends AbstractProcessor {
   }
 
   private String encodeEmbedName(VariableElement field) {
+    System.out.println("field = [" + field + "]");
+    System.out.println("enclosedElements = " + field.getEnclosedElements());
+    System.out.println("constantValue = " + field.getConstantValue());
     TypeMirror typeMirror = field.asType();
-    String[] parts = typeMirror.toString().split("\\.");
+    ClassType classType = (ClassType) typeMirror;
+    List<Type> typeArguments = classType.getTypeArguments();
+    String[] parts;
+    if(typeArguments.size() == 1) {
+      parts = typeArguments.get(0).toString().split("\\.");
+    } else {
+      parts = typeMirror.toString().split("\\.");
+    }
+    System.out.println("typeMirror = " + typeMirror);
+    System.out.println("typeMirror = " + typeMirror.getClass());
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < parts.length; i++) {
       String part = parts[i];
@@ -163,16 +177,18 @@ public class CriteriaBuilder extends AbstractProcessor {
   }
 
   private String getPackageName(TypeElement typeElement) {
+    System.out.println("************ CriteriaBuilder.getPackageName: typeElement = [" + typeElement + "]");
     QualifiedNameable enclosingElement = (QualifiedNameable) typeElement.getEnclosingElement();
     while (!(enclosingElement instanceof PackageElement)) {
       enclosingElement = (QualifiedNameable) enclosingElement.getEnclosingElement();
     }
-    return enclosingElement.getQualifiedName().toString();
+    String s = enclosingElement.getQualifiedName().toString();
+    System.out.println("************ s = " + s);
+    return s;
   }
 
   private boolean validField(VariableElement field) {
-    Class[] types = {NotSaved.class, Transient.class, Embedded.class, Reference.class};
-    for (Class type : types) {
+    for (Class type : new Class[]{NotSaved.class, Transient.class, Embedded.class, Reference.class}) {
       if (field.getAnnotation(type) != null) {
         return false;
       }
@@ -182,7 +198,10 @@ public class CriteriaBuilder extends AbstractProcessor {
 
   private boolean embedded(VariableElement field) {
     Set<Modifier> modifiers = field.getModifiers();
-    return !modifiers.contains(Modifier.STATIC) && field.getAnnotation(Embedded.class) != null;
+    com.sun.tools.javac.util.List<Type> typeArguments = ((ClassType) field.asType()).getTypeArguments();
+
+    return !modifiers.contains(Modifier.STATIC) && field.getAnnotation(Embedded.class) != null
+               && typeArguments.size() < 2;
   }
 
   private boolean reference(VariableElement field) {

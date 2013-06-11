@@ -1,9 +1,8 @@
 package com.antwerkz.critter.criteria;
 
-import java.util.List;
-
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
+import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
@@ -12,6 +11,7 @@ import com.google.code.morphia.query.UpdateOperations;
 import com.google.code.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
+import java.util.List;
 
 
 public class PersonCriteria {
