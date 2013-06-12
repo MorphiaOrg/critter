@@ -45,10 +45,10 @@ public class Invoice {
   public Invoice() {
   }
 
-  public Invoice(Date date, Person person, List<Address> addresses, Item... items) {
+  public Invoice(Date date, Person person, Address address, Item... items) {
     this.date = date;
     this.person = person;
-    this.addresses = addresses;
+    add(address);
     for (Item item : items) {
       add(item);
     }
@@ -66,6 +66,10 @@ public class Invoice {
     return person;
   }
 
+  public void setPerson(Person person) {
+    this.person = person;
+  }
+
   public Double getTotal() {
     return total;
   }
@@ -76,6 +80,13 @@ public class Invoice {
     }
     items.add(item);
     total += item.getPrice();
+  }
+
+  public void add(Address address) {
+    if (addresses == null) {
+      addresses = new ArrayList<>();
+    }
+    addresses.add(address);
   }
 
   @Override
@@ -96,6 +107,10 @@ public class Invoice {
   @Override
   public int hashCode() {
     return id.hashCode();
+  }
+
+  public List<Address> getAddresses() {
+    return addresses;
   }
 
   @Embedded
@@ -136,5 +151,26 @@ public class Invoice {
     public void setZip(final String zip) {
       this.zip = zip;
     }
+
+    @Override
+    public String toString() {
+      return "Address{" +
+                 "city='" + city + '\'' +
+                 ", state='" + state + '\'' +
+                 ", zip='" + zip + '\'' +
+                 '}';
+    }
+  }
+
+  @Override
+  public String toString() {
+    return "Invoice{" +
+               "id=" + id +
+               ", date=" + date +
+               ", person=" + person +
+               ", addresses=" + addresses +
+               ", total=" + total +
+               ", items=" + items +
+               '}';
   }
 }

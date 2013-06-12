@@ -39,6 +39,7 @@ import ${field.type};
 public class ${name}Criteria {
   private Query<${fqcn}> query;
   private Datastore ds;
+  private String prefix = "";
 
   public Query<${fqcn}> query() {
     return query;
@@ -64,31 +65,9 @@ public class ${name}Criteria {
   public CriteriaContainer and(Criteria... criteria) {
     return query.and(criteria);
   }
-<#list fields as field>
 
-  public TypeSafeFieldEnd<? extends CriteriaContainer, ${fqcn}, ${field.type}> ${field.name}() {
-    return new TypeSafeFieldEnd<>(query, query.criteria("${field.name}"));
-  }
+<#include "fields.ftl">
 
-  public ${name}Criteria ${field.name}(${field.type} value) {
-    new TypeSafeFieldEnd<>(query, query.criteria("${field.name}")).equal(value);
-    return this;
-  }
-
-  public ${name}Criteria orderBy${field.name?cap_first}() {
-    return orderBy${field.name?cap_first}(true);
-  }
-
-  public ${name}Criteria orderBy${field.name?cap_first}(boolean ascending) {
-    query.order((!ascending ? "-" : "") + "${field.name}");
-    return this;
-  }
-
-  public ${name}Criteria distinct${field.name?cap_first}() {
-    ((QueryImpl) query).getCollection().distinct("${field.name}");
-    return this;
-  }
-</#list>
 <#list embeddeds as embed>
 
   public ${embed.type}Criteria ${embed.name}() {

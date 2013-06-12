@@ -34,8 +34,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.QualifiedNameable;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.QualifiedNameable;import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
@@ -145,9 +144,6 @@ public class CriteriaBuilder extends AbstractProcessor {
   }
 
   private String encodeEmbedName(VariableElement field) {
-    System.out.println("field = [" + field + "]");
-    System.out.println("enclosedElements = " + field.getEnclosedElements());
-    System.out.println("constantValue = " + field.getConstantValue());
     TypeMirror typeMirror = field.asType();
     ClassType classType = (ClassType) typeMirror;
     List<Type> typeArguments = classType.getTypeArguments();
@@ -157,8 +153,6 @@ public class CriteriaBuilder extends AbstractProcessor {
     } else {
       parts = typeMirror.toString().split("\\.");
     }
-    System.out.println("typeMirror = " + typeMirror);
-    System.out.println("typeMirror = " + typeMirror.getClass());
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < parts.length; i++) {
       String part = parts[i];
@@ -177,14 +171,11 @@ public class CriteriaBuilder extends AbstractProcessor {
   }
 
   private String getPackageName(TypeElement typeElement) {
-    System.out.println("************ CriteriaBuilder.getPackageName: typeElement = [" + typeElement + "]");
     QualifiedNameable enclosingElement = (QualifiedNameable) typeElement.getEnclosingElement();
     while (!(enclosingElement instanceof PackageElement)) {
       enclosingElement = (QualifiedNameable) enclosingElement.getEnclosingElement();
     }
-    String s = enclosingElement.getQualifiedName().toString();
-    System.out.println("************ s = " + s);
-    return s;
+    return enclosingElement.getQualifiedName().toString();
   }
 
   private boolean validField(VariableElement field) {

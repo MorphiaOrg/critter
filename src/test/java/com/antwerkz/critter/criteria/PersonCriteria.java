@@ -17,6 +17,7 @@ import java.util.List;
 public class PersonCriteria {
   private Query<com.antwerkz.critter.Person> query;
   private Datastore ds;
+  private String prefix = "";
 
   public Query<com.antwerkz.critter.Person> query() {
     return query;
@@ -43,12 +44,13 @@ public class PersonCriteria {
     return query.and(criteria);
   }
 
+
   public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Person, java.lang.Long> age() {
-    return new TypeSafeFieldEnd<>(query, query.criteria("age"));
+    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "age"));
   }
 
   public PersonCriteria age(java.lang.Long value) {
-    new TypeSafeFieldEnd<>(query, query.criteria("age")).equal(value);
+    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "age")).equal(value);
     return this;
   }
 
@@ -57,21 +59,21 @@ public class PersonCriteria {
   }
 
   public PersonCriteria orderByAge(boolean ascending) {
-    query.order((!ascending ? "-" : "") + "age");
+    query.order((!ascending ? "-" : "") + prefix + "age");
     return this;
   }
 
   public PersonCriteria distinctAge() {
-    ((QueryImpl) query).getCollection().distinct("age");
+    ((QueryImpl) query).getCollection().distinct(prefix + "age");
     return this;
   }
 
   public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Person, java.lang.String> first() {
-    return new TypeSafeFieldEnd<>(query, query.criteria("first"));
+    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "first"));
   }
 
   public PersonCriteria first(java.lang.String value) {
-    new TypeSafeFieldEnd<>(query, query.criteria("first")).equal(value);
+    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "first")).equal(value);
     return this;
   }
 
@@ -80,21 +82,21 @@ public class PersonCriteria {
   }
 
   public PersonCriteria orderByFirst(boolean ascending) {
-    query.order((!ascending ? "-" : "") + "first");
+    query.order((!ascending ? "-" : "") + prefix + "first");
     return this;
   }
 
   public PersonCriteria distinctFirst() {
-    ((QueryImpl) query).getCollection().distinct("first");
+    ((QueryImpl) query).getCollection().distinct(prefix + "first");
     return this;
   }
 
   public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Person, org.bson.types.ObjectId> id() {
-    return new TypeSafeFieldEnd<>(query, query.criteria("id"));
+    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "id"));
   }
 
   public PersonCriteria id(org.bson.types.ObjectId value) {
-    new TypeSafeFieldEnd<>(query, query.criteria("id")).equal(value);
+    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "id")).equal(value);
     return this;
   }
 
@@ -103,21 +105,21 @@ public class PersonCriteria {
   }
 
   public PersonCriteria orderById(boolean ascending) {
-    query.order((!ascending ? "-" : "") + "id");
+    query.order((!ascending ? "-" : "") + prefix + "id");
     return this;
   }
 
   public PersonCriteria distinctId() {
-    ((QueryImpl) query).getCollection().distinct("id");
+    ((QueryImpl) query).getCollection().distinct(prefix + "id");
     return this;
   }
 
   public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Person, java.lang.String> last() {
-    return new TypeSafeFieldEnd<>(query, query.criteria("last"));
+    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "last"));
   }
 
   public PersonCriteria last(java.lang.String value) {
-    new TypeSafeFieldEnd<>(query, query.criteria("last")).equal(value);
+    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "last")).equal(value);
     return this;
   }
 
@@ -126,14 +128,15 @@ public class PersonCriteria {
   }
 
   public PersonCriteria orderByLast(boolean ascending) {
-    query.order((!ascending ? "-" : "") + "last");
+    query.order((!ascending ? "-" : "") + prefix + "last");
     return this;
   }
 
   public PersonCriteria distinctLast() {
-    ((QueryImpl) query).getCollection().distinct("last");
+    ((QueryImpl) query).getCollection().distinct(prefix + "last");
     return this;
   }
+
 
   public PersonUpdater getUpdater() {
     return new PersonUpdater();
