@@ -3,7 +3,7 @@ critter
 
 Critter will look at your morphia object model and generate type safe criteria builders for
 each model object.  To use it, you typically won't need to do anything.  It's standard
-annotation processor so the compiler should find it automatically.  If have disabled annotation
+annotation processor so the compiler should find it automatically.  If you have disabled annotation
 processing for whatever reason, you can add the following to your pom.xml to enabled processing:
 
     <plugin>
