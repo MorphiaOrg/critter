@@ -13,19 +13,18 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import java.util.List;
 
-
 public class PersonCriteria {
-  private Query<com.antwerkz.critter.Person> query;
-  private Datastore ds;
+  private final Query<com.antwerkz.critter.Person> query;
+  private final Datastore ds;
   private String prefix = "";
-
-  public Query<com.antwerkz.critter.Person> query() {
-    return query;
-  }
 
   public PersonCriteria(Datastore ds) {
     this.ds = ds;
     query = ds.find(com.antwerkz.critter.Person.class);
+  }
+
+  public Query<com.antwerkz.critter.Person> query() {
+    return query;
   }
 
   public WriteResult delete() {
@@ -45,95 +44,39 @@ public class PersonCriteria {
   }
 
 
-  public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Person, java.lang.Long> age() {
-    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "age"));
+  public TypeSafeFieldEnd<PersonCriteria, com.antwerkz.critter.Person, java.lang.Long> age() {
+    return new TypeSafeFieldEnd<>(this, query, prefix + "age");
   }
 
   public PersonCriteria age(java.lang.Long value) {
-    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "age")).equal(value);
+    new TypeSafeFieldEnd<>(this, query, prefix + "age").equal(value);
     return this;
   }
 
-  public PersonCriteria orderByAge() {
-    return orderByAge(true);
-  }
-
-  public PersonCriteria orderByAge(boolean ascending) {
-    query.order((!ascending ? "-" : "") + prefix + "age");
-    return this;
-  }
-
-  public PersonCriteria distinctAge() {
-    ((QueryImpl) query).getCollection().distinct(prefix + "age");
-    return this;
-  }
-
-  public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Person, java.lang.String> first() {
-    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "first"));
+  public TypeSafeFieldEnd<PersonCriteria, com.antwerkz.critter.Person, java.lang.String> first() {
+    return new TypeSafeFieldEnd<>(this, query, prefix + "first");
   }
 
   public PersonCriteria first(java.lang.String value) {
-    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "first")).equal(value);
+    new TypeSafeFieldEnd<>(this, query, prefix + "first").equal(value);
     return this;
   }
 
-  public PersonCriteria orderByFirst() {
-    return orderByFirst(true);
-  }
-
-  public PersonCriteria orderByFirst(boolean ascending) {
-    query.order((!ascending ? "-" : "") + prefix + "first");
-    return this;
-  }
-
-  public PersonCriteria distinctFirst() {
-    ((QueryImpl) query).getCollection().distinct(prefix + "first");
-    return this;
-  }
-
-  public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Person, org.bson.types.ObjectId> id() {
-    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "id"));
+  public TypeSafeFieldEnd<PersonCriteria, com.antwerkz.critter.Person, org.bson.types.ObjectId> id() {
+    return new TypeSafeFieldEnd<>(this, query, prefix + "id");
   }
 
   public PersonCriteria id(org.bson.types.ObjectId value) {
-    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "id")).equal(value);
+    new TypeSafeFieldEnd<>(this, query, prefix + "id").equal(value);
     return this;
   }
 
-  public PersonCriteria orderById() {
-    return orderById(true);
-  }
-
-  public PersonCriteria orderById(boolean ascending) {
-    query.order((!ascending ? "-" : "") + prefix + "id");
-    return this;
-  }
-
-  public PersonCriteria distinctId() {
-    ((QueryImpl) query).getCollection().distinct(prefix + "id");
-    return this;
-  }
-
-  public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Person, java.lang.String> last() {
-    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "last"));
+  public TypeSafeFieldEnd<PersonCriteria, com.antwerkz.critter.Person, java.lang.String> last() {
+    return new TypeSafeFieldEnd<>(this, query, prefix + "last");
   }
 
   public PersonCriteria last(java.lang.String value) {
-    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "last")).equal(value);
-    return this;
-  }
-
-  public PersonCriteria orderByLast() {
-    return orderByLast(true);
-  }
-
-  public PersonCriteria orderByLast(boolean ascending) {
-    query.order((!ascending ? "-" : "") + prefix + "last");
-    return this;
-  }
-
-  public PersonCriteria distinctLast() {
-    ((QueryImpl) query).getCollection().distinct(prefix + "last");
+    new TypeSafeFieldEnd<>(this, query, prefix + "last").equal(value);
     return this;
   }
 

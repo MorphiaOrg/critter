@@ -17,135 +17,203 @@ package com.antwerkz.critter;
 
 import com.google.code.morphia.query.FieldEnd;
 import com.google.code.morphia.query.Query;
+import com.google.code.morphia.query.Shape;
+import com.google.code.morphia.query.Shape.Point;
+import static com.google.code.morphia.query.Shape.box;
+import static com.google.code.morphia.query.Shape.center;
+import static com.google.code.morphia.query.Shape.centerSphere;
 
 public class TypeSafeFieldEnd<T, Q, V> {
+  private T criteria;
 
-  private Query< Q> query;
+  private final Query<Q> query;
 
   private FieldEnd<T> fieldEnd;
 
-  public TypeSafeFieldEnd(Query< Q> query, FieldEnd<T> fieldEnd) {
+  private final String fieldName;
+
+  @Deprecated
+  public TypeSafeFieldEnd(Query<Q> query, String fieldName) {
     this.query = query;
-    this.fieldEnd = fieldEnd;
+    this.fieldName = fieldName;
+    throw new RuntimeException("Old constructor");
+  }
+
+  public TypeSafeFieldEnd(T criteria, Query<Q> query, String fieldName) {
+    this.criteria = criteria;
+    this.query = query;
+    this.fieldName = fieldName;
   }
 
   public Query<Q> query() {
     return query;
   }
 
+  public T distinct() {
+    query.getCollection().distinct(fieldName);
+    return criteria;
+  }
+
+  public T order() {
+    order(true);
+    return criteria;
+  }
+
+  public T order(boolean ascending) {
+    query.order((!ascending ? "-" : "") + fieldName);
+    return criteria;
+  }
+
   public T exists() {
-    return fieldEnd.exists();
+    query.criteria(fieldName).exists();
+    return criteria;
   }
 
   public T doesNotExist() {
-    return fieldEnd.doesNotExist();
+    query.criteria(fieldName).doesNotExist();
+    return criteria;
   }
 
   public T greaterThan(V val) {
-    return fieldEnd.greaterThan(val);
+    query.criteria(fieldName).greaterThan(val);
+    return criteria;
   }
 
   public T greaterThanOrEq(V val) {
-    return fieldEnd.greaterThanOrEq(val);
+    query.criteria(fieldName).greaterThanOrEq(val);
+    return criteria;
   }
 
   public T lessThan(V val) {
-    return fieldEnd.lessThan(val);
+    query.criteria(fieldName).lessThan(val);
+    return criteria;
   }
 
   public T lessThanOrEq(V val) {
-    return fieldEnd.lessThanOrEq(val);
+    query.criteria(fieldName).lessThanOrEq(val);
+    return criteria;
   }
 
   public T equal(V val) {
-    return fieldEnd.equal(val);
+    query.criteria(fieldName).equal(val);
+    return criteria;
   }
 
   public T notEqual(V val) {
-    return fieldEnd.notEqual(val);
+    query.criteria(fieldName).notEqual(val);
+    return criteria;
   }
 
   public T startsWith(String prefix) {
-    return fieldEnd.startsWith(prefix);
+    query.criteria(fieldName).startsWith(prefix);
+    return criteria;
   }
 
   public T startsWithIgnoreCase(String prefix) {
-    return fieldEnd.startsWithIgnoreCase(prefix);
+    query.criteria(fieldName).startsWithIgnoreCase(prefix);
+    return criteria;
   }
 
   public T endsWith(String suffix) {
-    return fieldEnd.endsWith(suffix);
+    query.criteria(fieldName).endsWith(suffix);
+    return criteria;
   }
 
   public T endsWithIgnoreCase(String suffix) {
-    return fieldEnd.endsWithIgnoreCase(suffix);
+    query.criteria(fieldName).endsWithIgnoreCase(suffix);
+    return criteria;
   }
 
   public T contains(String string) {
-    return fieldEnd.contains(string);
+    query.criteria(fieldName).contains(string);
+    return criteria;
   }
 
   public T containsIgnoreCase(String suffix) {
-    return fieldEnd.containsIgnoreCase(suffix);
+    query.criteria(fieldName).containsIgnoreCase(suffix);
+    return criteria;
   }
 
   public T hasThisOne(V val) {
-    return fieldEnd.hasThisOne(val);
+    query.criteria(fieldName).hasThisOne(val);
+    return criteria;
   }
 
   public T hasAllOf(Iterable<V> vals) {
-    return fieldEnd.hasAllOf(vals);
+    query.criteria(fieldName).hasAllOf(vals);
+    return criteria;
   }
 
   public T hasAnyOf(Iterable<V> vals) {
-    return fieldEnd.hasAnyOf(vals);
+    query.criteria(fieldName).hasAnyOf(vals);
+    return criteria;
   }
 
   public T hasNoneOf(Iterable<V> vals) {
-    return fieldEnd.hasNoneOf(vals);
+    query.criteria(fieldName).hasNoneOf(vals);
+    return criteria;
   }
 
   public T in(Iterable<V> vals) {
-    return fieldEnd.in(vals);
+    query.criteria(fieldName).in(vals);
+    return criteria;
   }
 
   public T notIn(Iterable<V> vals) {
-    return fieldEnd.notIn(vals);
+    query.criteria(fieldName).notIn(vals);
+    return criteria;
   }
 
   public T hasThisElement(V val) {
-    return fieldEnd.hasThisElement(val);
+    query.criteria(fieldName).hasThisElement(val);
+    return criteria;
   }
 
   public T sizeEq(int val) {
-    return fieldEnd.sizeEq(val);
+    query.criteria(fieldName).sizeEq(val);
+    return criteria;
   }
 
   public T near(double x, double y) {
-    return fieldEnd.near(x, y);
+    query.criteria(fieldName).near(x, y);
+    return criteria;
   }
 
   public T near(double x, double y, boolean spherical) {
-    return fieldEnd.near(x, y, spherical);
+    query.criteria(fieldName).near(x, y, spherical);
+    return criteria;
   }
 
   public T near(double x, double y, double radius) {
-    return fieldEnd.near(x, y, radius);
+    query.criteria(fieldName).near(x, y, radius);
+    return criteria;
   }
 
   public T near(double x, double y, double radius, boolean spherical) {
-    return fieldEnd.near(x, y, radius, spherical);
+    query.criteria(fieldName).near(x, y, radius, spherical);
+    return criteria;
   }
 
+  public T within(Shape shape) {
+    query.criteria(fieldName).within(shape);
+    return criteria;
+  }
+
+  @Deprecated
   public T within(double x, double y, double radius) {
-    return fieldEnd.within(x, y, radius);
+    within(center(new Point(x, y), radius));
+    return criteria;
   }
 
+  @Deprecated
   public T within(double x, double y, double radius, boolean spherical) {
-    return fieldEnd.within(x, y, radius, spherical);
+    within(centerSphere(new Point(x, y), radius));
+    return criteria;
   }
 
+  @Deprecated
   public T within(double x1, double y1, double x2, double y2) {
-    return fieldEnd.within(x1, y1, x2, y2);
+    within(box(new Point(x1, y1), new Point(x2, y2)));
+    return criteria;
   }
 }

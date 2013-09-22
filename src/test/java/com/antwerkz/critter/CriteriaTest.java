@@ -26,6 +26,7 @@ import com.antwerkz.critter.criteria.PersonCriteria;
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
 import com.google.code.morphia.query.Query;
+import com.google.code.morphia.query.UpdateResults;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
@@ -58,7 +59,7 @@ public class CriteriaTest {
     Assert.assertEquals(invoice, doe);
     Assert.assertEquals(doe.getPerson().getLast(), "Doe");
     Assert.assertEquals(invoice.getPerson().getLast(), "Doe");
-    Invoice query = ds.createQuery(Invoice.class).field("address.city").equal("Chicago").get();
+    Invoice query = ds.createQuery(Invoice.class).field("addresses.city").equal("Chicago").get();
     Assert.assertNotNull(query);
     invoiceCriteria = new InvoiceCriteria(ds);
     invoiceCriteria.addresses().city("Chicago");
@@ -74,18 +75,21 @@ public class CriteriaTest {
     criteria.last("Beam");
     criteria.delete();
 
+    Query<Person> query = criteria.query();
+    System.out.println("query = " + query);
+
     Assert.assertEquals(criteria.getUpdater()
                             .age(30L)
                             .update().getUpdatedCount(), 0);
+
     Assert.assertEquals(criteria.getUpdater()
                             .age(30L)
                             .upsert().getInsertedCount(), 1);
 
-    criteria.getUpdater().incAge().update();
+    UpdateResults<Person> update = criteria.getUpdater().incAge().update();
+    Assert.assertEquals(update.getUpdatedCount(), 1);
     Assert.assertEquals(criteria.query().get().getAge().longValue(), 31L);
 
-    Query<Person> query = criteria.query();
-    System.out.println("query = " + query);
     WriteResult delete = datastore.delete(query);
     Assert.assertNull(delete.getError());
   }
@@ -111,11 +115,11 @@ public class CriteriaTest {
     datastore.save(invoice);
 
     InvoiceCriteria criteria1 = new InvoiceCriteria(datastore);
-    criteria1.addresses().orderByCity();
+    criteria1.addresses().city().order();
     Assert.assertEquals(criteria1.query().asList().get(0).getAddresses().get(0).getCity(), "NYC");
 
     InvoiceCriteria criteria2 = new InvoiceCriteria(datastore);
-    criteria2.addresses().orderByCity(false);
+    criteria2.addresses().city().order(false);
     Assert.assertEquals(criteria2.query().asList().get(0).getAddresses().get(0).getCity(), "New York City");
   }
 

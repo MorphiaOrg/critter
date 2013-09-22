@@ -30,24 +30,18 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import java.util.List;
 
-<#--
-<#list fields as field>
-import ${field.type};
-</#list>
--->
-
 public class ${name}Criteria {
-  private Query<${fqcn}> query;
-  private Datastore ds;
+  private final Query<${fqcn}> query;
+  private final Datastore ds;
   private String prefix = "";
-
-  public Query<${fqcn}> query() {
-    return query;
-  }
 
   public ${name}Criteria(Datastore ds) {
     this.ds = ds;
     query = ds.find(${fqcn}.class);
+  }
+
+  public Query<${fqcn}> query() {
+    return query;
   }
 
   public WriteResult delete() {

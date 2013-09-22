@@ -31,8 +31,8 @@ import ${field.type};
 -->
 
 public class ${name}Criteria {
-  private Query<${fqcn}> query;
-  private String prefix;
+  private final Query<${fqcn}> query;
+  private final String prefix;
 
   public ${name}Criteria(Query query, String prefix) {
     this.query = query;

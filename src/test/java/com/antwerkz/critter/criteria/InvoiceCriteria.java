@@ -1,31 +1,29 @@
 package com.antwerkz.critter.criteria;
 
+import java.util.List;
+
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
-import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
-import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
 import com.google.code.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
-import java.util.List;
-
 
 public class InvoiceCriteria {
-  private Query<com.antwerkz.critter.Invoice> query;
-  private Datastore ds;
+  private final Query<com.antwerkz.critter.Invoice> query;
+  private final Datastore ds;
   private String prefix = "";
-
-  public Query<com.antwerkz.critter.Invoice> query() {
-    return query;
-  }
 
   public InvoiceCriteria(Datastore ds) {
     this.ds = ds;
     query = ds.find(com.antwerkz.critter.Invoice.class);
+  }
+
+  public Query<com.antwerkz.critter.Invoice> query() {
+    return query;
   }
 
   public WriteResult delete() {
@@ -45,95 +43,39 @@ public class InvoiceCriteria {
   }
 
 
-  public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Invoice, java.util.Date> date() {
-    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "date"));
+  public TypeSafeFieldEnd<InvoiceCriteria, com.antwerkz.critter.Invoice, java.util.Date> date() {
+    return new TypeSafeFieldEnd<>(this, query, prefix + "date");
   }
 
   public InvoiceCriteria date(java.util.Date value) {
-    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "date")).equal(value);
+    new TypeSafeFieldEnd<>(this, query, prefix + "date").equal(value);
     return this;
   }
 
-  public InvoiceCriteria orderByDate() {
-    return orderByDate(true);
-  }
-
-  public InvoiceCriteria orderByDate(boolean ascending) {
-    query.order((!ascending ? "-" : "") + prefix + "date");
-    return this;
-  }
-
-  public InvoiceCriteria distinctDate() {
-    ((QueryImpl) query).getCollection().distinct(prefix + "date");
-    return this;
-  }
-
-  public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Invoice, org.bson.types.ObjectId> id() {
-    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "id"));
+  public TypeSafeFieldEnd<InvoiceCriteria, com.antwerkz.critter.Invoice, org.bson.types.ObjectId> id() {
+    return new TypeSafeFieldEnd<>(this, query, prefix + "id");
   }
 
   public InvoiceCriteria id(org.bson.types.ObjectId value) {
-    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "id")).equal(value);
+    new TypeSafeFieldEnd<>(this, query, prefix + "id").equal(value);
     return this;
   }
 
-  public InvoiceCriteria orderById() {
-    return orderById(true);
-  }
-
-  public InvoiceCriteria orderById(boolean ascending) {
-    query.order((!ascending ? "-" : "") + prefix + "id");
-    return this;
-  }
-
-  public InvoiceCriteria distinctId() {
-    ((QueryImpl) query).getCollection().distinct(prefix + "id");
-    return this;
-  }
-
-  public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Invoice, java.util.List<com.antwerkz.critter.Item>> items() {
-    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "items"));
+  public TypeSafeFieldEnd<InvoiceCriteria, com.antwerkz.critter.Invoice, java.util.List<com.antwerkz.critter.Item>> items() {
+    return new TypeSafeFieldEnd<>(this, query, prefix + "items");
   }
 
   public InvoiceCriteria items(java.util.List<com.antwerkz.critter.Item> value) {
-    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "items")).equal(value);
+    new TypeSafeFieldEnd<>(this, query, prefix + "items").equal(value);
     return this;
   }
 
-  public InvoiceCriteria orderByItems() {
-    return orderByItems(true);
-  }
-
-  public InvoiceCriteria orderByItems(boolean ascending) {
-    query.order((!ascending ? "-" : "") + prefix + "items");
-    return this;
-  }
-
-  public InvoiceCriteria distinctItems() {
-    ((QueryImpl) query).getCollection().distinct(prefix + "items");
-    return this;
-  }
-
-  public TypeSafeFieldEnd<? extends CriteriaContainer, com.antwerkz.critter.Invoice, java.lang.Double> total() {
-    return new TypeSafeFieldEnd<>(query, query.criteria(prefix + "total"));
+  public TypeSafeFieldEnd<InvoiceCriteria, com.antwerkz.critter.Invoice, java.lang.Double> total() {
+    return new TypeSafeFieldEnd<>(this, query, prefix + "total");
   }
 
   public InvoiceCriteria total(java.lang.Double value) {
-    new TypeSafeFieldEnd<>(query, query.criteria(prefix + "total")).equal(value);
-    return this;
-  }
-
-  public InvoiceCriteria orderByTotal() {
-    return orderByTotal(true);
-  }
-
-  public InvoiceCriteria orderByTotal(boolean ascending) {
-    query.order((!ascending ? "-" : "") + prefix + "total");
-    return this;
-  }
-
-  public InvoiceCriteria distinctTotal() {
-    ((QueryImpl) query).getCollection().distinct(prefix + "total");
+    new TypeSafeFieldEnd<>(this, query, prefix + "total").equal(value);
     return this;
   }
 
