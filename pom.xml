@@ -87,6 +87,7 @@
                     </properties>
                     <encoding>UTF-8</encoding>
                 </configuration>
+<!--
                 <executions>
                     <execution>
                         <phase>test</phase>
@@ -95,6 +96,7 @@
                         </goals>
                     </execution>
                 </executions>
+-->
             </plugin>
         </plugins>
     </build>

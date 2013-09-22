@@ -15,6 +15,28 @@
  */
 package com.antwerkz.critter;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.QualifiedNameable;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
+
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.NotSaved;
@@ -27,27 +49,6 @@ import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.QualifiedNameable;import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 public class CriteriaBuilder extends AbstractProcessor {
 
@@ -94,17 +95,15 @@ public class CriteriaBuilder extends AbstractProcessor {
   private void generate(Template temp, TypeElement typeElement) throws TemplateException, IOException {
     String pkg = getPackageName(typeElement);
     String name = typeElement.getQualifiedName().toString().replace(pkg + ".", "");
-    if (name.indexOf('.') != -1) {
-      // nested
-      name = name.replace('.', '_');
-    }
     TreeMap<String, Object> map = new TreeMap<>();
+    String criteriaName = name.replace('.', '_') + "Criteria";
+    map.put("criteriaName", criteriaName);
     map.put("name", name);
     map.put("package", pkg);
     map.put("fqcn", typeElement.getQualifiedName().toString());
     getFields(typeElement, map);
     File source = new File(getOutputDirectory(),
-                              String.format("%s/criteria/%sCriteria.java", pkg.replace('.', '/'), name));
+                              String.format("%s/criteria/%s.java", pkg.replace('.', '/'), criteriaName));
     source.getParentFile().mkdirs();
     try (PrintWriter out = new PrintWriter(source)) {
       temp.process(map, out);

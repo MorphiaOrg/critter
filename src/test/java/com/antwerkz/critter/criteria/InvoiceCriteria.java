@@ -1,49 +1,28 @@
 package com.antwerkz.critter.criteria;
 
-import java.util.List;
-
+import com.antwerkz.critter.Invoice;
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
+import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.query.Criteria;
 import com.google.code.morphia.query.CriteriaContainer;
 import com.google.code.morphia.query.Query;
+import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
 import com.google.code.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
+import java.util.List;
 
-public class InvoiceCriteria {
-  private final Query<com.antwerkz.critter.Invoice> query;
-  private final Datastore ds;
+public class InvoiceCriteria extends BaseCriteria<Invoice> {
   private String prefix = "";
 
   public InvoiceCriteria(Datastore ds) {
-    this.ds = ds;
-    query = ds.find(com.antwerkz.critter.Invoice.class);
-  }
-
-  public Query<com.antwerkz.critter.Invoice> query() {
-    return query;
-  }
-
-  public WriteResult delete() {
-     return ds.delete(query());
-  }
-
-  public WriteResult delete(WriteConcern wc) {
-     return ds.delete(query(), wc);
-  }
-
-  public CriteriaContainer or(Criteria... criteria) {
-    return query.or(criteria);
-  }
-
-  public CriteriaContainer and(Criteria... criteria) {
-    return query.and(criteria);
+    super(ds, Invoice.class);
   }
 
 
-  public TypeSafeFieldEnd<InvoiceCriteria, com.antwerkz.critter.Invoice, java.util.Date> date() {
+  public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date> date() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "date");
   }
 
@@ -52,7 +31,7 @@ public class InvoiceCriteria {
     return this;
   }
 
-  public TypeSafeFieldEnd<InvoiceCriteria, com.antwerkz.critter.Invoice, org.bson.types.ObjectId> id() {
+  public TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId> id() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "id");
   }
 
@@ -61,7 +40,7 @@ public class InvoiceCriteria {
     return this;
   }
 
-  public TypeSafeFieldEnd<InvoiceCriteria, com.antwerkz.critter.Invoice, java.util.List<com.antwerkz.critter.Item>> items() {
+  public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>> items() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "items");
   }
 
@@ -70,7 +49,7 @@ public class InvoiceCriteria {
     return this;
   }
 
-  public TypeSafeFieldEnd<InvoiceCriteria, com.antwerkz.critter.Invoice, java.lang.Double> total() {
+  public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double> total() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "total");
   }
 
@@ -94,25 +73,25 @@ public class InvoiceCriteria {
   }
 
   public class InvoiceUpdater {
-    UpdateOperations<com.antwerkz.critter.Invoice> updateOperations;
+    UpdateOperations<Invoice> updateOperations;
 
     public InvoiceUpdater() {
-      updateOperations = ds.createUpdateOperations(com.antwerkz.critter.Invoice.class);
+      updateOperations = ds.createUpdateOperations(Invoice.class);
     }
 
-    public UpdateResults<com.antwerkz.critter.Invoice> update() {
+    public UpdateResults<Invoice> update() {
       return ds.update(query(), updateOperations, false);
     }
 
-    public UpdateResults<com.antwerkz.critter.Invoice> update(WriteConcern wc) {
+    public UpdateResults<Invoice> update(WriteConcern wc) {
       return ds.update(query(), updateOperations, false, wc);
     }
 
-    public UpdateResults<com.antwerkz.critter.Invoice> upsert() {
+    public UpdateResults<Invoice> upsert() {
       return ds.update(query(), updateOperations, true);
     }
 
-    public UpdateResults<com.antwerkz.critter.Invoice> upsert(WriteConcern wc) {
+    public UpdateResults<Invoice> upsert(WriteConcern wc) {
       return ds.update(query(), updateOperations, true, wc);
     }
 

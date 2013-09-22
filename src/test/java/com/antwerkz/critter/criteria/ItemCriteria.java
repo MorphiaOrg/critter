@@ -18,7 +18,7 @@ public class ItemCriteria {
   }
 
 
-  public TypeSafeFieldEnd<ItemCriteria, com.antwerkz.critter.Item, java.lang.String> name() {
+  public TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String> name() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "name");
   }
 
@@ -27,7 +27,7 @@ public class ItemCriteria {
     return this;
   }
 
-  public TypeSafeFieldEnd<ItemCriteria, com.antwerkz.critter.Item, java.lang.Double> price() {
+  public TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double> price() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "price");
   }
 

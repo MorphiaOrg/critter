@@ -17,6 +17,7 @@
 -->
 package ${package}.criteria;
 
+import ${fqcn};
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.annotations.Entity;
@@ -30,34 +31,11 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import java.util.List;
 
-public class ${name}Criteria {
-  private final Query<${fqcn}> query;
-  private final Datastore ds;
+public class ${criteriaName} extends BaseCriteria<${name}> {
   private String prefix = "";
 
-  public ${name}Criteria(Datastore ds) {
-    this.ds = ds;
-    query = ds.find(${fqcn}.class);
-  }
-
-  public Query<${fqcn}> query() {
-    return query;
-  }
-
-  public WriteResult delete() {
-     return ds.delete(query());
-  }
-
-  public WriteResult delete(WriteConcern wc) {
-     return ds.delete(query(), wc);
-  }
-
-  public CriteriaContainer or(Criteria... criteria) {
-    return query.or(criteria);
-  }
-
-  public CriteriaContainer and(Criteria... criteria) {
-    return query.and(criteria);
+  public ${criteriaName}(Datastore ds) {
+    super(ds, ${name}.class);
   }
 
 <#include "fields.ftl">
@@ -70,7 +48,7 @@ public class ${name}Criteria {
 </#list>
 <#list references as reference>
 
-  public ${name}Criteria ${reference.name}(${reference.type} reference) {
+  public ${criteriaName} ${reference.name}(${reference.type} reference) {
     query.filter("${reference.name} = ", reference);
     return this;
   }
@@ -81,25 +59,25 @@ public class ${name}Criteria {
   }
 
   public class ${name}Updater {
-    UpdateOperations<${fqcn}> updateOperations;
+    UpdateOperations<${name}> updateOperations;
 
     public ${name}Updater() {
-      updateOperations = ds.createUpdateOperations(${fqcn}.class);
+      updateOperations = ds.createUpdateOperations(${name}.class);
     }
 
-    public UpdateResults<${fqcn}> update() {
+    public UpdateResults<${name}> update() {
       return ds.update(query(), updateOperations, false);
     }
 
-    public UpdateResults<${fqcn}> update(WriteConcern wc) {
+    public UpdateResults<${name}> update(WriteConcern wc) {
       return ds.update(query(), updateOperations, false, wc);
     }
 
-    public UpdateResults<${fqcn}> upsert() {
+    public UpdateResults<${name}> upsert() {
       return ds.update(query(), updateOperations, true);
     }
 
-    public UpdateResults<${fqcn}> upsert(WriteConcern wc) {
+    public UpdateResults<${name}> upsert(WriteConcern wc) {
       return ds.update(query(), updateOperations, true, wc);
     }
 

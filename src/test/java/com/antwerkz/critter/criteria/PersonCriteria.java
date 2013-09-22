@@ -1,50 +1,23 @@
 package com.antwerkz.critter.criteria;
 
+import java.util.List;
+
+import com.antwerkz.critter.Person;
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import com.google.code.morphia.Datastore;
-import com.google.code.morphia.annotations.Entity;
-import com.google.code.morphia.query.Criteria;
-import com.google.code.morphia.query.CriteriaContainer;
-import com.google.code.morphia.query.Query;
-import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
 import com.google.code.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
-import java.util.List;
 
-public class PersonCriteria {
-  private final Query<com.antwerkz.critter.Person> query;
-  private final Datastore ds;
+public class PersonCriteria extends BaseCriteria<Person> {
   private String prefix = "";
 
   public PersonCriteria(Datastore ds) {
-    this.ds = ds;
-    query = ds.find(com.antwerkz.critter.Person.class);
-  }
-
-  public Query<com.antwerkz.critter.Person> query() {
-    return query;
-  }
-
-  public WriteResult delete() {
-     return ds.delete(query());
-  }
-
-  public WriteResult delete(WriteConcern wc) {
-     return ds.delete(query(), wc);
-  }
-
-  public CriteriaContainer or(Criteria... criteria) {
-    return query.or(criteria);
-  }
-
-  public CriteriaContainer and(Criteria... criteria) {
-    return query.and(criteria);
+    super(ds, Person.class);
   }
 
 
-  public TypeSafeFieldEnd<PersonCriteria, com.antwerkz.critter.Person, java.lang.Long> age() {
+  public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long> age() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "age");
   }
 
@@ -53,7 +26,7 @@ public class PersonCriteria {
     return this;
   }
 
-  public TypeSafeFieldEnd<PersonCriteria, com.antwerkz.critter.Person, java.lang.String> first() {
+  public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> first() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "first");
   }
 
@@ -62,7 +35,7 @@ public class PersonCriteria {
     return this;
   }
 
-  public TypeSafeFieldEnd<PersonCriteria, com.antwerkz.critter.Person, org.bson.types.ObjectId> id() {
+  public TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId> id() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "id");
   }
 
@@ -71,7 +44,7 @@ public class PersonCriteria {
     return this;
   }
 
-  public TypeSafeFieldEnd<PersonCriteria, com.antwerkz.critter.Person, java.lang.String> last() {
+  public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> last() {
     return new TypeSafeFieldEnd<>(this, query, prefix + "last");
   }
 
@@ -86,25 +59,25 @@ public class PersonCriteria {
   }
 
   public class PersonUpdater {
-    UpdateOperations<com.antwerkz.critter.Person> updateOperations;
+    UpdateOperations<Person> updateOperations;
 
     public PersonUpdater() {
-      updateOperations = ds.createUpdateOperations(com.antwerkz.critter.Person.class);
+      updateOperations = ds.createUpdateOperations(Person.class);
     }
 
-    public UpdateResults<com.antwerkz.critter.Person> update() {
+    public UpdateResults<Person> update() {
       return ds.update(query(), updateOperations, false);
     }
 
-    public UpdateResults<com.antwerkz.critter.Person> update(WriteConcern wc) {
+    public UpdateResults<Person> update(WriteConcern wc) {
       return ds.update(query(), updateOperations, false, wc);
     }
 
-    public UpdateResults<com.antwerkz.critter.Person> upsert() {
+    public UpdateResults<Person> upsert() {
       return ds.update(query(), updateOperations, true);
     }
 
-    public UpdateResults<com.antwerkz.critter.Person> upsert(WriteConcern wc) {
+    public UpdateResults<Person> upsert(WriteConcern wc) {
       return ds.update(query(), updateOperations, true, wc);
     }
 
