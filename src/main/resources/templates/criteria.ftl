@@ -19,14 +19,14 @@ package ${package}.criteria;
 
 import ${fqcn};
 import com.antwerkz.critter.TypeSafeFieldEnd;
-import com.google.code.morphia.Datastore;
-import com.google.code.morphia.annotations.Entity;
-import com.google.code.morphia.query.Criteria;
-import com.google.code.morphia.query.CriteriaContainer;
-import com.google.code.morphia.query.Query;
-import com.google.code.morphia.query.QueryImpl;
-import com.google.code.morphia.query.UpdateOperations;
-import com.google.code.morphia.query.UpdateResults;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.CriteriaContainer;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.QueryImpl;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import java.util.List;
@@ -97,7 +97,7 @@ public class ${criteriaName} extends BaseCriteria<${name}> {
       return this;
     }
 
-    public ${name}Updater add${field.name?cap_first}(String fieldExpr, ${field.type} value, boolean addDups) {
+    public ${name}Updater add${field.name?cap_first}(${field.type} value, boolean addDups) {
       updateOperations.add("${field.name}", value, addDups);
       return this;
     }

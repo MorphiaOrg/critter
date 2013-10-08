@@ -37,7 +37,7 @@ What difference does it make?
 -----------------------------
 Before critter, your criteria might look something like this:
 
-    com.google.code.morphia.query.Query<Query> query = ds.createQuery(Query.class);
+    org.mongodb.morphia.query.Query<Query> query = ds.createQuery(Query.class);
     query.and(
       query.criteria("bookmark").equal(bookmark),
       query.criteria("database").equal(database)

@@ -2,14 +2,14 @@ package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.Invoice;
 import com.antwerkz.critter.TypeSafeFieldEnd;
-import com.google.code.morphia.Datastore;
-import com.google.code.morphia.annotations.Entity;
-import com.google.code.morphia.query.Criteria;
-import com.google.code.morphia.query.CriteriaContainer;
-import com.google.code.morphia.query.Query;
-import com.google.code.morphia.query.QueryImpl;
-import com.google.code.morphia.query.UpdateOperations;
-import com.google.code.morphia.query.UpdateResults;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.CriteriaContainer;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.QueryImpl;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import java.util.List;
@@ -59,8 +59,8 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
   }
 
 
-  public com.antwerkz.critter.criteria.Invoice_AddressCriteria addresses() {
-    return new com.antwerkz.critter.criteria.Invoice_AddressCriteria(query, "addresses");
+  public com.antwerkz.critter.criteria.AddressCriteria addresses() {
+    return new com.antwerkz.critter.criteria.AddressCriteria(query, "addresses");
   }
 
   public InvoiceCriteria person(com.antwerkz.critter.Person reference) {
@@ -110,7 +110,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater addDate(String fieldExpr, java.util.Date value, boolean addDups) {
+    public InvoiceUpdater addDate(java.util.Date value, boolean addDups) {
       updateOperations.add("date", value, addDups);
       return this;
     }
@@ -169,7 +169,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater addId(String fieldExpr, org.bson.types.ObjectId value, boolean addDups) {
+    public InvoiceUpdater addId(org.bson.types.ObjectId value, boolean addDups) {
       updateOperations.add("id", value, addDups);
       return this;
     }
@@ -228,7 +228,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater addItems(String fieldExpr, java.util.List<com.antwerkz.critter.Item> value, boolean addDups) {
+    public InvoiceUpdater addItems(java.util.List<com.antwerkz.critter.Item> value, boolean addDups) {
       updateOperations.add("items", value, addDups);
       return this;
     }
@@ -287,7 +287,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater addTotal(String fieldExpr, java.lang.Double value, boolean addDups) {
+    public InvoiceUpdater addTotal(java.lang.Double value, boolean addDups) {
       updateOperations.add("total", value, addDups);
       return this;
     }

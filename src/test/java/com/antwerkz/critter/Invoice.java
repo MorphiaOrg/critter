@@ -15,15 +15,15 @@
  */
 package com.antwerkz.critter;
 
-import com.google.code.morphia.annotations.Embedded;
-import com.google.code.morphia.annotations.Entity;
-import com.google.code.morphia.annotations.Id;
-import com.google.code.morphia.annotations.Reference;
-import org.bson.types.ObjectId;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Reference;
 
 @Entity
 public class Invoice {
@@ -111,55 +111,6 @@ public class Invoice {
 
   public List<Address> getAddresses() {
     return addresses;
-  }
-
-  @Embedded
-  public static class Address {
-    private String city;
-    private String state;
-    private String zip;
-
-    public Address() {
-    }
-
-    public Address(final String city, final String state, final String zip) {
-      this.city = city;
-      this.state = state;
-      this.zip = zip;
-    }
-
-    public String getCity() {
-      return city;
-    }
-
-    public void setCity(final String city) {
-      this.city = city;
-    }
-
-    public String getState() {
-      return state;
-    }
-
-    public void setState(final String state) {
-      this.state = state;
-    }
-
-    public String getZip() {
-      return zip;
-    }
-
-    public void setZip(final String zip) {
-      this.zip = zip;
-    }
-
-    @Override
-    public String toString() {
-      return "Address{" +
-                 "city='" + city + '\'' +
-                 ", state='" + state + '\'' +
-                 ", zip='" + zip + '\'' +
-                 '}';
-    }
   }
 
   @Override

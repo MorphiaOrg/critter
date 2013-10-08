@@ -37,11 +37,11 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 
-import com.google.code.morphia.annotations.Embedded;
-import com.google.code.morphia.annotations.Entity;
-import com.google.code.morphia.annotations.NotSaved;
-import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.annotations.Transient;
+import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.NotSaved;
+import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Transient;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Type.ClassType;
 import freemarker.cache.ClassTemplateLoader;
@@ -128,6 +128,8 @@ public class CriteriaBuilder extends AbstractProcessor {
             if (validField(field)) {
               fields.add(new Field(field.asType().toString(), field.getSimpleName().toString()));
             } else if (embedded(field)) {
+              System.out.println("embedded");
+              System.out.println("field = " + field);
               embeds.add(new Field(encodeEmbedName(field), field.getSimpleName().toString()));
             } else if (reference(field)) {
               references.add(new Field(field.asType().toString(), field.getSimpleName().toString()));
@@ -156,10 +158,8 @@ public class CriteriaBuilder extends AbstractProcessor {
     for (int i = 0; i < parts.length; i++) {
       String part = parts[i];
       if (builder.length() != 0) {
-        if (i == parts.length - 2) {
+        if (i == parts.length - 1) {
           builder.append(".criteria.");
-        } else if (i == parts.length - 1) {
-          builder.append("_");
         } else {
           builder.append(".");
         }

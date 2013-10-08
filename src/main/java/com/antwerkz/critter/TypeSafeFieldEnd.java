@@ -15,13 +15,13 @@
  */
 package com.antwerkz.critter;
 
-import com.google.code.morphia.query.FieldEnd;
-import com.google.code.morphia.query.Query;
-import com.google.code.morphia.query.Shape;
-import com.google.code.morphia.query.Shape.Point;
-import static com.google.code.morphia.query.Shape.box;
-import static com.google.code.morphia.query.Shape.center;
-import static com.google.code.morphia.query.Shape.centerSphere;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Shape;
+import org.mongodb.morphia.query.Shape.Point;
+import static org.mongodb.morphia.query.Shape.box;
+import static org.mongodb.morphia.query.Shape.center;
+import static org.mongodb.morphia.query.Shape.centerSphere;
 
 public class TypeSafeFieldEnd<T, Q, V> {
   private T criteria;

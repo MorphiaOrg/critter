@@ -15,10 +15,10 @@
  */
 package com.antwerkz.critter.criteria;
 
-import com.google.code.morphia.Datastore;
-import com.google.code.morphia.query.Criteria;
-import com.google.code.morphia.query.CriteriaContainer;
-import com.google.code.morphia.query.Query;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.CriteriaContainer;
+import org.mongodb.morphia.query.Query;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 

@@ -1,13 +1,18 @@
 package com.antwerkz.critter.criteria;
 
-import java.util.List;
-
 import com.antwerkz.critter.Person;
 import com.antwerkz.critter.TypeSafeFieldEnd;
-import com.google.code.morphia.Datastore;
-import com.google.code.morphia.query.UpdateOperations;
-import com.google.code.morphia.query.UpdateResults;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.CriteriaContainer;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.QueryImpl;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
+import java.util.List;
 
 public class PersonCriteria extends BaseCriteria<Person> {
   private String prefix = "";
@@ -96,7 +101,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater addAge(String fieldExpr, java.lang.Long value, boolean addDups) {
+    public PersonUpdater addAge(java.lang.Long value, boolean addDups) {
       updateOperations.add("age", value, addDups);
       return this;
     }
@@ -155,7 +160,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater addFirst(String fieldExpr, java.lang.String value, boolean addDups) {
+    public PersonUpdater addFirst(java.lang.String value, boolean addDups) {
       updateOperations.add("first", value, addDups);
       return this;
     }
@@ -214,7 +219,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater addId(String fieldExpr, org.bson.types.ObjectId value, boolean addDups) {
+    public PersonUpdater addId(org.bson.types.ObjectId value, boolean addDups) {
       updateOperations.add("id", value, addDups);
       return this;
     }
@@ -273,7 +278,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater addLast(String fieldExpr, java.lang.String value, boolean addDups) {
+    public PersonUpdater addLast(java.lang.String value, boolean addDups) {
       updateOperations.add("last", value, addDups);
       return this;
     }

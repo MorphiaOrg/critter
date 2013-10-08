@@ -20,15 +20,16 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.antwerkz.critter.Invoice.Address;
 import com.antwerkz.critter.criteria.InvoiceCriteria;
 import com.antwerkz.critter.criteria.PersonCriteria;
-import com.google.code.morphia.Datastore;
-import com.google.code.morphia.Morphia;
-import com.google.code.morphia.query.Query;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.WriteResult;
+import org.joda.time.DateTime;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.query.Query;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -41,15 +42,15 @@ public class CriteriaTest {
     Datastore ds = getDatastore();
     Person john = new Person("John", "Doe");
     ds.save(john);
-    ds.save(new Invoice(new Date(2012, 12, 21, 13, 15), john, new Address("New York City", "NY", "10000"),
+    ds.save(new Invoice(new DateTime(2012, 12, 21, 13, 15).toDate(), john, new Address("New York City", "NY", "10000"),
                            new Item("ball", 5.0), new Item("skateboard", 17.35)));
     Person jeff = new Person("Jeff", "Johnson");
     ds.save(jeff);
-    ds.save(new Invoice(new Date(2006, 3, 4, 8, 7), jeff, new Address("Los Angeles", "CA", "90210"),
+    ds.save(new Invoice(new DateTime(2006, 3, 4, 8, 7).toDate(), jeff, new Address("Los Angeles", "CA", "90210"),
                            new Item("movie", 29.95)));
     Person sally = new Person("Sally", "Ride");
     ds.save(sally);
-    ds.save(new Invoice(new Date(2007, 8, 16, 19, 27), sally, new Address("Chicago", "IL", "99999"),
+    ds.save(new Invoice(new DateTime(2007, 8, 16, 19, 27).toDate(), sally, new Address("Chicago", "IL", "99999"),
                            new Item("kleenex", 3.49), new Item("cough and cold syrup", 5.61)));
     InvoiceCriteria invoiceCriteria = new InvoiceCriteria(ds);
     invoiceCriteria.person(john);
@@ -126,7 +127,7 @@ public class CriteriaTest {
   private Datastore getDatastore() {
     if (datastore == null) {
       try {
-        Mongo mongo = new Mongo();
+        Mongo mongo = new MongoClient();
         DB critter = mongo.getDB("critter");
         critter.dropDatabase();
         Set<Class> classes = new HashSet<>();
