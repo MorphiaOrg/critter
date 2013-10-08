@@ -23,38 +23,38 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
 
 
   public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date> date() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "date");
+    return new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date>(this, query, prefix + "date");
   }
 
   public InvoiceCriteria date(java.util.Date value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "date").equal(value);
+    new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date>(this, query, prefix + "date").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId> id() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "id");
+    return new TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId>(this, query, prefix + "id");
   }
 
   public InvoiceCriteria id(org.bson.types.ObjectId value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "id").equal(value);
+    new TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>> items() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "items");
+    return new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>>(this, query, prefix + "items");
   }
 
   public InvoiceCriteria items(java.util.List<com.antwerkz.critter.Item> value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "items").equal(value);
+    new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>>(this, query, prefix + "items").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double> total() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "total");
+    return new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double>(this, query, prefix + "total");
   }
 
   public InvoiceCriteria total(java.lang.Double value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "total").equal(value);
+    new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double>(this, query, prefix + "total").equal(value);
     return this;
   }
 

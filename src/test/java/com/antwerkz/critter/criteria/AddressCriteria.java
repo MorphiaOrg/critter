@@ -2,12 +2,7 @@ package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.Address;
 import com.antwerkz.critter.TypeSafeFieldEnd;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.CriteriaContainer;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.QueryImpl;
-import org.bson.types.ObjectId;
 
 public class AddressCriteria {
   private final Query query;
@@ -20,29 +15,29 @@ public class AddressCriteria {
 
 
   public TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> city() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "city");
+    return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "city");
   }
 
   public AddressCriteria city(java.lang.String value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "city").equal(value);
+    new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "city").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> state() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "state");
+    return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "state");
   }
 
   public AddressCriteria state(java.lang.String value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "state").equal(value);
+    new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "state").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> zip() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "zip");
+    return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "zip");
   }
 
   public AddressCriteria zip(java.lang.String value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "zip").equal(value);
+    new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "zip").equal(value);
     return this;
   }
 }

@@ -20,20 +20,20 @@ public class ItemCriteria {
 
 
   public TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String> name() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "name");
+    return new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String>(this, query, prefix + "name");
   }
 
   public ItemCriteria name(java.lang.String value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "name").equal(value);
+    new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String>(this, query, prefix + "name").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double> price() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "price");
+    return new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double>(this, query, prefix + "price");
   }
 
   public ItemCriteria price(java.lang.Double value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "price").equal(value);
+    new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double>(this, query, prefix + "price").equal(value);
     return this;
   }
 }

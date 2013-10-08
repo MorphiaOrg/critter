@@ -23,38 +23,38 @@ public class PersonCriteria extends BaseCriteria<Person> {
 
 
   public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long> age() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "age");
+    return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(this, query, prefix + "age");
   }
 
   public PersonCriteria age(java.lang.Long value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "age").equal(value);
+    new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(this, query, prefix + "age").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> first() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "first");
+    return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "first");
   }
 
   public PersonCriteria first(java.lang.String value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "first").equal(value);
+    new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "first").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId> id() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "id");
+    return new TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(this, query, prefix + "id");
   }
 
   public PersonCriteria id(org.bson.types.ObjectId value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "id").equal(value);
+    new TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
     return this;
   }
 
   public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> last() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "last");
+    return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "last");
   }
 
   public PersonCriteria last(java.lang.String value) {
-    new TypeSafeFieldEnd<>(this, query, prefix + "last").equal(value);
+    new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "last").equal(value);
     return this;
   }
 
