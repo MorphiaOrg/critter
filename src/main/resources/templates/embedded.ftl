@@ -18,24 +18,12 @@
 package ${package}.criteria;
 
 import ${fqcn};
-import com.antwerkz.critter.TypeSafeFieldEnd;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.CriteriaContainer;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.QueryImpl;
-import org.bson.types.ObjectId;
-<#--
-<#list fields as field>
-import ${field.type};
-</#list>
--->
 
 public class ${criteriaName} {
-  private final Query query;
+  private final org.mongodb.morphia.query.Query query;
   private final String prefix;
 
-  public ${criteriaName}(Query query, String prefix) {
+  public ${criteriaName}(org.mongodb.morphia.query.Query query, String prefix) {
     this.query = query;
     this.prefix = prefix + ".";
   }

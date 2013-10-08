@@ -1,60 +1,48 @@
 package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.Person;
-import com.antwerkz.critter.TypeSafeFieldEnd;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.CriteriaContainer;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.QueryImpl;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
-import java.util.List;
 
-public class PersonCriteria extends BaseCriteria<Person> {
+public class PersonCriteria extends com.antwerkz.critter.criteria.BaseCriteria<Person> {
   private String prefix = "";
 
-  public PersonCriteria(Datastore ds) {
+  public PersonCriteria(org.mongodb.morphia.Datastore ds) {
     super(ds, Person.class);
   }
 
 
-  public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long> age() {
-    return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(this, query, prefix + "age");
+  public com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long> age() {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "age");
   }
 
   public PersonCriteria age(java.lang.Long value) {
-    new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(this, query, prefix + "age").equal(value);
+    new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(this, query, prefix + "age").equal(value);
     return this;
   }
 
-  public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> first() {
-    return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "first");
+  public com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> first() {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "first");
   }
 
   public PersonCriteria first(java.lang.String value) {
-    new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "first").equal(value);
+    new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "first").equal(value);
     return this;
   }
 
-  public TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId> id() {
-    return new TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(this, query, prefix + "id");
+  public com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId> id() {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "id");
   }
 
   public PersonCriteria id(org.bson.types.ObjectId value) {
-    new TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
+    new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
     return this;
   }
 
-  public TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> last() {
-    return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "last");
+  public com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> last() {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "last");
   }
 
   public PersonCriteria last(java.lang.String value) {
-    new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "last").equal(value);
+    new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "last").equal(value);
     return this;
   }
 
@@ -64,25 +52,25 @@ public class PersonCriteria extends BaseCriteria<Person> {
   }
 
   public class PersonUpdater {
-    UpdateOperations<Person> updateOperations;
+    org.mongodb.morphia.query.UpdateOperations<Person> updateOperations;
 
     public PersonUpdater() {
       updateOperations = ds.createUpdateOperations(Person.class);
     }
 
-    public UpdateResults<Person> update() {
+    public org.mongodb.morphia.query.UpdateResults<Person> update() {
       return ds.update(query(), updateOperations, false);
     }
 
-    public UpdateResults<Person> update(WriteConcern wc) {
+    public org.mongodb.morphia.query.UpdateResults<Person> update(com.mongodb.WriteConcern wc) {
       return ds.update(query(), updateOperations, false, wc);
     }
 
-    public UpdateResults<Person> upsert() {
+    public org.mongodb.morphia.query.UpdateResults<Person> upsert() {
       return ds.update(query(), updateOperations, true);
     }
 
-    public UpdateResults<Person> upsert(WriteConcern wc) {
+    public org.mongodb.morphia.query.UpdateResults<Person> upsert(com.mongodb.WriteConcern wc) {
       return ds.update(query(), updateOperations, true, wc);
     }
 
@@ -106,7 +94,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater addAllToAge(List<java.lang.Long> values, boolean addDups) {
+    public PersonUpdater addAllToAge(java.util.List<java.lang.Long> values, boolean addDups) {
       updateOperations.addAll("age", values, addDups);
       return this;
     }
@@ -126,7 +114,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater removeAllFromAge(List<java.lang.Long> values) {
+    public PersonUpdater removeAllFromAge(java.util.List<java.lang.Long> values) {
       updateOperations.removeAll("age", values);
       return this;
     }
@@ -165,7 +153,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater addAllToFirst(List<java.lang.String> values, boolean addDups) {
+    public PersonUpdater addAllToFirst(java.util.List<java.lang.String> values, boolean addDups) {
       updateOperations.addAll("first", values, addDups);
       return this;
     }
@@ -185,7 +173,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater removeAllFromFirst(List<java.lang.String> values) {
+    public PersonUpdater removeAllFromFirst(java.util.List<java.lang.String> values) {
       updateOperations.removeAll("first", values);
       return this;
     }
@@ -224,7 +212,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater addAllToId(List<org.bson.types.ObjectId> values, boolean addDups) {
+    public PersonUpdater addAllToId(java.util.List<org.bson.types.ObjectId> values, boolean addDups) {
       updateOperations.addAll("id", values, addDups);
       return this;
     }
@@ -244,7 +232,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater removeAllFromId(List<org.bson.types.ObjectId> values) {
+    public PersonUpdater removeAllFromId(java.util.List<org.bson.types.ObjectId> values) {
       updateOperations.removeAll("id", values);
       return this;
     }
@@ -283,7 +271,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater addAllToLast(List<java.lang.String> values, boolean addDups) {
+    public PersonUpdater addAllToLast(java.util.List<java.lang.String> values, boolean addDups) {
       updateOperations.addAll("last", values, addDups);
       return this;
     }
@@ -303,7 +291,7 @@ public class PersonCriteria extends BaseCriteria<Person> {
       return this;
     }
 
-    public PersonUpdater removeAllFromLast(List<java.lang.String> values) {
+    public PersonUpdater removeAllFromLast(java.util.List<java.lang.String> values) {
       updateOperations.removeAll("last", values);
       return this;
     }

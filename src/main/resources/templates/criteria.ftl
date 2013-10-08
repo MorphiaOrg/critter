@@ -18,23 +18,11 @@
 package ${package}.criteria;
 
 import ${fqcn};
-import com.antwerkz.critter.TypeSafeFieldEnd;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.CriteriaContainer;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.QueryImpl;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
-import java.util.List;
 
-public class ${criteriaName} extends BaseCriteria<${name}> {
+public class ${criteriaName} extends ${package}.criteria.BaseCriteria<${name}> {
   private String prefix = "";
 
-  public ${criteriaName}(Datastore ds) {
+  public ${criteriaName}(org.mongodb.morphia.Datastore ds) {
     super(ds, ${name}.class);
   }
 
@@ -59,25 +47,25 @@ public class ${criteriaName} extends BaseCriteria<${name}> {
   }
 
   public class ${name}Updater {
-    UpdateOperations<${name}> updateOperations;
+    org.mongodb.morphia.query.UpdateOperations<${name}> updateOperations;
 
     public ${name}Updater() {
       updateOperations = ds.createUpdateOperations(${name}.class);
     }
 
-    public UpdateResults<${name}> update() {
+    public org.mongodb.morphia.query.UpdateResults<${name}> update() {
       return ds.update(query(), updateOperations, false);
     }
 
-    public UpdateResults<${name}> update(WriteConcern wc) {
+    public org.mongodb.morphia.query.UpdateResults<${name}> update(com.mongodb.WriteConcern wc) {
       return ds.update(query(), updateOperations, false, wc);
     }
 
-    public UpdateResults<${name}> upsert() {
+    public org.mongodb.morphia.query.UpdateResults<${name}> upsert() {
       return ds.update(query(), updateOperations, true);
     }
 
-    public UpdateResults<${name}> upsert(WriteConcern wc) {
+    public org.mongodb.morphia.query.UpdateResults<${name}> upsert(com.mongodb.WriteConcern wc) {
       return ds.update(query(), updateOperations, true, wc);
     }
 
@@ -102,7 +90,7 @@ public class ${criteriaName} extends BaseCriteria<${name}> {
       return this;
     }
 
-    public ${name}Updater addAllTo${field.name?cap_first}(List<${field.type}> values, boolean addDups) {
+    public ${name}Updater addAllTo${field.name?cap_first}(java.util.List<${field.type}> values, boolean addDups) {
       updateOperations.addAll("${field.name}", values, addDups);
       return this;
     }
@@ -122,7 +110,7 @@ public class ${criteriaName} extends BaseCriteria<${name}> {
       return this;
     }
 
-    public ${name}Updater removeAllFrom${field.name?cap_first}(List<${field.type}> values) {
+    public ${name}Updater removeAllFrom${field.name?cap_first}(java.util.List<${field.type}> values) {
       updateOperations.removeAll("${field.name}", values);
       return this;
     }

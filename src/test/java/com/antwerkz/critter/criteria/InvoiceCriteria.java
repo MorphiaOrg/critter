@@ -1,60 +1,48 @@
 package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.Invoice;
-import com.antwerkz.critter.TypeSafeFieldEnd;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.CriteriaContainer;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.QueryImpl;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
-import java.util.List;
 
-public class InvoiceCriteria extends BaseCriteria<Invoice> {
+public class InvoiceCriteria extends com.antwerkz.critter.criteria.BaseCriteria<Invoice> {
   private String prefix = "";
 
-  public InvoiceCriteria(Datastore ds) {
+  public InvoiceCriteria(org.mongodb.morphia.Datastore ds) {
     super(ds, Invoice.class);
   }
 
 
-  public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date> date() {
-    return new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date>(this, query, prefix + "date");
+  public com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date> date() {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "date");
   }
 
   public InvoiceCriteria date(java.util.Date value) {
-    new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date>(this, query, prefix + "date").equal(value);
+    new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date>(this, query, prefix + "date").equal(value);
     return this;
   }
 
-  public TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId> id() {
-    return new TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId>(this, query, prefix + "id");
+  public com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId> id() {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "id");
   }
 
   public InvoiceCriteria id(org.bson.types.ObjectId value) {
-    new TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
+    new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
     return this;
   }
 
-  public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>> items() {
-    return new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>>(this, query, prefix + "items");
+  public com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>> items() {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "items");
   }
 
   public InvoiceCriteria items(java.util.List<com.antwerkz.critter.Item> value) {
-    new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>>(this, query, prefix + "items").equal(value);
+    new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>>(this, query, prefix + "items").equal(value);
     return this;
   }
 
-  public TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double> total() {
-    return new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double>(this, query, prefix + "total");
+  public com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double> total() {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "total");
   }
 
   public InvoiceCriteria total(java.lang.Double value) {
-    new TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double>(this, query, prefix + "total").equal(value);
+    new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double>(this, query, prefix + "total").equal(value);
     return this;
   }
 
@@ -73,25 +61,25 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
   }
 
   public class InvoiceUpdater {
-    UpdateOperations<Invoice> updateOperations;
+    org.mongodb.morphia.query.UpdateOperations<Invoice> updateOperations;
 
     public InvoiceUpdater() {
       updateOperations = ds.createUpdateOperations(Invoice.class);
     }
 
-    public UpdateResults<Invoice> update() {
+    public org.mongodb.morphia.query.UpdateResults<Invoice> update() {
       return ds.update(query(), updateOperations, false);
     }
 
-    public UpdateResults<Invoice> update(WriteConcern wc) {
+    public org.mongodb.morphia.query.UpdateResults<Invoice> update(com.mongodb.WriteConcern wc) {
       return ds.update(query(), updateOperations, false, wc);
     }
 
-    public UpdateResults<Invoice> upsert() {
+    public org.mongodb.morphia.query.UpdateResults<Invoice> upsert() {
       return ds.update(query(), updateOperations, true);
     }
 
-    public UpdateResults<Invoice> upsert(WriteConcern wc) {
+    public org.mongodb.morphia.query.UpdateResults<Invoice> upsert(com.mongodb.WriteConcern wc) {
       return ds.update(query(), updateOperations, true, wc);
     }
 
@@ -115,7 +103,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater addAllToDate(List<java.util.Date> values, boolean addDups) {
+    public InvoiceUpdater addAllToDate(java.util.List<java.util.Date> values, boolean addDups) {
       updateOperations.addAll("date", values, addDups);
       return this;
     }
@@ -135,7 +123,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater removeAllFromDate(List<java.util.Date> values) {
+    public InvoiceUpdater removeAllFromDate(java.util.List<java.util.Date> values) {
       updateOperations.removeAll("date", values);
       return this;
     }
@@ -174,7 +162,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater addAllToId(List<org.bson.types.ObjectId> values, boolean addDups) {
+    public InvoiceUpdater addAllToId(java.util.List<org.bson.types.ObjectId> values, boolean addDups) {
       updateOperations.addAll("id", values, addDups);
       return this;
     }
@@ -194,7 +182,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater removeAllFromId(List<org.bson.types.ObjectId> values) {
+    public InvoiceUpdater removeAllFromId(java.util.List<org.bson.types.ObjectId> values) {
       updateOperations.removeAll("id", values);
       return this;
     }
@@ -233,7 +221,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater addAllToItems(List<java.util.List<com.antwerkz.critter.Item>> values, boolean addDups) {
+    public InvoiceUpdater addAllToItems(java.util.List<java.util.List<com.antwerkz.critter.Item>> values, boolean addDups) {
       updateOperations.addAll("items", values, addDups);
       return this;
     }
@@ -253,7 +241,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater removeAllFromItems(List<java.util.List<com.antwerkz.critter.Item>> values) {
+    public InvoiceUpdater removeAllFromItems(java.util.List<java.util.List<com.antwerkz.critter.Item>> values) {
       updateOperations.removeAll("items", values);
       return this;
     }
@@ -292,7 +280,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater addAllToTotal(List<java.lang.Double> values, boolean addDups) {
+    public InvoiceUpdater addAllToTotal(java.util.List<java.lang.Double> values, boolean addDups) {
       updateOperations.addAll("total", values, addDups);
       return this;
     }
@@ -312,7 +300,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice> {
       return this;
     }
 
-    public InvoiceUpdater removeAllFromTotal(List<java.lang.Double> values) {
+    public InvoiceUpdater removeAllFromTotal(java.util.List<java.lang.Double> values) {
       updateOperations.removeAll("total", values);
       return this;
     }
