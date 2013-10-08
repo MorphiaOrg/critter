@@ -10,10 +10,10 @@ import org.mongodb.morphia.query.QueryImpl;
 import org.bson.types.ObjectId;
 
 public class ItemCriteria {
-  private final Query query;
+  private final Query<com.antwerkz.critter.Item> query;
   private final String prefix;
 
-  public ItemCriteria(Query query, String prefix) {
+  public ItemCriteria(Query<com.antwerkz.critter.Item> query, String prefix) {
     this.query = query;
     this.prefix = prefix + ".";
   }
