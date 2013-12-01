@@ -19,7 +19,7 @@ package ${package}.criteria;
 
 import ${fqcn};
 
-public class ${criteriaName} extends ${package}.criteria.BaseCriteria<${name}> {
+public class ${criteriaName} extends com.antwerkz.critter.criteria.BaseCriteria<${name}> {
   private String prefix = "";
 
   public ${criteriaName}(org.mongodb.morphia.Datastore ds) {
