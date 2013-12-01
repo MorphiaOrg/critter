@@ -30,7 +30,7 @@ Include the dependency in your pom.xml like this:
     <dependency>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter</artifactId>
-        <version>1.2.0</version>
+        <version>1.2.3</version>
     </dependency>
 
 What difference does it make?
