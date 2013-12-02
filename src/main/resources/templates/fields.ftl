@@ -18,11 +18,10 @@
 <#list fields as field>
 
   public com.antwerkz.critter.TypeSafeFieldEnd<${criteriaName}, ${name}, ${field.type}> ${field.name}() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "${field.name}");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<${criteriaName}, ${name}, ${field.type}>(this, query, prefix + "${field.name}");
   }
 
-  public ${criteriaName} ${field.name}(${field.type} value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<${criteriaName}, ${name}, ${field.type}>(this, query, prefix + "${field.name}").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria ${field.name}(${field.type} value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<${criteriaName}, ${name}, ${field.type}>(this, query, prefix + "${field.name}").equal(value);
   }
 </#list>

@@ -15,6 +15,9 @@
  */
 package com.antwerkz.critter;
 
+import java.util.List;
+
+import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Shape;
@@ -28,14 +31,15 @@ public class TypeSafeFieldEnd<T, Q, V> {
 
   private final Query<Q> query;
 
-  private FieldEnd<T> fieldEnd;
-
   private final String fieldName;
 
   @Deprecated
   public TypeSafeFieldEnd(Query<Q> query, String fieldName) {
-    this.query = query;
-    this.fieldName = fieldName;
+    throw new RuntimeException("Old constructor");
+  }
+
+  @Deprecated
+  public TypeSafeFieldEnd(Query<Q> query, FieldEnd<T> criteria) {
     throw new RuntimeException("Old constructor");
   }
 
@@ -49,9 +53,8 @@ public class TypeSafeFieldEnd<T, Q, V> {
     return query;
   }
 
-  public T distinct() {
-    query.getCollection().distinct(fieldName);
-    return criteria;
+  public List distinct() {
+    return query.getCollection().distinct(fieldName);
   }
 
   public T order() {
@@ -64,156 +67,126 @@ public class TypeSafeFieldEnd<T, Q, V> {
     return criteria;
   }
 
-  public T exists() {
-    query.criteria(fieldName).exists();
-    return criteria;
+  public Criteria exists() {
+    return query.criteria(fieldName).exists();
   }
 
-  public T doesNotExist() {
-    query.criteria(fieldName).doesNotExist();
-    return criteria;
+  public Criteria doesNotExist() {
+    return query.criteria(fieldName).doesNotExist();
   }
 
-  public T greaterThan(V val) {
-    query.criteria(fieldName).greaterThan(val);
-    return criteria;
+  public Criteria greaterThan(V val) {
+    return query.criteria(fieldName).greaterThan(val);
   }
 
-  public T greaterThanOrEq(V val) {
-    query.criteria(fieldName).greaterThanOrEq(val);
-    return criteria;
+  public Criteria greaterThanOrEq(V val) {
+    return query.criteria(fieldName).greaterThanOrEq(val);
   }
 
-  public T lessThan(V val) {
-    query.criteria(fieldName).lessThan(val);
-    return criteria;
+  public Criteria lessThan(V val) {
+    return query.criteria(fieldName).lessThan(val);
   }
 
-  public T lessThanOrEq(V val) {
-    query.criteria(fieldName).lessThanOrEq(val);
-    return criteria;
+  public Criteria lessThanOrEq(V val) {
+    return query.criteria(fieldName).lessThanOrEq(val);
   }
 
-  public T equal(V val) {
-    query.criteria(fieldName).equal(val);
-    return criteria;
+  public Criteria equal(V val) {
+    return query.criteria(fieldName).equal(val);
   }
 
-  public T notEqual(V val) {
-    query.criteria(fieldName).notEqual(val);
-    return criteria;
+  public Criteria notEqual(V val) {
+    return query.criteria(fieldName).notEqual(val);
   }
 
-  public T startsWith(String prefix) {
-    query.criteria(fieldName).startsWith(prefix);
-    return criteria;
+  public Criteria startsWith(String prefix) {
+    return query.criteria(fieldName).startsWith(prefix);
   }
 
-  public T startsWithIgnoreCase(String prefix) {
-    query.criteria(fieldName).startsWithIgnoreCase(prefix);
-    return criteria;
+  public Criteria startsWithIgnoreCase(String prefix) {
+    return query.criteria(fieldName).startsWithIgnoreCase(prefix);
   }
 
-  public T endsWith(String suffix) {
-    query.criteria(fieldName).endsWith(suffix);
-    return criteria;
+  public Criteria endsWith(String suffix) {
+    return query.criteria(fieldName).endsWith(suffix);
   }
 
-  public T endsWithIgnoreCase(String suffix) {
-    query.criteria(fieldName).endsWithIgnoreCase(suffix);
-    return criteria;
+  public Criteria endsWithIgnoreCase(String suffix) {
+    return query.criteria(fieldName).endsWithIgnoreCase(suffix);
   }
 
-  public T contains(String string) {
-    query.criteria(fieldName).contains(string);
-    return criteria;
+  public Criteria contains(String string) {
+    return query.criteria(fieldName).contains(string);
   }
 
-  public T containsIgnoreCase(String suffix) {
-    query.criteria(fieldName).containsIgnoreCase(suffix);
-    return criteria;
+  public Criteria containsIgnoreCase(String suffix) {
+    return query.criteria(fieldName).containsIgnoreCase(suffix);
   }
 
-  public T hasThisOne(V val) {
-    query.criteria(fieldName).hasThisOne(val);
-    return criteria;
+  public Criteria hasThisOne(V val) {
+    return query.criteria(fieldName).hasThisOne(val);
   }
 
-  public T hasAllOf(Iterable<V> vals) {
-    query.criteria(fieldName).hasAllOf(vals);
-    return criteria;
+  public Criteria hasAllOf(Iterable<V> vals) {
+    return query.criteria(fieldName).hasAllOf(vals);
   }
 
-  public T hasAnyOf(Iterable<V> vals) {
-    query.criteria(fieldName).hasAnyOf(vals);
-    return criteria;
+  public Criteria hasAnyOf(Iterable<V> vals) {
+    return query.criteria(fieldName).hasAnyOf(vals);
   }
 
-  public T hasNoneOf(Iterable<V> vals) {
-    query.criteria(fieldName).hasNoneOf(vals);
-    return criteria;
+  public Criteria hasNoneOf(Iterable<V> vals) {
+    return query.criteria(fieldName).hasNoneOf(vals);
   }
 
-  public T in(Iterable<V> vals) {
-    query.criteria(fieldName).in(vals);
-    return criteria;
+  public Criteria in(Iterable<V> vals) {
+    return query.criteria(fieldName).in(vals);
   }
 
-  public T notIn(Iterable<V> vals) {
-    query.criteria(fieldName).notIn(vals);
-    return criteria;
+  public Criteria notIn(Iterable<V> vals) {
+    return query.criteria(fieldName).notIn(vals);
   }
 
-  public T hasThisElement(V val) {
-    query.criteria(fieldName).hasThisElement(val);
-    return criteria;
+  public Criteria hasThisElement(V val) {
+    return query.criteria(fieldName).hasThisElement(val);
   }
 
-  public T sizeEq(int val) {
-    query.criteria(fieldName).sizeEq(val);
-    return criteria;
+  public Criteria sizeEq(int val) {
+    return query.criteria(fieldName).sizeEq(val);
   }
 
-  public T near(double x, double y) {
-    query.criteria(fieldName).near(x, y);
-    return criteria;
+  public Criteria near(double x, double y) {
+    return query.criteria(fieldName).near(x, y);
   }
 
-  public T near(double x, double y, boolean spherical) {
-    query.criteria(fieldName).near(x, y, spherical);
-    return criteria;
+  public Criteria near(double x, double y, boolean spherical) {
+    return query.criteria(fieldName).near(x, y, spherical);
   }
 
-  public T near(double x, double y, double radius) {
-    query.criteria(fieldName).near(x, y, radius);
-    return criteria;
+  public Criteria near(double x, double y, double radius) {
+    return query.criteria(fieldName).near(x, y, radius);
   }
 
-  public T near(double x, double y, double radius, boolean spherical) {
-    query.criteria(fieldName).near(x, y, radius, spherical);
-    return criteria;
+  public Criteria near(double x, double y, double radius, boolean spherical) {
+    return query.criteria(fieldName).near(x, y, radius, spherical);
   }
 
-  public T within(Shape shape) {
-    query.criteria(fieldName).within(shape);
-    return criteria;
+  public Criteria within(Shape shape) {
+    return query.criteria(fieldName).within(shape);
   }
 
   @Deprecated
-  public T within(double x, double y, double radius) {
-    within(center(new Point(x, y), radius));
-    return criteria;
+  public Criteria within(double x, double y, double radius) {
+    return within(center(new Point(x, y), radius));
   }
 
   @Deprecated
-  public T within(double x, double y, double radius, boolean spherical) {
-    within(centerSphere(new Point(x, y), radius));
-    return criteria;
+  public Criteria within(double x, double y, double radius, boolean spherical) {
+    return within(centerSphere(new Point(x, y), radius));
   }
 
   @Deprecated
-  public T within(double x1, double y1, double x2, double y2) {
-    within(box(new Point(x1, y1), new Point(x2, y2)));
-    return criteria;
+  public Criteria within(double x1, double y1, double x2, double y2) {
+    return within(box(new Point(x1, y1), new Point(x2, y2)));
   }
 }

@@ -13,29 +13,26 @@ public class AddressCriteria {
 
 
   public com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> city() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "city");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "city");
   }
 
-  public AddressCriteria city(java.lang.String value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "city").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria city(java.lang.String value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "city").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> state() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "state");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "state");
   }
 
-  public AddressCriteria state(java.lang.String value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "state").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria state(java.lang.String value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "state").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> zip() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "zip");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "zip");
   }
 
-  public AddressCriteria zip(java.lang.String value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "zip").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria zip(java.lang.String value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "zip").equal(value);
   }
 }

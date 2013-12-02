@@ -11,39 +11,35 @@ public class InvoiceCriteria extends com.antwerkz.critter.criteria.BaseCriteria<
 
 
   public com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date> date() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "date");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date>(this, query, prefix + "date");
   }
 
-  public InvoiceCriteria date(java.util.Date value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date>(this, query, prefix + "date").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria date(java.util.Date value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.Date>(this, query, prefix + "date").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId> id() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "id");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId>(this, query, prefix + "id");
   }
 
-  public InvoiceCriteria id(org.bson.types.ObjectId value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria id(org.bson.types.ObjectId value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>> items() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "items");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>>(this, query, prefix + "items");
   }
 
-  public InvoiceCriteria items(java.util.List<com.antwerkz.critter.Item> value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>>(this, query, prefix + "items").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria items(java.util.List<com.antwerkz.critter.Item> value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.util.List<com.antwerkz.critter.Item>>(this, query, prefix + "items").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double> total() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "total");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double>(this, query, prefix + "total");
   }
 
-  public InvoiceCriteria total(java.lang.Double value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double>(this, query, prefix + "total").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria total(java.lang.Double value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<InvoiceCriteria, Invoice, java.lang.Double>(this, query, prefix + "total").equal(value);
   }
 
 

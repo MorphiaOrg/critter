@@ -128,8 +128,6 @@ public class CriteriaBuilder extends AbstractProcessor {
             if (validField(field)) {
               fields.add(new Field(field.asType().toString(), field.getSimpleName().toString()));
             } else if (embedded(field)) {
-              System.out.println("embedded");
-              System.out.println("field = " + field);
               embeds.add(new Field(encodeEmbedName(field), field.getSimpleName().toString()));
             } else if (reference(field)) {
               references.add(new Field(field.asType().toString(), field.getSimpleName().toString()));

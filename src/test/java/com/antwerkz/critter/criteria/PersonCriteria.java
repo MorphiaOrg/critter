@@ -11,39 +11,35 @@ public class PersonCriteria extends com.antwerkz.critter.criteria.BaseCriteria<P
 
 
   public com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long> age() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "age");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(this, query, prefix + "age");
   }
 
-  public PersonCriteria age(java.lang.Long value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(this, query, prefix + "age").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria age(java.lang.Long value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(this, query, prefix + "age").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> first() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "first");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "first");
   }
 
-  public PersonCriteria first(java.lang.String value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "first").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria first(java.lang.String value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "first").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId> id() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "id");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(this, query, prefix + "id");
   }
 
-  public PersonCriteria id(org.bson.types.ObjectId value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria id(org.bson.types.ObjectId value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(this, query, prefix + "id").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String> last() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "last");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "last");
   }
 
-  public PersonCriteria last(java.lang.String value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "last").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria last(java.lang.String value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(this, query, prefix + "last").equal(value);
   }
 
 

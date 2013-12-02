@@ -13,20 +13,18 @@ public class ItemCriteria {
 
 
   public com.antwerkz.critter.TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String> name() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "name");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String>(this, query, prefix + "name");
   }
 
-  public ItemCriteria name(java.lang.String value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String>(this, query, prefix + "name").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria name(java.lang.String value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String>(this, query, prefix + "name").equal(value);
   }
 
   public com.antwerkz.critter.TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double> price() {
-    return new com.antwerkz.critter.TypeSafeFieldEnd<>(this, query, prefix + "price");
+    return new com.antwerkz.critter.TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double>(this, query, prefix + "price");
   }
 
-  public ItemCriteria price(java.lang.Double value) {
-    new com.antwerkz.critter.TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double>(this, query, prefix + "price").equal(value);
-    return this;
+  public org.mongodb.morphia.query.Criteria price(java.lang.Double value) {
+    return new com.antwerkz.critter.TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double>(this, query, prefix + "price").equal(value);
   }
 }
