@@ -8,3 +8,6 @@ notifications:
     - jlee@antwerkz.com
     on_success: change
     on_failure: always
+
+services:
+- mongodb
