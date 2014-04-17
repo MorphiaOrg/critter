@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -32,73 +33,56 @@
         </repository>
     </repositories>
     <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                    <compilerArgument>-proc:none</compilerArgument>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-                <version>2.1.0</version>
-                <executions>
-                    <execution>
-                        <id>process</id>
-                        <goals>
-                            <goal>process-test</goal>
-                        </goals>
-                        <phase>test-compile</phase>
-                        <configuration>
-                            <optionMap>
-                                <outputDirectory>src/test/java</outputDirectory>
-                            </optionMap>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.mycila.maven-license-plugin</groupId>
-                <artifactId>maven-license-plugin</artifactId>
-                <version>1.10.b1</version>
-                <configuration>
-                    <basedir>${project.basedir}</basedir>
-                    <header>etc/aslv2.txt</header>
-                    <quiet>false</quiet>
-                    <failIfMissing>true</failIfMissing>
-                    <strictCheck>true</strictCheck>
-                    <aggregate>true</aggregate>
-                    <includes>
-                        <include>src/**</include>
-                    </includes>
-                    <excludes>
-                        <exclude>src/**/*Criteria.java</exclude>
-                    </excludes>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                    <useDefaultMapping>true</useDefaultMapping>
-                    <properties>
-                        <year>2012-2013</year>
-                        <full.name>Justin Lee</full.name>
-                        <email>jlee@antwerkz.com</email>
-                    </properties>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-<!--
-                <executions>
-                    <execution>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
--->
-            </plugin>
-        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.5.1</version>
+                    <configuration>
+                        <source>1.7</source>
+                        <target>1.7</target>
+                        <compilerArgument>-proc:none</compilerArgument>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>com.mycila.maven-license-plugin</groupId>
+                    <artifactId>maven-license-plugin</artifactId>
+                    <version>1.10.b1</version>
+                    <configuration>
+                        <basedir>${project.basedir}</basedir>
+                        <header>etc/aslv2.txt</header>
+                        <quiet>false</quiet>
+                        <failIfMissing>true</failIfMissing>
+                        <strictCheck>true</strictCheck>
+                        <aggregate>true</aggregate>
+                        <includes>
+                            <include>src/**</include>
+                        </includes>
+                        <excludes>
+                            <exclude>src/**/*Criteria.java</exclude>
+                        </excludes>
+                        <useDefaultExcludes>true</useDefaultExcludes>
+                        <useDefaultMapping>true</useDefaultMapping>
+                        <properties>
+                            <year>2012-2013</year>
+                            <full.name>Justin Lee</full.name>
+                            <email>jlee@antwerkz.com</email>
+                        </properties>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                    <!--
+                                    <executions>
+                                        <execution>
+                                            <phase>test</phase>
+                                            <goals>
+                                                <goal>check</goal>
+                                            </goals>
+                                        </execution>
+                                    </executions>
+                    -->
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
     <dependencyManagement>
         <dependencies>

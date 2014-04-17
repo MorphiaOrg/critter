@@ -30,6 +30,7 @@ import org.joda.time.DateTime;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateResults;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -68,28 +69,28 @@ public class CriteriaTest {
     Assert.assertEquals(critter, query);
   }
 
-  @Test(enabled = false, description = "disabled until the $and issue can be resolved")
+  @Test
   public void updates() throws UnknownHostException {
     Datastore datastore = getDatastore();
     PersonCriteria criteria = new PersonCriteria(datastore);
+    criteria.delete();
     criteria.first("Jim");
     criteria.last("Beam");
-    criteria.delete();
 
     Query<Person> query = criteria.query();
     System.out.println("query = " + query);
 
-//    Assert.assertEquals(criteria.getUpdater()
-//                            .age(30L)
-//                            .update().getUpdatedCount(), 0);
-//
-//    Assert.assertEquals(criteria.getUpdater()
-//                            .age(30L)
-//                            .upsert().getInsertedCount(), 1);
-//
-//    UpdateResults<Person> update = criteria.getUpdater().incAge().update();
-//    Assert.assertEquals(update.getUpdatedCount(), 1);
-//    Assert.assertEquals(criteria.query().get().getAge().longValue(), 31L);
+    Assert.assertEquals(criteria.getUpdater()
+                            .age(30L)
+                            .update().getUpdatedCount(), 0);
+
+    Assert.assertEquals(criteria.getUpdater()
+                            .age(30L)
+                            .upsert().getInsertedCount(), 1);
+
+    UpdateResults<Person> update = criteria.getUpdater().incAge().update();
+    Assert.assertEquals(update.getUpdatedCount(), 1);
+    Assert.assertEquals(criteria.query().get().getAge().longValue(), 31L);
 
     WriteResult delete = datastore.delete(query);
     Assert.assertNull(delete.getError());

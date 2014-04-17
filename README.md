@@ -29,8 +29,14 @@ Include the dependency in your pom.xml like this:
 
     <dependency>
         <groupId>com.antwerkz.critter</groupId>
-        <artifactId>critter</artifactId>
-        <version>1.2.3</version>
+        <artifactId>critter-apt</artifactId>
+        <version>1.2.5</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>com.antwerkz.critter</groupId>
+        <artifactId>critter-core</artifactId>
+        <version>1.2.5</version>
     </dependency>
 
 What difference does it make?
@@ -53,7 +59,7 @@ But using critter, it would look like this:
     Query query = criteria.query().get();
 
 Notice how bookmark() and database() methods were created based on the model object Query's fields.  The comparison
-methods you're familiar with from morphia's criteria API are all there but now only take the type of the field itself.
+methods you're familiar with from Morphia's criteria API are all there but now only take the type of the field itself.
 With this code in place if the model object changes, the code above runs the risk of failing to compile allowing you to
 catch model/query conflicts at compile time rather than waiting for things to fail at runtime (or in your tests if you're
 lucky enough to those).
