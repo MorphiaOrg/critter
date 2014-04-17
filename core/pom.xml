@@ -19,6 +19,7 @@
             <groupId>com.antwerkz.critter</groupId>
             <artifactId>critter-apt</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.mongodb.morphia</groupId>
