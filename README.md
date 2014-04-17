@@ -64,5 +64,5 @@ With this code in place if the model object changes, the code above runs the ris
 catch model/query conflicts at compile time rather than waiting for things to fail at runtime (or in your tests if you're
 lucky enough to those).
 
-You can see a working example in the [tests](https://github.com/evanchooly/critter/tree/master/src/test) and in critter's
-own [pom.xml](https://github.com/evanchooly/critter/blob/master/pom.xml).
+You can see a working example in the [tests](https://github.com/evanchooly/critter/tree/master/core/src/test) and in
+critter's own [pom.xml](https://github.com/evanchooly/critter/blob/master/core/pom.xml).
