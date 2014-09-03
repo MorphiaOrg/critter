@@ -17,13 +17,17 @@
 -->
 package ${package}.criteria;
 
+import com.antwerkz.critter.TypeSafeFieldEnd;
 import ${fqcn};
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.Query;
+
 
 public class ${criteriaName} {
-  private final org.mongodb.morphia.query.Query query;
+  private final Query query;
   private final String prefix;
 
-  public ${criteriaName}(org.mongodb.morphia.query.Query query, String prefix) {
+  public ${criteriaName}(Query query, String prefix) {
     this.query = query;
     this.prefix = prefix + ".";
   }

@@ -1,4 +1,4 @@
-package com.antwerkz.critter;
+package com.antwerkz.critter.test;
 
 import org.mongodb.morphia.annotations.Embedded;
 

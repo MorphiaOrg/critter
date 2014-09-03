@@ -18,11 +18,20 @@
 package ${package}.criteria;
 
 import ${fqcn};
+import com.mongodb.WriteConcern;
+import com.antwerkz.critter.criteria.BaseCriteria;
+import com.antwerkz.critter.TypeSafeFieldEnd;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.query.Criteria;
+import java.util.List;
 
-public class ${criteriaName} extends com.antwerkz.critter.criteria.BaseCriteria<${name}> {
+public class ${criteriaName} extends BaseCriteria<${name}> {
   private String prefix = "";
 
-  public ${criteriaName}(org.mongodb.morphia.Datastore ds) {
+  public ${criteriaName}(Datastore ds) {
     super(ds, ${name}.class);
   }
 
@@ -47,25 +56,25 @@ public class ${criteriaName} extends com.antwerkz.critter.criteria.BaseCriteria<
   }
 
   public class ${name}Updater {
-    org.mongodb.morphia.query.UpdateOperations<${name}> updateOperations;
+    UpdateOperations<${name}> updateOperations;
 
     public ${name}Updater() {
       updateOperations = ds.createUpdateOperations(${name}.class);
     }
 
-    public org.mongodb.morphia.query.UpdateResults<${name}> update() {
+    public UpdateResults update() {
       return ds.update(query(), updateOperations, false);
     }
 
-    public org.mongodb.morphia.query.UpdateResults<${name}> update(com.mongodb.WriteConcern wc) {
+    public UpdateResults update(WriteConcern wc) {
       return ds.update(query(), updateOperations, false, wc);
     }
 
-    public org.mongodb.morphia.query.UpdateResults<${name}> upsert() {
+    public UpdateResults upsert() {
       return ds.update(query(), updateOperations, true);
     }
 
-    public org.mongodb.morphia.query.UpdateResults<${name}> upsert(com.mongodb.WriteConcern wc) {
+    public UpdateResults upsert(WriteConcern wc) {
       return ds.update(query(), updateOperations, true, wc);
     }
 
@@ -90,7 +99,7 @@ public class ${criteriaName} extends com.antwerkz.critter.criteria.BaseCriteria<
       return this;
     }
 
-    public ${name}Updater addAllTo${field.name?cap_first}(java.util.List<${field.type}> values, boolean addDups) {
+    public ${name}Updater addAllTo${field.name?cap_first}(List<${field.type}> values, boolean addDups) {
       updateOperations.addAll("${field.name}", values, addDups);
       return this;
     }
@@ -110,7 +119,7 @@ public class ${criteriaName} extends com.antwerkz.critter.criteria.BaseCriteria<
       return this;
     }
 
-    public ${name}Updater removeAllFrom${field.name?cap_first}(java.util.List<${field.type}> values) {
+    public ${name}Updater removeAllFrom${field.name?cap_first}(List<${field.type}> values) {
       updateOperations.removeAll("${field.name}", values);
       return this;
     }

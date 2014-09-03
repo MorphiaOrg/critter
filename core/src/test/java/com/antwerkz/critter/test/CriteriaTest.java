@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.antwerkz.critter;
+package com.antwerkz.critter.test;
 
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
-import com.antwerkz.critter.criteria.InvoiceCriteria;
-import com.antwerkz.critter.criteria.PersonCriteria;
+import com.antwerkz.critter.test.criteria.InvoiceCriteria;
+import com.antwerkz.critter.test.criteria.PersonCriteria;
 import com.mongodb.DB;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteResult;
 import org.joda.time.DateTime;
@@ -33,6 +27,11 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.net.UnknownHostException;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Test
 public class CriteriaTest {
@@ -88,7 +87,7 @@ public class CriteriaTest {
                             .age(30L)
                             .upsert().getInsertedCount(), 1);
 
-    UpdateResults<Person> update = criteria.getUpdater().incAge().update();
+    UpdateResults update = criteria.getUpdater().incAge().update();
     Assert.assertEquals(update.getUpdatedCount(), 1);
     Assert.assertEquals(criteria.query().get().getAge().longValue(), 31L);
 
@@ -128,7 +127,7 @@ public class CriteriaTest {
   private Datastore getDatastore() {
     if (datastore == null) {
       try {
-        Mongo mongo = new MongoClient();
+        MongoClient mongo = new MongoClient();
         DB critter = mongo.getDB("critter");
         critter.dropDatabase();
         Set<Class> classes = new HashSet<>();
