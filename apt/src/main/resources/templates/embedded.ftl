@@ -15,10 +15,10 @@
     limitations under the License.
 
 -->
-package ${package}.criteria;
+package ${packageName}.criteria;
 
 import com.antwerkz.critter.TypeSafeFieldEnd;
-import ${fqcn};
+import ${fullyQualifiedName};
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.Query;
 

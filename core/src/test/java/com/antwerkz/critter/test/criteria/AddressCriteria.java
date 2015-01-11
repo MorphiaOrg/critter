@@ -16,27 +16,33 @@ public class AddressCriteria {
   }
 
 
+  // fields
   public TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> city() {
-    return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "city");
+    return new TypeSafeFieldEnd<>(this, query, prefix + "city");
   }
 
   public Criteria city(java.lang.String value) {
     return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "city").equal(value);
   }
+  // end fields
 
+  // fields
   public TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> state() {
-    return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "state");
+    return new TypeSafeFieldEnd<>(this, query, prefix + "state");
   }
 
   public Criteria state(java.lang.String value) {
     return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "state").equal(value);
   }
+  // end fields
 
+  // fields
   public TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String> zip() {
-    return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "zip");
+    return new TypeSafeFieldEnd<>(this, query, prefix + "zip");
   }
 
   public Criteria zip(java.lang.String value) {
     return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(this, query, prefix + "zip").equal(value);
   }
+  // end fields
 }

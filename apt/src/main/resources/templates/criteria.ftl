@@ -15,9 +15,9 @@
     limitations under the License.
 
 -->
-package ${package}.criteria;
+package ${packageName}.criteria;
 
-import ${fqcn};
+import ${fullyQualifiedName};
 import com.mongodb.WriteConcern;
 import com.antwerkz.critter.criteria.BaseCriteria;
 import com.antwerkz.critter.TypeSafeFieldEnd;
@@ -37,10 +37,10 @@ public class ${criteriaName} extends BaseCriteria<${name}> {
 
 <#include "fields.ftl">
 
-<#list embeddeds as embed>
+<#list embeddeds as embedded>
 
-  public ${embed.type}Criteria ${embed.name}() {
-    return new ${embed.type}Criteria(query, "${embed.name}");
+  public ${embedded.criteriaType} ${embedded.name}() {
+    return new ${embedded.criteriaType}(query, "${embedded.name}");
   }
 </#list>
 <#list references as reference>
@@ -78,66 +78,74 @@ public class ${criteriaName} extends BaseCriteria<${name}> {
       return ds.update(query(), updateOperations, true, wc);
     }
 
+    // Updater Methods
   <#list fields as field>
+    <#if !field.isId() >
     public ${name}Updater ${field.name}(${field.type} value) {
-      updateOperations.set("${field.name}", value);
-      return this;
+    updateOperations.set("${field.name}", value);
+    return this;
     }
 
-    public ${name}Updater unset${field.name?cap_first}(${field.type} value) {
-      updateOperations.unset("${field.name}");
-      return this;
+    public ${name}Updater unset${field.name?cap_first}() {
+    updateOperations.unset("${field.name}");
+    return this;
     }
 
-    public ${name}Updater add${field.name?cap_first}(${field.type} value) {
+      <#if field.isContainerType()>
+      public ${name}Updater add${field.name?cap_first}(${field.type} value) {
       updateOperations.add("${field.name}", value);
       return this;
-    }
+      }
 
-    public ${name}Updater add${field.name?cap_first}(${field.type} value, boolean addDups) {
+      public ${name}Updater add${field.name?cap_first}(${field.type} value, boolean addDups) {
       updateOperations.add("${field.name}", value, addDups);
       return this;
-    }
+      }
 
-    public ${name}Updater addAllTo${field.name?cap_first}(List<${field.type}> values, boolean addDups) {
+      public ${name}Updater addAllTo${field.name?cap_first}(List<${field.type}> values, boolean addDups) {
       updateOperations.addAll("${field.name}", values, addDups);
       return this;
-    }
-  
-    public ${name}Updater removeFirst${field.name?cap_first}() {
+      }
+
+      public ${name}Updater removeFirst${field.name?cap_first}() {
       updateOperations.removeFirst("${field.name}");
       return this;
-    }
-  
-    public ${name}Updater removeLast${field.name?cap_first}() {
+      }
+
+      public ${name}Updater removeLast${field.name?cap_first}() {
       updateOperations.removeLast("${field.name}");
       return this;
-    }
-  
-    public ${name}Updater removeFrom${field.name?cap_first}(${field.type} value) {
+      }
+
+      public ${name}Updater removeFrom${field.name?cap_first}(${field.type} value) {
       updateOperations.removeAll("${field.name}", value);
       return this;
-    }
+      }
 
-    public ${name}Updater removeAllFrom${field.name?cap_first}(List<${field.type}> values) {
+      public ${name}Updater removeAllFrom${field.name?cap_first}(List<${field.type}> values) {
       updateOperations.removeAll("${field.name}", values);
       return this;
-    }
- 
-    public ${name}Updater dec${field.name?cap_first}() {
+      }
+      </#if>
+
+      <#if field.isNumericType()>
+      public ${name}Updater dec${field.name?cap_first}() {
       updateOperations.dec("${field.name}");
       return this;
-    }
+      }
 
-    public ${name}Updater inc${field.name?cap_first}() {
+      public ${name}Updater inc${field.name?cap_first}() {
       updateOperations.inc("${field.name}");
       return this;
-    }
+      }
 
-    public ${name}Updater inc${field.name?cap_first}(Number value) {
+      public ${name}Updater inc${field.name?cap_first}(Number value) {
       updateOperations.inc("${field.name}", value);
       return this;
-    }
+      }
+      </#if>
+    </#if>
   </#list>
+    // Updater Methods
   }
 }

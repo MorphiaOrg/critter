@@ -16,19 +16,23 @@ public class ItemCriteria {
   }
 
 
+  // fields
   public TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String> name() {
-    return new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String>(this, query, prefix + "name");
+    return new TypeSafeFieldEnd<>(this, query, prefix + "name");
   }
 
   public Criteria name(java.lang.String value) {
     return new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String>(this, query, prefix + "name").equal(value);
   }
+  // end fields
 
+  // fields
   public TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double> price() {
-    return new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double>(this, query, prefix + "price");
+    return new TypeSafeFieldEnd<>(this, query, prefix + "price");
   }
 
   public Criteria price(java.lang.Double value) {
     return new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double>(this, query, prefix + "price").equal(value);
   }
+  // end fields
 }

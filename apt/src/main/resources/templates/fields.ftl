@@ -17,11 +17,13 @@
 -->
 <#list fields as field>
 
+  // fields
   public TypeSafeFieldEnd<${criteriaName}, ${name}, ${field.type}> ${field.name}() {
-    return new TypeSafeFieldEnd<${criteriaName}, ${name}, ${field.type}>(this, query, prefix + "${field.name}");
+    return new TypeSafeFieldEnd<>(this, query, prefix + "${field.name}");
   }
 
   public Criteria ${field.name}(${field.type} value) {
     return new TypeSafeFieldEnd<${criteriaName}, ${name}, ${field.type}>(this, query, prefix + "${field.name}").equal(value);
   }
+  // end fields
 </#list>

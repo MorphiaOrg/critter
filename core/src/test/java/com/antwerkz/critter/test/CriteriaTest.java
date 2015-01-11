@@ -71,49 +71,48 @@ public class CriteriaTest {
   @Test
   public void updates() throws UnknownHostException {
     Datastore datastore = getDatastore();
-    PersonCriteria criteria = new PersonCriteria(datastore);
-    criteria.delete();
-    criteria.first("Jim");
-    criteria.last("Beam");
+    PersonCriteria personCriteria = new PersonCriteria(datastore);
+    personCriteria.delete();
+    personCriteria.first("Jim");
+    personCriteria.last("Beam");
 
-    Query<Person> query = criteria.query();
-    System.out.println("query = " + query);
+    Query<Person> query = personCriteria.query();
 
-    Assert.assertEquals(criteria.getUpdater()
+    Assert.assertEquals(personCriteria.getUpdater()
                             .age(30L)
                             .update().getUpdatedCount(), 0);
 
-    Assert.assertEquals(criteria.getUpdater()
+    Assert.assertEquals(personCriteria.getUpdater()
                             .age(30L)
                             .upsert().getInsertedCount(), 1);
 
-    UpdateResults update = criteria.getUpdater().incAge().update();
+    UpdateResults update = personCriteria.getUpdater().incAge().update();
     Assert.assertEquals(update.getUpdatedCount(), 1);
-    Assert.assertEquals(criteria.query().get().getAge().longValue(), 31L);
+    Assert.assertEquals(personCriteria.query().get().getAge().longValue(), 31L);
+
+    Assert.assertNotNull(new PersonCriteria(datastore).query().get().getFirst());
 
     WriteResult delete = datastore.delete(query);
     Assert.assertNull(delete.getError());
   }
 
   public void embeds() {
-    Datastore datastore = getDatastore();
-
     Invoice invoice = new Invoice();
     invoice.setDate(new Date());
     Person person = new Person("Mike", "Bloomberg");
-    datastore.save(person);
+    getDatastore().save(person);
     invoice.setPerson(person);
     invoice.add(new Address("New York City", "NY", "10036"));
-    datastore.save(invoice);
+    getDatastore().save(invoice);
 
     invoice = new Invoice();
     invoice.setDate(new Date());
     person = new Person("Andy", "Warhol");
-    datastore.save(person);
+    getDatastore().save(person);
 
     invoice.setPerson(person);
     invoice.add(new Address("NYC", "NY", "10018"));
-    datastore.save(invoice);
+    getDatastore().save(invoice);
 
     InvoiceCriteria criteria1 = new InvoiceCriteria(datastore);
     criteria1.addresses().city().order();
