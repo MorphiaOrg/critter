@@ -1,15 +1,19 @@
 package com.antwerkz.critter.test.criteria;
 
-import com.antwerkz.critter.test.Invoice;
-import com.mongodb.WriteConcern;
-import com.antwerkz.critter.criteria.BaseCriteria;
 import com.antwerkz.critter.TypeSafeFieldEnd;
+import com.antwerkz.critter.criteria.BaseCriteria;
+import com.antwerkz.critter.test.Address;
+import com.antwerkz.critter.test.Invoice;
+import com.antwerkz.critter.test.Item;
+import com.antwerkz.critter.test.Person;
+import com.mongodb.WriteConcern;
+import java.util.Date;
+import java.util.List;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Criteria;
-import java.util.List;
 
 public class InvoiceCriteria extends BaseCriteria<Invoice> {
   private String prefix = "";

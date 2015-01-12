@@ -100,7 +100,7 @@
             <dependency>
                 <groupId>org.mongodb.morphia</groupId>
                 <artifactId>morphia</artifactId>
-                <version>0.108</version>
+                <version>0.109</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>

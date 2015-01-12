@@ -12,8 +12,6 @@ public class ModelTest {
     @Test
     public void api() {
         final Map<String, Method> methods = getFields(PersonUpdater.class);
-        System.out.println("methods = " + methods);
-
         assertNull(methods, "addAllToAge");
         assertNull(methods, "incLast");
     }

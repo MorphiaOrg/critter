@@ -1,19 +1,20 @@
 package com.antwerkz.critter;
 
-import com.sun.tools.javac.code.Symbol.VarSymbol;
-import com.sun.tools.javac.code.Type;
-import static java.lang.String.format;
-import org.mongodb.morphia.annotations.Id;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import javax.lang.model.element.VariableElement;
+
+import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Type;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import org.mongodb.morphia.annotations.Id;
 
 public class CritterField implements Comparable<CritterField> {
     private final boolean id;
-    private final String rawTypePackage;
     private String name;
     private String type;
 
@@ -24,7 +25,6 @@ public class CritterField implements Comparable<CritterField> {
         this.name = field.getSimpleName().toString();
         this.type = field.asType().toString();
         id = field.getAnnotation(Id.class) != null;
-        final Element enclosingElement = field.getEnclosingElement();
         if (field instanceof VarSymbol) {
             VarSymbol symbol = (VarSymbol) field;
             final List<Type> typeParameters = symbol.asType().getTypeArguments();
@@ -32,14 +32,11 @@ public class CritterField implements Comparable<CritterField> {
                 rawType = type;
             } else {
                 for (Type typeParameter : typeParameters) {
-                    System.out.println("typeParameter = " + typeParameter);
                     parameters.add(typeParameter.toString());
                 }
             }
             rawType = symbol.asType().asElement().getQualifiedName().toString();
-            System.out.println("symbol = " + symbol);
         }
-        rawTypePackage = extractPackage(rawType);
     }
 
     public boolean isId() {
@@ -103,5 +100,15 @@ public class CritterField implements Comparable<CritterField> {
     @Override
     public int compareTo(CritterField o) {
         return name.compareTo(o.name);
+    }
+
+    public Set<String> getImportInfo() {
+        final TreeSet<String> imports = new TreeSet<>();
+
+        if (!rawType.startsWith("java.lang")) {
+            imports.add(rawType);
+        }
+        imports.addAll(parameters.stream().filter((name) -> !name.startsWith("java.lang")).collect(toList()));
+        return imports;
     }
 }

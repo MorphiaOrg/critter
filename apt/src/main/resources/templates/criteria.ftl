@@ -17,16 +17,9 @@
 -->
 package ${packageName}.criteria;
 
-import ${fullyQualifiedName};
-import com.mongodb.WriteConcern;
-import com.antwerkz.critter.criteria.BaseCriteria;
-import com.antwerkz.critter.TypeSafeFieldEnd;
-import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Criteria;
-import java.util.List;
+<#list imports as import>
+import ${import};
+</#list>
 
 public class ${criteriaName} extends BaseCriteria<${name}> {
   private String prefix = "";
