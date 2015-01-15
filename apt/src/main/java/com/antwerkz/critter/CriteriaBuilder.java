@@ -20,23 +20,18 @@ import com.sun.tools.javac.code.Type.ClassType;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -71,11 +66,11 @@ public class CriteriaBuilder extends AbstractProcessor {
                 cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/templates"));
 
                 for (TypeElement typeElement : ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(Entity.class))) {
-                    new CritterClass(processingEnv, cfg.getTemplate("criteria.ftl"), typeElement).generate();
+                    new CritterAptClass(processingEnv, cfg.getTemplate("criteria.ftl"), typeElement).generate();
                 }
 
                 for (TypeElement typeElement : ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(Embedded.class))) {
-                    new CritterClass(processingEnv, cfg.getTemplate("embedded.ftl"), typeElement).generate();
+                    new CritterAptClass(processingEnv, cfg.getTemplate("embedded.ftl"), typeElement).generate();
                 }
                 return true;
             } catch (IOException | TemplateException e) {

@@ -13,7 +13,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import org.mongodb.morphia.annotations.Id;
 
-public class CritterField implements Comparable<CritterField> {
+public class CritterAptField implements Comparable<CritterAptField> {
     private final boolean id;
     private String name;
     private String type;
@@ -21,7 +21,7 @@ public class CritterField implements Comparable<CritterField> {
     private String rawType;
     private List<String> parameters = new ArrayList<>();
 
-    public CritterField(final VariableElement field) {
+    public CritterAptField(final VariableElement field) {
         this.name = field.getSimpleName().toString();
         this.type = field.asType().toString();
         id = field.getAnnotation(Id.class) != null;
@@ -98,7 +98,7 @@ public class CritterField implements Comparable<CritterField> {
     }
 
     @Override
-    public int compareTo(CritterField o) {
+    public int compareTo(CritterAptField o) {
         return name.compareTo(o.name);
     }
 

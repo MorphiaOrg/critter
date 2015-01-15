@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.NotSaved;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
-public class CritterClass {
+public class CritterAptClass {
   private final ProcessingEnvironment processingEnv;
 
   private final Template template;
@@ -39,15 +39,15 @@ public class CritterClass {
 
   private String fullyQualifiedName;
 
-  private final Set<CritterField> fields = new TreeSet<>();
+  private final Set<CritterAptField> fields = new TreeSet<>();
 
-  private final Set<CritterField> embeddeds = new TreeSet<>();
+  private final Set<CritterAptField> embeddeds = new TreeSet<>();
 
-  private final Set<CritterField> references = new TreeSet<>();
+  private final Set<CritterAptField> references = new TreeSet<>();
 
   private Set<String> imports = new TreeSet<>();
 
-  public CritterClass(final ProcessingEnvironment processingEnv, final Template template,
+  public CritterAptClass(final ProcessingEnvironment processingEnv, final Template template,
       final TypeElement typeElement) {
     this.processingEnv = processingEnv;
     this.template = template;
@@ -62,11 +62,11 @@ public class CritterClass {
     return criteriaName;
   }
 
-  public Set<CritterField> getEmbeddeds() {
+  public Set<CritterAptField> getEmbeddeds() {
     return embeddeds;
   }
 
-  public Set<CritterField> getFields() {
+  public Set<CritterAptField> getFields() {
     return fields;
   }
 
@@ -82,7 +82,7 @@ public class CritterClass {
     return packageName;
   }
 
-  public Set<CritterField> getReferences() {
+  public Set<CritterAptField> getReferences() {
     return references;
   }
 
@@ -93,15 +93,15 @@ public class CritterClass {
         if (enclosedElement instanceof VariableElement) {
           VariableElement field = (VariableElement) enclosedElement;
           if (!field.getModifiers().contains(Modifier.STATIC)) {
-            CritterField critterField = null;
+            CritterAptField critterField = null;
             if (validField(field)) {
-              critterField = new CritterField(field);
+              critterField = new CritterAptField(field);
               fields.add(critterField);
             } else if (embedded(field)) {
-              critterField = new CritterField(field);
+              critterField = new CritterAptField(field);
               embeddeds.add(critterField);
             } else if (reference(field)) {
-              critterField = new CritterField(field);
+              critterField = new CritterAptField(field);
               references.add(critterField);
             }
             if (critterField != null) {
@@ -171,16 +171,19 @@ public class CritterClass {
     File source = getSourceFile();
     source.getParentFile().mkdirs();
     final File tempFile = File.createTempFile(name, ".java");
-    tempFile.deleteOnExit();
+    System.out.printf("Generating %s in to %s\n", getCriteriaName(), tempFile);
     try (PrintWriter out = new PrintWriter(tempFile)) {
       template.process(this, out);
+      System.out.printf("Moving %s to %s\n", tempFile, source);
       Files.move(tempFile.toPath(), source.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    } finally {
+      tempFile.delete();
     }
   }
 
   @Override
   public String toString() {
-    return "CritterClass{" +
+    return "CritterAptClass{" +
         "fullyQualifiedName='" + fullyQualifiedName + '\'' +
         ", packageName='" + packageName + '\'' +
         ", name='" + name + '\'' +
