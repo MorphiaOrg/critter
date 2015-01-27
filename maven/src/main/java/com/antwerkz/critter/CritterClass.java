@@ -9,11 +9,15 @@ import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import com.antwerkz.critter.criteria.BaseCriteria;
+import static java.lang.String.format;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.FieldSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
+import org.jboss.forge.roaster.model.source.MethodSource;
+import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.query.Query;
 
 public class CritterClass {
   private final CritterContext context;
@@ -22,15 +26,11 @@ public class CritterClass {
 
   private String packageName;
 
-  private String fullyQualifiedName;
-
   private final Set<CritterField> fields = new TreeSet<>();
 
-  private final List<CritterField> embeds = new ArrayList<>();
-
-  private List<CritterField> references = new ArrayList<>();
-
   private JavaClassSource source;
+
+  private final boolean embedded;
 
   public CritterClass(CritterContext context, final File file) {
     this.context = context;
@@ -39,23 +39,16 @@ public class CritterClass {
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e.getMessage(), e);
     }
-    packageName = source.getPackage();
+    packageName = source.getPackage() + ".criteria";
     name = source.getName();
-    fullyQualifiedName = source.getQualifiedName();
     source.getFields().stream().forEach(new FieldConsumer());
+    embedded = source.hasAnnotation(Embedded.class);
+    context.add(this);
   }
 
   private void add(final CritterContext context, final JavaClassSource javaClass,
       final FieldSource<JavaClassSource> field) {
-    final CritterField critterField = new CritterField(context, javaClass, field);
-
-    if (field.getAnnotation(Reference.class) != null) {
-      references.add(critterField);
-    } else if (field.getAnnotation(Embedded.class) != null) {
-      embeds.add(critterField);
-    } else {
-      fields.add(critterField);
-    }
+    fields.add(new CritterField(context, javaClass, field));
   }
 
   public String getName() {
@@ -67,14 +60,60 @@ public class CritterClass {
   }
 
   public JavaClassSource build() {
-    final JavaClassSource javaClass = Roaster.create(JavaClassSource.class);
-    javaClass.setPackage(packageName).setName(source.getName() + "Criteria");
-    javaClass.setSuperType(BaseCriteria.class.getName() + "<" + source.getQualifiedName() + ">" );
+    final JavaClassSource criteriaClass = Roaster.create(JavaClassSource.class);
+    criteriaClass.setPackage(packageName).setName(source.getName() + "Criteria");
+
+    if (!source.hasAnnotation(Embedded.class)) {
+      criteriaClass.setSuperType(BaseCriteria.class.getName() + "<" + source.getQualifiedName() + ">");
+      final MethodSource<JavaClassSource> method = criteriaClass.addMethod()
+          .setPublic()
+          .setName(getName())
+          .setBody(format("super(ds, %s.class);", source.getName()));
+      method
+          .setConstructor(true)
+          .addParameter(Datastore.class, "ds");
+    } else {
+      criteriaClass.addField()
+          .setPrivate()
+          .setType(Query.class)
+          .setName("query");
+      criteriaClass.addField()
+          .setPrivate()
+          .setType("String")
+          .setName("prefix");
+
+      final MethodSource<JavaClassSource> method = criteriaClass.addMethod()
+          .setPublic()
+          .setName(getName())
+          .setBody("this.query = query;\nthis.prefix = prefix + \".\";");
+      method
+          .setConstructor(true)
+          .addParameter(Query.class, "query");
+      method
+          .addParameter(String.class, "prefix");
+    }
 
     for (CritterField field : fields) {
-      field.build(javaClass);
+      if (field.getSource().hasAnnotation(Reference.class)) {
+        field.buildReference(criteriaClass);
+      } else if (field.hasAnnotation(Embedded.class)) {
+        field.buildEmbed(criteriaClass);
+      } else {
+        field.buildField(criteriaClass);
+      }
     }
-    return javaClass;
+    if (!source.hasAnnotation(Embedded.class)) {
+      new UpdaterBuilder(this, criteriaClass);
+    }
+    return criteriaClass;
+  }
+
+  public Set<CritterField> getFields() {
+    return fields;
+  }
+
+  public boolean isEmbedded() {
+    return embedded;
   }
 
   private class FieldConsumer implements Consumer<FieldSource<JavaClassSource>> {

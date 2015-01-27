@@ -129,7 +129,6 @@
         </dependencies>
     </dependencyManagement>
     <modules>
-        <module>apt</module>
         <module>core</module>
         <module>maven</module>
         <module>tests</module>

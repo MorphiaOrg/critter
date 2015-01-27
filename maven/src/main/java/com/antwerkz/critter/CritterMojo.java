@@ -1,6 +1,8 @@
 package com.antwerkz.critter;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
@@ -12,6 +14,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryWalkListener;
 import org.codehaus.plexus.util.DirectoryWalker;
+import org.jboss.forge.roaster.model.source.JavaClassSource;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class CritterMojo extends AbstractMojo {
@@ -57,7 +60,16 @@ public class CritterMojo extends AbstractMojo {
     context.getClasses().stream().forEach(new Consumer<CritterClass>() {
       @Override
       public void accept(final CritterClass critterClass) {
-        System.out.println(critterClass.build());
+        final JavaClassSource criteriaClass = critterClass.build();
+        final String fileName = criteriaClass.getQualifiedName().replace('.', '/') + ".java";
+        final File file = new File(directory, fileName);
+        file.getParentFile().mkdirs();
+        try(PrintWriter writer =  new PrintWriter(file)) {
+          System.out.printf("Generating %s in to %s\n", criteriaClass.getName(), file);
+          writer.println(criteriaClass);
+        } catch (IOException e) {
+          throw new RuntimeException(e.getMessage(), e);
+        }
       }
     });
   }

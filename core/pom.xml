@@ -45,12 +45,6 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>com.antwerkz.critter</groupId>
-            <artifactId>critter-maven</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.mongodb.morphia</groupId>
             <artifactId>morphia</artifactId>
         </dependency>

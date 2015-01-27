@@ -1,38 +1,45 @@
 package com.antwerkz.critter.test.criteria;
 
-import com.antwerkz.critter.TypeSafeFieldEnd;
+import org.mongodb.morphia.query.Query;
 import com.antwerkz.critter.test.Item;
 import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.Query;
+import com.antwerkz.critter.TypeSafeFieldEnd;
+import org.mongodb.morphia.query.FieldEndImpl;
+import org.mongodb.morphia.query.QueryImpl;
 
+public class ItemCriteria
+{
 
-public class ItemCriteria {
-  private final Query query;
-  private final String prefix;
+   private Query query;
+   private String prefix;
 
-  public ItemCriteria(Query query, String prefix) {
-    this.query = query;
-    this.prefix = prefix + ".";
-  }
+   public ItemCriteria(Query query, String prefix)
+   {
+      this.query = query;
+      this.prefix = prefix + ".";
+   }
 
+   public TypeSafeFieldEnd<ItemCriteria, Item, String> name()
+   {
+      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.ItemCriteria, com.antwerkz.critter.test.Item, java.lang.String>(
+            this, query, prefix + "name");
+   }
 
-  // fields
-  public TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String> name() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "name");
-  }
+   public Criteria name(String value)
+   {
+      return new FieldEndImpl<QueryImpl>((QueryImpl) query, prefix + "name",
+            (QueryImpl) query, false).equal(value);
+   }
 
-  public Criteria name(java.lang.String value) {
-    return new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.String>(this, query, prefix + "name").equal(value);
-  }
-  // end fields
+   public TypeSafeFieldEnd<ItemCriteria, Item, Double> price()
+   {
+      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.ItemCriteria, com.antwerkz.critter.test.Item, java.lang.Double>(
+            this, query, prefix + "price");
+   }
 
-  // fields
-  public TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double> price() {
-    return new TypeSafeFieldEnd<>(this, query, prefix + "price");
-  }
-
-  public Criteria price(java.lang.Double value) {
-    return new TypeSafeFieldEnd<ItemCriteria, Item, java.lang.Double>(this, query, prefix + "price").equal(value);
-  }
-  // end fields
+   public Criteria price(Double value)
+   {
+      return new FieldEndImpl<QueryImpl>((QueryImpl) query, prefix + "price",
+            (QueryImpl) query, false).equal(value);
+   }
 }
