@@ -24,9 +24,12 @@ public class CritterMojo extends AbstractMojo {
   @Parameter(property = "includes", defaultValue = "**/*.java")
   private String includes;
 
+  @Parameter(property = "package", defaultValue = "com.antwerkz.critter.criteria")
+  private String criteriaPkg;
+
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
-    CritterContext context = new CritterContext();
+    CritterContext context = new CritterContext(criteriaPkg);
 //    final FileSet fileSet = new FileSet();
 //    fileSet.setDirectory(directory);
 //    fileSet.setIncludes(asList(includes.split(",")));
@@ -66,7 +69,7 @@ public class CritterMojo extends AbstractMojo {
         file.getParentFile().mkdirs();
         try(PrintWriter writer =  new PrintWriter(file)) {
           System.out.printf("Generating %s in to %s\n", criteriaClass.getName(), file);
-          writer.println(criteriaClass);
+          writer.println(criteriaClass.toString());
         } catch (IOException e) {
           throw new RuntimeException(e.getMessage(), e);
         }

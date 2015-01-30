@@ -24,7 +24,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <roaster.version>2.11.1.Final</roaster.version>
+        <roaster.version>2.11.2-SNAPSHOT</roaster.version>
     </properties>
 
     <build>

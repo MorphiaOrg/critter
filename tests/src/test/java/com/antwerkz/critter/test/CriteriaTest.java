@@ -15,8 +15,8 @@
  */
 package com.antwerkz.critter.test;
 
-import com.antwerkz.critter.test.criteria.InvoiceCriteria;
-import com.antwerkz.critter.test.criteria.PersonCriteria;
+import com.antwerkz.critter.criteria.InvoiceCriteria;
+import com.antwerkz.critter.criteria.PersonCriteria;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteResult;

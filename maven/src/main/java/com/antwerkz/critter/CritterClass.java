@@ -39,7 +39,6 @@ public class CritterClass {
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e.getMessage(), e);
     }
-    packageName = source.getPackage() + ".criteria";
     name = source.getName();
     source.getFields().stream().forEach(new FieldConsumer());
     embedded = source.hasAnnotation(Embedded.class);
@@ -114,6 +113,18 @@ public class CritterClass {
 
   public boolean isEmbedded() {
     return embedded;
+  }
+
+  public void setPackage(final String aPackage) {
+    this.packageName = aPackage;
+  }
+
+  public String getCriteriaPkg() {
+    return packageName;
+  }
+
+  public void setCriteriaPkg(final String criteriaPkg) {
+    this.packageName = criteriaPkg;
   }
 
   private class FieldConsumer implements Consumer<FieldSource<JavaClassSource>> {

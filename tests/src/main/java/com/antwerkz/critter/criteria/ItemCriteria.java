@@ -1,4 +1,4 @@
-package com.antwerkz.critter.test.criteria;
+package com.antwerkz.critter.criteria;
 
 import org.mongodb.morphia.query.Query;
 import com.antwerkz.critter.test.Item;
@@ -21,7 +21,7 @@ public class ItemCriteria
 
    public TypeSafeFieldEnd<ItemCriteria, Item, String> name()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.ItemCriteria, com.antwerkz.critter.test.Item, java.lang.String>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.ItemCriteria, com.antwerkz.critter.test.Item, java.lang.String>(
             this, query, prefix + "name");
    }
 
@@ -33,7 +33,7 @@ public class ItemCriteria
 
    public TypeSafeFieldEnd<ItemCriteria, Item, Double> price()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.ItemCriteria, com.antwerkz.critter.test.Item, java.lang.Double>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.ItemCriteria, com.antwerkz.critter.test.Item, java.lang.Double>(
             this, query, prefix + "price");
    }
 

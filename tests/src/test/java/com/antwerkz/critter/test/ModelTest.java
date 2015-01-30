@@ -1,6 +1,6 @@
 package com.antwerkz.critter.test;
 
-import com.antwerkz.critter.test.criteria.PersonCriteria.PersonUpdater;
+import com.antwerkz.critter.criteria.PersonCriteria.PersonUpdater;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

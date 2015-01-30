@@ -1,4 +1,4 @@
-package com.antwerkz.critter.test.criteria;
+package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.criteria.BaseCriteria;
 import com.antwerkz.critter.test.Person;
@@ -24,7 +24,7 @@ public class PersonCriteria extends BaseCriteria<Person>
 
    public TypeSafeFieldEnd<PersonCriteria, Person, Long> age()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.Long>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.Long>(
             this, query, "age");
    }
 
@@ -36,7 +36,7 @@ public class PersonCriteria extends BaseCriteria<Person>
 
    public TypeSafeFieldEnd<PersonCriteria, Person, String> first()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.String>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.String>(
             this, query, "first");
    }
 
@@ -48,7 +48,7 @@ public class PersonCriteria extends BaseCriteria<Person>
 
    public TypeSafeFieldEnd<PersonCriteria, Person, ObjectId> id()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.PersonCriteria, com.antwerkz.critter.test.Person, org.bson.types.ObjectId>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.PersonCriteria, com.antwerkz.critter.test.Person, org.bson.types.ObjectId>(
             this, query, "id");
    }
 
@@ -60,7 +60,7 @@ public class PersonCriteria extends BaseCriteria<Person>
 
    public TypeSafeFieldEnd<PersonCriteria, Person, String> last()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.String>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.String>(
             this, query, "last");
    }
 

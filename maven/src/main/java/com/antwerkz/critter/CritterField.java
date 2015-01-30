@@ -156,4 +156,11 @@ public class CritterField implements Comparable<CritterField> {
     final String name = format("%s%s", qualifiedName, types);
     return name;
   }
+
+  @Override
+  public String toString() {
+    return "CritterField{" +
+        "source=" + source +
+        '}';
+  }
 }

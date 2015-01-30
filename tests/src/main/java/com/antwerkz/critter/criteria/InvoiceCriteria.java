@@ -1,10 +1,10 @@
-package com.antwerkz.critter.test.criteria;
+package com.antwerkz.critter.criteria;
 
 import com.antwerkz.critter.criteria.BaseCriteria;
 import com.antwerkz.critter.test.Invoice;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Criteria;
-import com.antwerkz.critter.test.criteria.AddressCriteria;
+import com.antwerkz.critter.criteria.AddressCriteria;
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import org.mongodb.morphia.query.FieldEndImpl;
 import org.mongodb.morphia.query.QueryImpl;
@@ -34,7 +34,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice>
 
    public TypeSafeFieldEnd<InvoiceCriteria, Invoice, Date> date()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.InvoiceCriteria, com.antwerkz.critter.test.Invoice, java.util.Date>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.InvoiceCriteria, com.antwerkz.critter.test.Invoice, java.util.Date>(
             this, query, "date");
    }
 
@@ -46,7 +46,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice>
 
    public TypeSafeFieldEnd<InvoiceCriteria, Invoice, ObjectId> id()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.InvoiceCriteria, com.antwerkz.critter.test.Invoice, org.bson.types.ObjectId>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.InvoiceCriteria, com.antwerkz.critter.test.Invoice, org.bson.types.ObjectId>(
             this, query, "id");
    }
 
@@ -58,7 +58,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice>
 
    public TypeSafeFieldEnd<InvoiceCriteria, Invoice, List> items()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.InvoiceCriteria, com.antwerkz.critter.test.Invoice, java.util.List>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.InvoiceCriteria, com.antwerkz.critter.test.Invoice, java.util.List>(
             this, query, "items");
    }
 
@@ -76,7 +76,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice>
 
    public TypeSafeFieldEnd<InvoiceCriteria, Invoice, Double> total()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.test.criteria.InvoiceCriteria, com.antwerkz.critter.test.Invoice, java.lang.Double>(
+      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.InvoiceCriteria, com.antwerkz.critter.test.Invoice, java.lang.Double>(
             this, query, "total");
    }
 
@@ -120,7 +120,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice>
          return ds.update(query(), updateOperations, true, wc);
       }
 
-      public InvoiceUpdater addresses(List value)
+      public InvoiceUpdater addresses(List<Address> value)
       {
          updateOperations.set("addresses", value);
          return this;
@@ -144,7 +144,8 @@ public class InvoiceCriteria extends BaseCriteria<Invoice>
          return this;
       }
 
-      public InvoiceUpdater addAllToAddresses(List values, boolean addDups)
+      public InvoiceUpdater addAllToAddresses(List<Address> values,
+            boolean addDups)
       {
          updateOperations.addAll("addresses", values, addDups);
          return this;
@@ -186,7 +187,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice>
          return this;
       }
 
-      public InvoiceUpdater items(List value)
+      public InvoiceUpdater items(List<Item> value)
       {
          updateOperations.set("items", value);
          return this;
@@ -210,7 +211,7 @@ public class InvoiceCriteria extends BaseCriteria<Invoice>
          return this;
       }
 
-      public InvoiceUpdater addAllToItems(List values, boolean addDups)
+      public InvoiceUpdater addAllToItems(List<Item> values, boolean addDups)
       {
          updateOperations.addAll("items", values, addDups);
          return this;
