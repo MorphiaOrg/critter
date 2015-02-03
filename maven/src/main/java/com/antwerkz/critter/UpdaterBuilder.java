@@ -65,8 +65,10 @@ public class UpdaterBuilder {
         .addParameter(WriteConcern.class, "wc");
 
     for (CritterField field : critterClass.getFields()) {
-      if (field.getParameterType() != null) {
-        criteriaClass.addImport(field.getParameterType());
+      if (!field.getParameterTypes().isEmpty()) {
+        field.getParameterTypes()
+            .stream()
+            .forEach(criteriaClass::addImport);
       }
       criteriaClass.addImport(field.getFullType());
       if (!field.hasAnnotation(Id.class)) {
@@ -75,7 +77,7 @@ public class UpdaterBuilder {
             .setName(field.getName())
             .setReturnType(type)
             .setBody(format("updateOperations.set(\"%s\", value);\nreturn this;", field.getName()))
-            .addParameter(field.getFullyQualifiedType(), "value");
+            .addParameter(field.getParameterizedType(), "value");
 
         updater.addMethod()
             .setPublic()
@@ -122,7 +124,7 @@ public class UpdaterBuilder {
           .setName(format("addTo%s", nameCase(field.getName())))
           .setReturnType(type)
           .setBody(format("updateOperations.add(\"%s\", value);\nreturn this;", field.getName()))
-          .addParameter(field.getParameterType(), "value");
+          .addParameter(field.getParameterizedType(), "value");
 
       MethodSource<JavaClassSource> addItems = updater.addMethod()
           .setPublic()
@@ -130,7 +132,7 @@ public class UpdaterBuilder {
           .setReturnType(type)
           .setBody(format("updateOperations.add(\"%s\", value, addDups);\nreturn this;", field.getName()));
       addItems
-          .addParameter(field.getParameterType(), "value");
+          .addParameter(field.getParameterizedType(), "value");
       addItems
           .addParameter("boolean", "addDups");
 
@@ -139,7 +141,7 @@ public class UpdaterBuilder {
           .setName(format("addAllTo%s", nameCase(field.getName())))
           .setReturnType(type)
           .setBody(format("updateOperations.addAll(\"%s\", values, addDups);\nreturn this;", field.getName()));
-      addItems.addParameter(format("%s<%s>", field.getFullType(), field.getParameterType()), "values");
+      addItems.addParameter(field.getParameterizedType(), "values");
       addItems.addParameter("boolean", "addDups");
 
       updater.addMethod()
@@ -159,14 +161,14 @@ public class UpdaterBuilder {
           .setName(format("removeFrom%s", nameCase(field.getName())))
           .setReturnType(type)
           .setBody(format("updateOperations.removeAll(\"%s\", value);\nreturn this;", field.getName()))
-          .addParameter(field.getParameterType(), "value");
+          .addParameter(field.getParameterizedType(), "value");
 
       MethodSource<JavaClassSource> removeAll = updater.addMethod()
           .setPublic()
           .setName(format("removeAllFrom%s", nameCase(field.getName())))
           .setReturnType(type)
           .setBody(format("updateOperations.removeAll(\"%s\", values);\nreturn this;", field.getName()));
-      removeAll.addParameter(field.getParameterType(), "values");
+      removeAll.addParameter(field.getParameterizedType(), "values");
     }
   }
 

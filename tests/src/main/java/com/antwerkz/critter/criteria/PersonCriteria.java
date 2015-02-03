@@ -3,16 +3,16 @@ package com.antwerkz.critter.criteria;
 import com.antwerkz.critter.criteria.BaseCriteria;
 import com.antwerkz.critter.test.Person;
 import org.mongodb.morphia.Datastore;
+import java.lang.Long;
 import org.mongodb.morphia.query.Criteria;
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import org.mongodb.morphia.query.FieldEndImpl;
 import org.mongodb.morphia.query.QueryImpl;
+import java.lang.String;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
-import java.lang.Long;
-import java.lang.String;
 
 public class PersonCriteria extends BaseCriteria<Person>
 {
@@ -24,7 +24,7 @@ public class PersonCriteria extends BaseCriteria<Person>
 
    public TypeSafeFieldEnd<PersonCriteria, Person, Long> age()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.Long>(
+      return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(
             this, query, "age");
    }
 
@@ -36,7 +36,7 @@ public class PersonCriteria extends BaseCriteria<Person>
 
    public TypeSafeFieldEnd<PersonCriteria, Person, String> first()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.String>(
+      return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(
             this, query, "first");
    }
 
@@ -48,7 +48,7 @@ public class PersonCriteria extends BaseCriteria<Person>
 
    public TypeSafeFieldEnd<PersonCriteria, Person, ObjectId> id()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.PersonCriteria, com.antwerkz.critter.test.Person, org.bson.types.ObjectId>(
+      return new TypeSafeFieldEnd<PersonCriteria, Person, org.bson.types.ObjectId>(
             this, query, "id");
    }
 
@@ -60,7 +60,7 @@ public class PersonCriteria extends BaseCriteria<Person>
 
    public TypeSafeFieldEnd<PersonCriteria, Person, String> last()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.PersonCriteria, com.antwerkz.critter.test.Person, java.lang.String>(
+      return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.String>(
             this, query, "last");
    }
 

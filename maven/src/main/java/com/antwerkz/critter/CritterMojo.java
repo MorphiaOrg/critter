@@ -1,6 +1,7 @@
 package com.antwerkz.critter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.function.Consumer;
@@ -14,7 +15,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryWalkListener;
 import org.codehaus.plexus.util.DirectoryWalker;
+import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
+import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Entity;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class CritterMojo extends AbstractMojo {
@@ -46,7 +51,17 @@ public class CritterMojo extends AbstractMojo {
       @Override
       public void directoryWalkStep(final int percentage, final File file) {
         if (!file.getName().endsWith("Criteria.java")) {
-          context.add(new CritterClass(context, file));
+          final JavaType<?> type;
+          try {
+            type = Roaster.parse(file);
+          } catch (FileNotFoundException e) {
+            throw new RuntimeException(e.getMessage(), e);
+          }
+          if (type instanceof JavaClassSource) {
+            if (type.hasAnnotation(Entity.class) || type.hasAnnotation(Embedded.class)) {
+              context.add(new CritterClass(context, type));
+            }
+          }
         }
       }
 
@@ -67,7 +82,7 @@ public class CritterMojo extends AbstractMojo {
         final String fileName = criteriaClass.getQualifiedName().replace('.', '/') + ".java";
         final File file = new File(directory, fileName);
         file.getParentFile().mkdirs();
-        try(PrintWriter writer =  new PrintWriter(file)) {
+        try (PrintWriter writer = new PrintWriter(file)) {
           System.out.printf("Generating %s in to %s\n", criteriaClass.getName(), file);
           writer.println(criteriaClass.toString());
         } catch (IOException e) {

@@ -5,22 +5,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Strings;
 import static java.lang.String.*;
 import static java.lang.String.format;
 import org.jboss.forge.roaster.model.Field;
 import org.jboss.forge.roaster.model.Type;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
+import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
+import org.jboss.forge.roaster.model.util.Strings;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FieldEndImpl;
 import org.mongodb.morphia.query.QueryImpl;
 
 public class CritterField implements Comparable<CritterField> {
-  private String shortParameterType;
+  private List<String> shortParameterTypes = new ArrayList<>();
 
-  private String fullParameterType;
+  private List<String> fullParameterTypes = new ArrayList<>();
 
   private Field<JavaClassSource> source;
 
@@ -47,17 +48,27 @@ public class CritterField implements Comparable<CritterField> {
     this.context = context;
     this.javaClass = javaClass;
     source = field;
-    fullType = field.getType().getQualifiedName();
+    getFullType(field.getType());
     if (field.getType().isParameterized()) {
       final List<Type<JavaClassSource>> typeArguments = field.getType().getTypeArguments();
-      shortParameterType = typeArguments.get(0).getName();
-      fullParameterType = typeArguments.get(0).getQualifiedName();
+      for (Type<JavaClassSource> typeArgument : typeArguments) {
+        shortParameterTypes.add(typeArgument.getName()) ;
+        fullParameterTypes.add(typeArgument.getQualifiedName());
+      }
     }
+  }
+
+  private void getFullType(final Type<JavaClassSource> type) {
+    final JavaSource<?> nestedType = source.getOrigin().getNestedType(type.getName());
+    fullType = nestedType != null
+        ? nestedType.getCanonicalName()
+        : type.getQualifiedName();
   }
 
   public void buildField(final JavaClassSource criteriaClass) {
     final String qualifiedName = javaClass.getQualifiedName();
     criteriaClass.addImport(qualifiedName);
+    criteriaClass.addImport(fullType);
     criteriaClass.addImport(Criteria.class);
     String name = "\"" + source.getName() + "\"";
     if(getSource().getOrigin().hasAnnotation(Embedded.class) || context.isEmbedded(getSource().getOrigin())) {
@@ -69,7 +80,7 @@ public class CritterField implements Comparable<CritterField> {
         .setReturnType(format("%s<%s, %s, %s>", TypeSafeFieldEnd.class.getName(), criteriaClass.getQualifiedName(),
             javaClass.getQualifiedName(), fullType))
         .setBody(format("return new TypeSafeFieldEnd<%s, %s, %s>(this, query, %s);",
-            criteriaClass.getQualifiedName(), javaClass.getQualifiedName(), fullType, name));
+            criteriaClass.getName(), javaClass.getName(), fullType, name));
 
     criteriaClass.addImport(FieldEndImpl.class);
     criteriaClass.addImport(QueryImpl.class);
@@ -80,14 +91,14 @@ public class CritterField implements Comparable<CritterField> {
     method.setBody(format("return new FieldEndImpl<QueryImpl>((QueryImpl)query, %s, (QueryImpl)query, false).equal(value);",
         name));
 
-    method.addParameter(source.getType().getQualifiedName(), "value");
+    method.addParameter(getParameterizedType(), "value");
   }
 
   public void buildEmbed(final JavaClassSource criteriaClass) {
     criteriaClass.addImport(Criteria.class);
     String criteriaType;
-    if(fullParameterType != null) {
-      criteriaType = shortParameterType + "Criteria";
+    if(!shortParameterTypes.isEmpty()) {
+      criteriaType = shortParameterTypes.get(0) + "Criteria";
       criteriaClass.addImport(criteriaClass.getPackage() + "." + criteriaType);
     } else {
       final Type<JavaClassSource> type = source.getType();
@@ -139,8 +150,16 @@ public class CritterField implements Comparable<CritterField> {
     return NUMERIC_TYPES.contains(source.getType().getQualifiedName());
   }
 
-  public String getParameterType() {
-    return fullParameterType;
+  public List<String> getParameterTypes() {
+    return fullParameterTypes;
+  }
+
+  public String getParameterizedType() {
+    if(getParameterTypes().isEmpty()) {
+      return fullType;
+    } else {
+      return format("%s<%s>", fullType, Strings.join(fullParameterTypes, ", "));
+    }
   }
 
   public Field<JavaClassSource> getSource() {
@@ -153,8 +172,7 @@ public class CritterField implements Comparable<CritterField> {
     String types = typeArguments.isEmpty()
         ? ""
         : "<" + join(",", typeArguments.stream().map(Type::getQualifiedName).collect(Collectors.toList())) + ">";
-    final String name = format("%s%s", qualifiedName, types);
-    return name;
+    return format("%s%s", qualifiedName, types);
   }
 
   @Override

@@ -1,9 +1,6 @@
 package com.antwerkz.critter;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
@@ -11,6 +8,7 @@ import java.util.function.Consumer;
 import com.antwerkz.critter.criteria.BaseCriteria;
 import static java.lang.String.format;
 import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.source.FieldSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -32,13 +30,9 @@ public class CritterClass {
 
   private final boolean embedded;
 
-  public CritterClass(CritterContext context, final File file) {
+  public CritterClass(CritterContext context, final JavaType<?> type) {
     this.context = context;
-    try {
-      source = (JavaClassSource) Roaster.parse(file);
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e.getMessage(), e);
-    }
+    source = (JavaClassSource) type;
     name = source.getName();
     source.getFields().stream().forEach(new FieldConsumer());
     embedded = source.hasAnnotation(Embedded.class);

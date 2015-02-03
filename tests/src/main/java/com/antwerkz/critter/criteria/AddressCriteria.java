@@ -2,6 +2,7 @@ package com.antwerkz.critter.criteria;
 
 import org.mongodb.morphia.query.Query;
 import com.antwerkz.critter.test.Address;
+import java.lang.String;
 import org.mongodb.morphia.query.Criteria;
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import org.mongodb.morphia.query.FieldEndImpl;
@@ -21,7 +22,7 @@ public class AddressCriteria
 
    public TypeSafeFieldEnd<AddressCriteria, Address, String> city()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.AddressCriteria, com.antwerkz.critter.test.Address, java.lang.String>(
+      return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(
             this, query, prefix + "city");
    }
 
@@ -33,7 +34,7 @@ public class AddressCriteria
 
    public TypeSafeFieldEnd<AddressCriteria, Address, String> state()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.AddressCriteria, com.antwerkz.critter.test.Address, java.lang.String>(
+      return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(
             this, query, prefix + "state");
    }
 
@@ -45,7 +46,7 @@ public class AddressCriteria
 
    public TypeSafeFieldEnd<AddressCriteria, Address, String> zip()
    {
-      return new TypeSafeFieldEnd<com.antwerkz.critter.criteria.AddressCriteria, com.antwerkz.critter.test.Address, java.lang.String>(
+      return new TypeSafeFieldEnd<AddressCriteria, Address, java.lang.String>(
             this, query, prefix + "zip");
    }
 
