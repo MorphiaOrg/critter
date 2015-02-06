@@ -1,42 +1,43 @@
 critter
 =======
 
-Critter will look at your morphia object model and generate type safe criteria builders for
-each model object.  To use it, you typically won't need to do anything.  It's standard
-annotation processor so the compiler should find it automatically.  If you have disabled annotation
-processing for whatever reason, you can add the following to your pom.xml to enable processing:
+Critter will look at your source code and generate type safe criteria builders for
+each model object.  To use it, you simply need to add a plugin to your maven pom:
 
     <plugin>
-        <groupId>org.bsc.maven</groupId>
-        <artifactId>maven-processor-plugin</artifactId>
-        <version>2.1.0</version>
+        <groupId>com.antwerkz.critter</groupId>
+        <artifactId>critter-maven</artifactId>
+        <version>${project.version}</version>
         <executions>
             <execution>
-                <id>process</id>
+                <id>critter</id>
                 <goals>
-                    <goal>process</goal>
+                    <goal>generate</goal>
                 </goals>
-                <phase>compile</phase>
+                <configuration>
+                    <criteriaPkg>critter.criteria</criteriaPkg>
+                </configuration>
             </execution>
         </executions>
     </plugin>
 
-For now, it generates straight in to src/main/java.  It's a little less than ideal.  I'd rather have it generate in to
-say, src/main/generated/critter, but maven wasn't cooperating and it wasn't that big of a deal.  The packages for the
-generated classes are computed by the packages of the entity objects so their sequestered packagewise in any case.
+
+This will generate your criteria classes straight in to src/main/java.  It's a little less than ideal but it
+is [changing](https://github.com/evanchooly/critter/issues/4) soon.  If the `criteriaPkg` option is left out, the code
+will be generated using `com.antwerkz.critter.criteria`.
 
 Include the dependency in your pom.xml like this:
 
     <dependency>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter-apt</artifactId>
-        <version>1.2.5</version>
+        <version>2.0.0</version>
         <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter-core</artifactId>
-        <version>1.2.5</version>
+        <version>2.0.0</version>
     </dependency>
 
 What difference does it make?
