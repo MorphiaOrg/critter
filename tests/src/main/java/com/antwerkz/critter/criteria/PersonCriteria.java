@@ -3,13 +3,13 @@ package com.antwerkz.critter.criteria;
 import com.antwerkz.critter.criteria.BaseCriteria;
 import com.antwerkz.critter.test.Person;
 import org.mongodb.morphia.Datastore;
-import java.lang.Long;
+import java.lang.String;
 import org.mongodb.morphia.query.Criteria;
 import com.antwerkz.critter.TypeSafeFieldEnd;
 import org.mongodb.morphia.query.FieldEndImpl;
 import org.mongodb.morphia.query.QueryImpl;
-import java.lang.String;
 import org.bson.types.ObjectId;
+import java.lang.Long;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import com.mongodb.WriteConcern;
@@ -20,18 +20,6 @@ public class PersonCriteria extends BaseCriteria<Person>
    public PersonCriteria(Datastore ds)
    {
       super(ds, Person.class);
-   }
-
-   public TypeSafeFieldEnd<PersonCriteria, Person, Long> age()
-   {
-      return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(
-            this, query, "age");
-   }
-
-   public Criteria age(Long value)
-   {
-      return new FieldEndImpl<QueryImpl>((QueryImpl) query, "age",
-            (QueryImpl) query, false).equal(value);
    }
 
    public TypeSafeFieldEnd<PersonCriteria, Person, String> first()
@@ -70,6 +58,18 @@ public class PersonCriteria extends BaseCriteria<Person>
             (QueryImpl) query, false).equal(value);
    }
 
+   public TypeSafeFieldEnd<PersonCriteria, Person, Long> age()
+   {
+      return new TypeSafeFieldEnd<PersonCriteria, Person, java.lang.Long>(
+            this, query, "age");
+   }
+
+   public Criteria age(Long value)
+   {
+      return new FieldEndImpl<QueryImpl>((QueryImpl) query, "age",
+            (QueryImpl) query, false).equal(value);
+   }
+
    public PersonUpdater getUpdater()
    {
       return new PersonUpdater();
@@ -104,6 +104,30 @@ public class PersonCriteria extends BaseCriteria<Person>
          return ds.update(query(), updateOperations, true, wc);
       }
 
+      public PersonUpdater first(String value)
+      {
+         updateOperations.set("first", value);
+         return this;
+      }
+
+      public PersonUpdater unsetFirst()
+      {
+         updateOperations.unset("first");
+         return this;
+      }
+
+      public PersonUpdater last(String value)
+      {
+         updateOperations.set("last", value);
+         return this;
+      }
+
+      public PersonUpdater unsetLast()
+      {
+         updateOperations.unset("last");
+         return this;
+      }
+
       public PersonUpdater age(Long value)
       {
          updateOperations.set("age", value);
@@ -131,30 +155,6 @@ public class PersonCriteria extends BaseCriteria<Person>
       public PersonUpdater incAge(Long value)
       {
          updateOperations.inc("age", value);
-         return this;
-      }
-
-      public PersonUpdater first(String value)
-      {
-         updateOperations.set("first", value);
-         return this;
-      }
-
-      public PersonUpdater unsetFirst()
-      {
-         updateOperations.unset("first");
-         return this;
-      }
-
-      public PersonUpdater last(String value)
-      {
-         updateOperations.set("last", value);
-         return this;
-      }
-
-      public PersonUpdater unsetLast()
-      {
-         updateOperations.unset("last");
          return this;
       }
    }

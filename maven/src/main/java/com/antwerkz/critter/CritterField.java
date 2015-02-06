@@ -14,6 +14,7 @@ import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 import org.jboss.forge.roaster.model.util.Strings;
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FieldEndImpl;
 import org.mongodb.morphia.query.QueryImpl;
@@ -29,8 +30,6 @@ public class CritterField implements Comparable<CritterField> {
 
   private CritterContext context;
 
-  private JavaClassSource javaClass;
-
   public static final List<String> NUMERIC_TYPES = new ArrayList<>();
 
   static {
@@ -43,10 +42,8 @@ public class CritterField implements Comparable<CritterField> {
     NUMERIC_TYPES.add("java.lang.Number");
   }
 
-  public CritterField(final CritterContext context, final JavaClassSource javaClass,
-      final Field<JavaClassSource> field) {
+  public CritterField(final CritterContext context, final Field<JavaClassSource> field) {
     this.context = context;
-    this.javaClass = javaClass;
     source = field;
     getFullType(field.getType());
     if (field.getType().isParameterized()) {
@@ -63,64 +60,6 @@ public class CritterField implements Comparable<CritterField> {
     fullType = nestedType != null
         ? nestedType.getCanonicalName()
         : type.getQualifiedName();
-  }
-
-  public void buildField(final JavaClassSource criteriaClass) {
-    final String qualifiedName = javaClass.getQualifiedName();
-    criteriaClass.addImport(qualifiedName);
-    criteriaClass.addImport(fullType);
-    criteriaClass.addImport(Criteria.class);
-    String name = "\"" + source.getName() + "\"";
-    if(getSource().getOrigin().hasAnnotation(Embedded.class) || context.isEmbedded(getSource().getOrigin())) {
-      name = "prefix + " + name;
-    }
-    criteriaClass.addMethod()
-        .setPublic()
-        .setName(source.getName())
-        .setReturnType(format("%s<%s, %s, %s>", TypeSafeFieldEnd.class.getName(), criteriaClass.getQualifiedName(),
-            javaClass.getQualifiedName(), fullType))
-        .setBody(format("return new TypeSafeFieldEnd<%s, %s, %s>(this, query, %s);",
-            criteriaClass.getName(), javaClass.getName(), fullType, name));
-
-    criteriaClass.addImport(FieldEndImpl.class);
-    criteriaClass.addImport(QueryImpl.class);
-    final MethodSource<JavaClassSource> method = criteriaClass.addMethod()
-        .setName(source.getName())
-        .setPublic()
-        .setReturnType(Criteria.class);
-    method.setBody(format("return new FieldEndImpl<QueryImpl>((QueryImpl)query, %s, (QueryImpl)query, false).equal(value);",
-        name));
-
-    method.addParameter(getParameterizedType(), "value");
-  }
-
-  public void buildEmbed(final JavaClassSource criteriaClass) {
-    criteriaClass.addImport(Criteria.class);
-    String criteriaType;
-    if(!shortParameterTypes.isEmpty()) {
-      criteriaType = shortParameterTypes.get(0) + "Criteria";
-      criteriaClass.addImport(criteriaClass.getPackage() + "." + criteriaType);
-    } else {
-      final Type<JavaClassSource> type = source.getType();
-      criteriaType = type.getQualifiedName() + "Criteria";
-      criteriaClass.addImport(source.getType().getQualifiedName());
-    }
-    final MethodSource<JavaClassSource> method = criteriaClass.addMethod()
-        .setPublic()
-        .setName(source.getName())
-        .setReturnType(criteriaType);
-    method
-        .setBody(format("return new %s(query, \"%s\");", method.getReturnType().getName(), source.getName()));
-  }
-
-  public void buildReference(final JavaClassSource criteriaClass) {
-    criteriaClass.addMethod()
-        .setPublic()
-        .setName(source.getName())
-        .setReturnType(criteriaClass)
-        .setBody(format("query.filter(\"%s = \", reference);\n"
-            + "return this;", source.getName()))
-        .addParameter(source.getType().getQualifiedName(), "reference");
   }
 
   @Override
@@ -180,5 +119,74 @@ public class CritterField implements Comparable<CritterField> {
     return "CritterField{" +
         "source=" + source +
         '}';
+  }
+
+  public void build(final CritterClass critterClass, final JavaClassSource criteriaClass) {
+    if (getSource().hasAnnotation(Reference.class)) {
+      buildReference(critterClass, criteriaClass);
+    } else if (hasAnnotation(Embedded.class)) {
+      buildEmbed(critterClass, criteriaClass);
+    } else {
+      buildField(critterClass, criteriaClass);
+    }
+
+  }
+
+  public void buildReference(final CritterClass critterClass, final JavaClassSource criteriaClass) {
+    criteriaClass.addMethod()
+        .setPublic()
+        .setName(source.getName())
+        .setReturnType(criteriaClass)
+        .setBody(format("query.filter(\"%s = \", reference);\n"
+            + "return this;", source.getName()))
+        .addParameter(source.getType().getQualifiedName(), "reference");
+  }
+
+  public void buildEmbed(final CritterClass critterClass, final JavaClassSource criteriaClass) {
+    criteriaClass.addImport(Criteria.class);
+    String criteriaType;
+    if(!shortParameterTypes.isEmpty()) {
+      criteriaType = shortParameterTypes.get(0) + "Criteria";
+      criteriaClass.addImport(criteriaClass.getPackage() + "." + criteriaType);
+    } else {
+      final Type<JavaClassSource> type = source.getType();
+      criteriaType = type.getQualifiedName() + "Criteria";
+      criteriaClass.addImport(source.getType().getQualifiedName());
+    }
+    final MethodSource<JavaClassSource> method = criteriaClass.addMethod()
+        .setPublic()
+        .setName(source.getName())
+        .setReturnType(criteriaType);
+    method
+        .setBody(format("return new %s(query, \"%s\");", method.getReturnType().getName(), source.getName()));
+  }
+
+  public void buildField(final CritterClass critterClass, final JavaClassSource criteriaClass) {
+    final String qualifiedName = critterClass.getSourceClass().getQualifiedName();
+    criteriaClass.addImport(qualifiedName);
+    criteriaClass.addImport(fullType);
+    criteriaClass.addImport(Criteria.class);
+    String name = "\"" + source.getName() + "\"";
+    if(getSource().getOrigin().hasAnnotation(Embedded.class) || context.isEmbedded(getSource().getOrigin())) {
+      name = "prefix + " + name;
+    }
+    criteriaClass.addMethod()
+        .setPublic()
+        .setName(source.getName())
+        .setReturnType(format("%s<%s, %s, %s>", TypeSafeFieldEnd.class.getName(), criteriaClass.getQualifiedName(),
+            critterClass.getSourceClass().getQualifiedName(), fullType))
+        .setBody(format("return new TypeSafeFieldEnd<%s, %s, %s>(this, query, %s);",
+            criteriaClass.getName(), critterClass.getSourceClass().getName(), fullType, name));
+
+    criteriaClass.addImport(FieldEndImpl.class);
+    criteriaClass.addImport(QueryImpl.class);
+    final MethodSource<JavaClassSource> method = criteriaClass.addMethod()
+        .setName(source.getName())
+        .setPublic()
+        .setReturnType(Criteria.class);
+    method.setBody(format("return new FieldEndImpl<QueryImpl>((QueryImpl)query, %s, (QueryImpl)query, false).equal(value);",
+        name));
+
+    method.addParameter(getParameterizedType(), "value");
   }
 }

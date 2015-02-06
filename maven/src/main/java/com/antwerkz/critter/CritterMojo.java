@@ -2,8 +2,6 @@ package com.antwerkz.critter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
@@ -18,8 +16,6 @@ import org.codehaus.plexus.util.DirectoryWalker;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class CritterMojo extends AbstractMojo {
@@ -58,9 +54,7 @@ public class CritterMojo extends AbstractMojo {
             throw new RuntimeException(e.getMessage(), e);
           }
           if (type instanceof JavaClassSource) {
-            if (type.hasAnnotation(Entity.class) || type.hasAnnotation(Embedded.class)) {
-              context.add(new CritterClass(context, type));
-            }
+            context.add(new CritterClass(context, type));
           }
         }
       }
@@ -75,20 +69,7 @@ public class CritterMojo extends AbstractMojo {
     });
     walker.scan();
 
-    context.getClasses().stream().forEach(new Consumer<CritterClass>() {
-      @Override
-      public void accept(final CritterClass critterClass) {
-        final JavaClassSource criteriaClass = critterClass.build();
-        final String fileName = criteriaClass.getQualifiedName().replace('.', '/') + ".java";
-        final File file = new File(directory, fileName);
-        file.getParentFile().mkdirs();
-        try (PrintWriter writer = new PrintWriter(file)) {
-          System.out.printf("Generating %s in to %s\n", criteriaClass.getName(), file);
-          writer.println(criteriaClass.toString());
-        } catch (IOException e) {
-          throw new RuntimeException(e.getMessage(), e);
-        }
-      }
-    });
+    context.getClasses().stream()
+        .forEach(critterClass -> critterClass.build(directory));
   }
 }

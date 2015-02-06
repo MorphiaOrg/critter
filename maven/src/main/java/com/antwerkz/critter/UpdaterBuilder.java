@@ -70,6 +70,7 @@ public class UpdaterBuilder {
             .stream()
             .forEach(criteriaClass::addImport);
       }
+
       criteriaClass.addImport(field.getFullType());
       if (!field.hasAnnotation(Id.class)) {
         updater.addMethod()

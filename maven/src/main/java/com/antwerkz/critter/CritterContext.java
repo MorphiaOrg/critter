@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.String.format;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 
 public class CritterContext {
@@ -17,7 +18,7 @@ public class CritterContext {
   }
 
   public void add(CritterClass critterClass) {
-    classes.put(critterClass.getName(), critterClass);
+    classes.put(format("%s.%s", critterClass.getPackage(), critterClass.getName()), critterClass);
     critterClass.setPackage(criteriaPkg);
   }
 

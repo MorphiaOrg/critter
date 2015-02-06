@@ -20,15 +20,13 @@ import org.mongodb.morphia.annotations.Id;
 import org.bson.types.ObjectId;
 
 @Entity
-public class Person {
+public class Person extends AbstractPerson {
   @Id
   private ObjectId id;
 
   private String first;
 
   private String last;
-
-  private Long age;
 
   public Person() {
   }
@@ -44,14 +42,6 @@ public class Person {
 
   public void setId(final ObjectId id) {
     this.id = id;
-  }
-
-  public Long getAge() {
-    return age;
-  }
-
-  public void setAge(final Long age) {
-    this.age = age;
   }
 
   public String getFirst() {
