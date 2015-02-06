@@ -110,7 +110,6 @@ public class CritterClass {
     final File file = new File(directory, fileName);
     file.getParentFile().mkdirs();
     try (PrintWriter writer = new PrintWriter(file)) {
-      System.out.printf("Generating %s in to %s\n", criteriaClass.getName(), file);
       writer.println(criteriaClass.toString());
     } catch (IOException e) {
       throw new RuntimeException(e.getMessage(), e);
