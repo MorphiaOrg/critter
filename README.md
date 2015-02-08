@@ -28,33 +28,11 @@ will be generated using `com.antwerkz.critter.criteria`.
 
 Include the dependency in your pom.xml like this:
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.antwerkz.critter</groupId>
-                <artifactId>critter-maven</artifactId>
-                <version>${project.version}</version>
-                <executions>
-                    <execution>
-                        <id>critter</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.antwerkz.critter</groupId>
-            <artifactId>critter-core</artifactId>
-            <version>2.0.0</version>
-        </dependency>
-    </ependencies>
+    <dependency>
+        <groupId>com.antwerkz.critter</groupId>
+        <artifactId>critter-core</artifactId>
+        <version>2.0.0</version>
+    </dependency>
 
 What difference does it make?
 -----------------------------
