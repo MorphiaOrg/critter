@@ -2,7 +2,6 @@ package com.antwerkz.critter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
 import org.apache.maven.plugin.AbstractMojo;
@@ -11,6 +10,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryWalkListener;
 import org.codehaus.plexus.util.DirectoryWalker;
 import org.jboss.forge.roaster.Roaster;
@@ -19,24 +19,40 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class CritterMojo extends AbstractMojo {
-  @Parameter(property = "directory", defaultValue = "src/main/java")
-  private File directory;
+  @Parameter(property = "critter.source.directory", defaultValue = "src/main/java")
+  private File sourceDirectory;
 
-  @Parameter(property = "includes", defaultValue = "**/*.java")
+  @Parameter(property = "critter.output.directory", defaultValue = "${project.build.directory}/generated-sources/critter",
+      readonly = true, required = true)
+  private File outputDirectory;
+
+  @Parameter(property = "critter.includes", defaultValue = "**/*.java")
   private String includes;
 
-  @Parameter(property = "package", defaultValue = "com.antwerkz.critter.criteria")
-  private String criteriaPkg;
+  @Parameter(property = "critter.criteria.package", defaultValue = "com.antwerkz.critter.criteria")
+  private String criteriaPackage;
+
+  @Parameter(defaultValue = "${project}", readonly = true, required = true)
+  protected MavenProject project;
+
+  public void setCriteriaPackage(final String criteriaPackage) {
+    this.criteriaPackage = criteriaPackage;
+  }
+
+  public void setSourceDirectory(final File sourceDirectory) {
+    this.sourceDirectory = sourceDirectory;
+  }
+
+  public void setIncludes(final String includes) {
+    this.includes = includes;
+  }
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
-    CritterContext context = new CritterContext(criteriaPkg);
-//    final FileSet fileSet = new FileSet();
-//    fileSet.setDirectory(directory);
-//    fileSet.setIncludes(asList(includes.split(",")));
-//    fileSet.includes()
+    project.addCompileSourceRoot(outputDirectory.getPath());
+    CritterContext context = new CritterContext(criteriaPackage);
     final DirectoryWalker walker = new DirectoryWalker();
-    walker.setBaseDir(directory);
+    walker.setBaseDir(sourceDirectory);
     walker.setIncludes(asList(includes.split(",")));
 
     walker.addDirectoryWalkListener(new DirectoryWalkListener() {
@@ -70,6 +86,6 @@ public class CritterMojo extends AbstractMojo {
     walker.scan();
 
     context.getClasses().stream()
-        .forEach(critterClass -> critterClass.build(directory));
+        .forEach(critterClass -> critterClass.build(outputDirectory));
   }
 }

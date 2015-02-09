@@ -15,16 +15,18 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
                     <goal>generate</goal>
                 </goals>
                 <configuration>
-                    <criteriaPkg>critter.criteria</criteriaPkg>
+                    <criteriaPackage>com.antwerkz.critter.criteria</criteriaPackage>
+                    <includes>**/*.java</includes>
+                    <sourceDirectory>src/main/java</sourceDirectory>
                 </configuration>
             </execution>
         </executions>
     </plugin>
 
-
 This will generate your criteria classes straight in to src/main/java.  It's a little less than ideal but it
 is [changing](https://github.com/evanchooly/critter/issues/4) soon.  If the `criteriaPkg` option is left out, the code
-will be generated using `com.antwerkz.critter.criteria`.
+will be generated using `com.antwerkz.critter.criteria`.  (The options are shown here for documentation
+purposes using the default values.  They can be left out altogether if the defaults are acceptable.)
 
 Include the dependency in your pom.xml like this:
 

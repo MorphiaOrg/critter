@@ -118,7 +118,6 @@ public class CritterClass {
   }
 
   public List<CritterField> getFields() {
-    final String name1 = sourceClass.getName();
     if (fields == null) {
       fields = sourceClass.getFields().stream()
           .map(f -> new CritterField(context, f))
