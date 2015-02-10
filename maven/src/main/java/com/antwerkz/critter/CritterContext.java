@@ -17,9 +17,11 @@ public class CritterContext {
     this.criteriaPkg = criteriaPkg;
   }
 
-  public void add(CritterClass critterClass) {
-    classes.put(format("%s.%s", critterClass.getPackage(), critterClass.getName()), critterClass);
-    critterClass.setPackage(criteriaPkg);
+  public void add(final String aPackage, CritterClass critterClass) {
+    classes.put(format("%s.%s", aPackage, critterClass.getName()), critterClass);
+    if(criteriaPkg != null) {
+      critterClass.setPackage(criteriaPkg);
+    }
   }
 
   public CritterClass get(String name) {

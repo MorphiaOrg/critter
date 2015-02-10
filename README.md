@@ -7,7 +7,7 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
     <plugin>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter-maven</artifactId>
-        <version>${project.version}</version>
+        <version>${critter.version</version>
         <executions>
             <execution>
                 <id>critter</id>
@@ -15,7 +15,6 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
                     <goal>generate</goal>
                 </goals>
                 <configuration>
-                    <criteriaPackage>com.antwerkz.critter.criteria</criteriaPackage>
                     <includes>**/*.java</includes>
                     <sourceDirectory>src/main/java</sourceDirectory>
                 </configuration>
@@ -23,17 +22,17 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
         </executions>
     </plugin>
 
-This will generate your criteria classes straight in to src/main/java.  It's a little less than ideal but it
-is [changing](https://github.com/evanchooly/critter/issues/4) soon.  If the `criteriaPkg` option is left out, the code
-will be generated using `com.antwerkz.critter.criteria`.  (The options are shown here for documentation
-purposes using the default values.  They can be left out altogether if the defaults are acceptable.)
+This will generate your criteria classes in `build/generated-sources/critter` and add the directory as a source
+directory of your maven project.  If the `criteriaPkg` option is left out, the code
+will be generated using the package of your entities with `.criteria` appended. (The options are shown here for
+documentation purposes using the default values.  They can be left out altogether if the defaults are acceptable.)
 
 Include the dependency in your pom.xml like this:
 
     <dependency>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter-core</artifactId>
-        <version>2.0.0</version>
+        <version>${critter.version}</version>
     </dependency>
 
 What difference does it make?

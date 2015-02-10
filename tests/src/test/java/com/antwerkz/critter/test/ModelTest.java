@@ -4,21 +4,20 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.antwerkz.critter.criteria.PersonCriteria.PersonUpdater;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class ModelTest {
   @Test
   public void api() {
-    final Map<String, Method> methods = getFields("com.antwerkz.critter.criteria.PersonCriteria$PersonUpdater");
+    final Map<String, Method> methods = getFields("com.antwerkz.critter.test.criteria.PersonCriteria$PersonUpdater");
     assertNull(methods, "addAllToAge");
     assertNull(methods, "incLast");
   }
 
   @Test
   public void inheritance() {
-    final Map<String, Method> methods = getFields("com.antwerkz.critter.criteria.UserCriteria");
+    final Map<String, Method> methods = getFields("com.antwerkz.critter.test.criteria.UserCriteria");
     assertNotNull(methods, "age");
     assertNotNull(methods, "email");
     assertNotNull(methods, "last");

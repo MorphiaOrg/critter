@@ -29,7 +29,7 @@ public class CritterMojo extends AbstractMojo {
   @Parameter(property = "critter.includes", defaultValue = "**/*.java")
   private String includes;
 
-  @Parameter(property = "critter.criteria.package", defaultValue = "com.antwerkz.critter.criteria")
+  @Parameter(property = "critter.criteria.package")
   private String criteriaPackage;
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -70,7 +70,7 @@ public class CritterMojo extends AbstractMojo {
             throw new RuntimeException(e.getMessage(), e);
           }
           if (type instanceof JavaClassSource) {
-            context.add(new CritterClass(context, type));
+            context.add(type.getPackage(), new CritterClass(context, type));
           }
         }
       }

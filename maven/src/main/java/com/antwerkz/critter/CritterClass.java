@@ -36,7 +36,7 @@ public class CritterClass {
     sourceClass = (JavaClassSource) type;
     name = sourceClass.getName();
     embedded = sourceClass.hasAnnotation(Embedded.class);
-    context.add(this);
+    packageName = sourceClass.getPackage() + ".criteria";
   }
 
   public JavaClassSource getSourceClass() {
@@ -48,7 +48,11 @@ public class CritterClass {
   }
 
   public String getPackage() {
-    return sourceClass.getPackage();
+    return packageName;
+  }
+
+  public void setPackage(final String aPackage) {
+    this.packageName = aPackage;
   }
 
   public void setName(final String name) {
@@ -133,10 +137,6 @@ public class CritterClass {
 
   public boolean isEmbedded() {
     return embedded;
-  }
-
-  public void setPackage(final String aPackage) {
-    this.packageName = aPackage;
   }
 
   @Override

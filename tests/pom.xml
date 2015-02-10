@@ -24,7 +24,6 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <criteriaPackage>com.antwerkz.critter.criteria</criteriaPackage>
                             <includes>**/*.java</includes>
                             <sourceDirectory>src/main/java</sourceDirectory>
                         </configuration>
