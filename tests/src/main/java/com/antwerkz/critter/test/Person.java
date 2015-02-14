@@ -59,4 +59,36 @@ public class Person extends AbstractPerson {
   public void setLast(String last) {
     this.last = last;
   }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    final Person person = (Person) o;
+
+    if (first != null ? !first.equals(person.first) : person.first != null) {
+      return false;
+    }
+    if (id != null ? !id.equals(person.id) : person.id != null) {
+      return false;
+    }
+    if (last != null ? !last.equals(person.last) : person.last != null) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (first != null ? first.hashCode() : 0);
+    result = 31 * result + (last != null ? last.hashCode() : 0);
+    return result;
+  }
 }

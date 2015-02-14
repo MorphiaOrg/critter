@@ -15,6 +15,9 @@
  */
 package com.antwerkz.critter.test;
 
+import java.net.UnknownHostException;
+import java.util.Date;
+
 import com.antwerkz.critter.test.criteria.InvoiceCriteria;
 import com.antwerkz.critter.test.criteria.PersonCriteria;
 import com.mongodb.DB;
@@ -26,32 +29,33 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
-
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 @Test
 public class CriteriaTest {
 
   private Datastore datastore;
 
+  @AfterMethod
+  public void clean() {
+    datastore = null;
+  }
+
   public void invoice() {
     Datastore ds = getDatastore();
     Person john = new Person("John", "Doe");
     ds.save(john);
     ds.save(new Invoice(new DateTime(2012, 12, 21, 13, 15).toDate(), john, new Address("New York City", "NY", "10000"),
-                           new Item("ball", 5.0), new Item("skateboard", 17.35)));
+        new Item("ball", 5.0), new Item("skateboard", 17.35)));
     Person jeff = new Person("Jeff", "Johnson");
     ds.save(jeff);
     ds.save(new Invoice(new DateTime(2006, 3, 4, 8, 7).toDate(), jeff, new Address("Los Angeles", "CA", "90210"),
-                           new Item("movie", 29.95)));
+        new Item("movie", 29.95)));
     Person sally = new Person("Sally", "Ride");
     ds.save(sally);
     ds.save(new Invoice(new DateTime(2007, 8, 16, 19, 27).toDate(), sally, new Address("Chicago", "IL", "99999"),
-                           new Item("kleenex", 3.49), new Item("cough and cold syrup", 5.61)));
+        new Item("kleenex", 3.49), new Item("cough and cold syrup", 5.61)));
     InvoiceCriteria invoiceCriteria = new InvoiceCriteria(ds);
     invoiceCriteria.person(john);
     Invoice invoice = invoiceCriteria.query().get();
@@ -79,12 +83,12 @@ public class CriteriaTest {
     Query<Person> query = personCriteria.query();
 
     Assert.assertEquals(personCriteria.getUpdater()
-                            .age(30L)
-                            .update().getUpdatedCount(), 0);
+        .age(30L)
+        .update().getUpdatedCount(), 0);
 
     Assert.assertEquals(personCriteria.getUpdater()
-                            .age(30L)
-                            .upsert().getInsertedCount(), 1);
+        .age(30L)
+        .upsert().getInsertedCount(), 1);
 
     UpdateResults update = personCriteria.getUpdater().incAge().update();
     Assert.assertEquals(update.getUpdatedCount(), 1);
@@ -123,15 +127,55 @@ public class CriteriaTest {
     Assert.assertEquals(criteria2.query().asList().get(0).getAddresses().get(0).getCity(), "New York City");
   }
 
+  public void orQueries() {
+    getDatastore().save(new Person("Mike", "Bloomberg"));
+    getDatastore().save(new Person("Mike", "Tyson"));
+
+    final Query<Person> query = getDatastore().createQuery(Person.class);
+    query.or(
+        query.criteria("last").equal("Bloomberg"),
+        query.criteria("last").equal("Tyson")
+    );
+
+    final PersonCriteria criteria = new PersonCriteria(getDatastore());
+    criteria.or(
+        criteria.last("Bloomberg"),
+        criteria.last("Tyson")
+    );
+
+    Assert.assertEquals(criteria.query().asList().size(), 2);
+    Assert.assertEquals(query.asList(), criteria.query().asList());
+  }
+
+  public void andQueries() {
+    getDatastore().save(new Person("Mike", "Bloomberg"));
+    getDatastore().save(new Person("Mike", "Tyson"));
+
+    final Query<Person> query = getDatastore().createQuery(Person.class);
+    query.and(
+        query.criteria("first").equal("Mike"),
+        query.criteria("last").equal("Tyson")
+    );
+
+    final PersonCriteria criteria = new PersonCriteria(getDatastore());
+    criteria.and(
+        criteria.first("Mike"),
+        criteria.last("Tyson")
+    );
+
+    Assert.assertEquals(criteria.query().asList().size(), 1);
+    Assert.assertEquals(query.asList(), criteria.query().asList());
+  }
+
   private Datastore getDatastore() {
     if (datastore == null) {
       try {
         MongoClient mongo = new MongoClient();
         DB critter = mongo.getDB("critter");
         critter.dropDatabase();
-        Set<Class> classes = new HashSet<>();
-        classes.add(Invoice.class);
-        datastore = new Morphia(classes).createDatastore(mongo, "critter");
+        final Morphia morphia = new Morphia();
+        morphia.mapPackage("com.antwerkz");
+        datastore = morphia.createDatastore(mongo, "critter");
       } catch (UnknownHostException e) {
         throw new RuntimeException(e.getMessage(), e);
       }

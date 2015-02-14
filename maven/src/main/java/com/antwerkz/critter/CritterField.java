@@ -166,10 +166,14 @@ public class CritterField implements Comparable<CritterField> {
     criteriaClass.addImport(qualifiedName);
     criteriaClass.addImport(fullType);
     criteriaClass.addImport(Criteria.class);
+    criteriaClass.addImport(FieldEndImpl.class);
+    criteriaClass.addImport(QueryImpl.class);
+
     String name = "\"" + source.getName() + "\"";
     if(getSource().getOrigin().hasAnnotation(Embedded.class) || context.isEmbedded(getSource().getOrigin())) {
       name = "prefix + " + name;
     }
+
     criteriaClass.addMethod()
         .setPublic()
         .setName(source.getName())
@@ -178,15 +182,12 @@ public class CritterField implements Comparable<CritterField> {
         .setBody(format("return new TypeSafeFieldEnd<%s, %s, %s>(this, query, %s);",
             criteriaClass.getName(), critterClass.getSourceClass().getName(), fullType, name));
 
-    criteriaClass.addImport(FieldEndImpl.class);
-    criteriaClass.addImport(QueryImpl.class);
     final MethodSource<JavaClassSource> method = criteriaClass.addMethod()
         .setName(source.getName())
         .setPublic()
-        .setReturnType(Criteria.class);
-    method.setBody(format("return new FieldEndImpl<QueryImpl>((QueryImpl)query, %s, (QueryImpl)query, false).equal(value);",
-        name));
-
+        .setReturnType(Criteria.class)
+        .setBody(format("return new TypeSafeFieldEnd<%s, %s, %s>(this, query, %s).equal(value);",
+            criteriaClass.getName(), critterClass.getSourceClass().getName(), fullType, name));
     method.addParameter(getParameterizedType(), "value");
   }
 }
