@@ -99,26 +99,31 @@ public class CritterClass {
             .addParameter(String.class, "prefix");
       }
 
-      for (CritterField field : getFields()) {
-        field.build(this, criteriaClass);
+      final File outputFile = new File(directory, criteriaClass.getQualifiedName().replace('.', '/') + ".java");
+      if (context.isForce() || outputFile.lastModified() < entitySource().lastModified()) {
+        for (CritterField field : getFields()) {
+          field.build(this, criteriaClass);
+        }
+        if (!sourceClass.hasAnnotation(Embedded.class)) {
+          new UpdaterBuilder(this, criteriaClass);
+        }
+
+        generate(criteriaClass, outputFile);
       }
-      if (!sourceClass.hasAnnotation(Embedded.class)) {
-        new UpdaterBuilder(this, criteriaClass);
-      }
-      generate(criteriaClass, directory);
     }
   }
 
-  private void generate(final JavaClassSource criteriaClass, final File directory) {
-    final String fileName = criteriaClass.getQualifiedName().replace('.', '/') + ".java";
-    final File file = new File(directory, fileName);
+  private File entitySource() {
+    return new File("src/main/java", sourceClass.getQualifiedName().replace('.', '/') + ".java");
+  }
+
+  private void generate(final JavaClassSource criteriaClass, final File file) {
     file.getParentFile().mkdirs();
     try (PrintWriter writer = new PrintWriter(file)) {
       writer.println(criteriaClass.toString());
     } catch (IOException e) {
       throw new RuntimeException(e.getMessage(), e);
     }
-
   }
 
   public List<CritterField> getFields() {

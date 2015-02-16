@@ -12,9 +12,12 @@ public class CritterContext {
 
   private String criteriaPkg;
 
-  public CritterContext(final String criteriaPkg) {
+  private boolean force;
+
+  public CritterContext(final String criteriaPkg, final boolean force) {
 
     this.criteriaPkg = criteriaPkg;
+    this.force = force;
   }
 
   public void add(final String aPackage, CritterClass critterClass) {
@@ -35,5 +38,9 @@ public class CritterContext {
   public boolean isEmbedded(final JavaClassSource clazz) {
     final CritterClass critterClass = get(clazz.getName());
     return critterClass != null && critterClass.isEmbedded();
+  }
+
+  public boolean isForce() {
+    return force;
   }
 }

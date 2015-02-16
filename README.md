@@ -17,6 +17,7 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
                 <configuration>
                     <includes>**/*.java</includes>
                     <sourceDirectory>src/main/java</sourceDirectory>
+                    <force>false</force>
                 </configuration>
             </execution>
         </executions>

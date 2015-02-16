@@ -32,6 +32,9 @@ public class CritterMojo extends AbstractMojo {
   @Parameter(property = "critter.criteria.package")
   private String criteriaPackage;
 
+  @Parameter(property = "critter.force", defaultValue = "false")
+  private boolean force;
+
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
   protected MavenProject project;
 
@@ -50,7 +53,7 @@ public class CritterMojo extends AbstractMojo {
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     project.addCompileSourceRoot(outputDirectory.getPath());
-    CritterContext context = new CritterContext(criteriaPackage);
+    CritterContext context = new CritterContext(criteriaPackage, force);
     final DirectoryWalker walker = new DirectoryWalker();
     walker.setBaseDir(sourceDirectory);
     walker.setIncludes(asList(includes.split(",")));
