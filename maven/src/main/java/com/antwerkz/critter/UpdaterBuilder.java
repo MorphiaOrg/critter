@@ -1,6 +1,7 @@
 package com.antwerkz.critter;
 
 import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 import static java.lang.String.format;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.FieldSource;
@@ -27,6 +28,7 @@ public class UpdaterBuilder {
     criteriaClass.addImport(UpdateOperations.class);
     criteriaClass.addImport(UpdateResults.class);
     criteriaClass.addImport(WriteConcern.class);
+    criteriaClass.addImport(WriteResult.class);
 
     final FieldSource<JavaClassSource> updateOperations = updater.addField()
         .setType(format("UpdateOperations<%s>", critterClass.getName()))
@@ -70,6 +72,19 @@ public class UpdaterBuilder {
         .setName("upsert")
         .setReturnType(UpdateResults.class)
         .setBody("return ds.update(query(), updateOperations, true, wc);")
+        .addParameter(WriteConcern.class, "wc");
+
+    updater.addMethod()
+        .setPublic()
+        .setName("remove")
+        .setReturnType(WriteResult.class)
+        .setBody("return ds.delete(query());");
+
+    updater.addMethod()
+        .setPublic()
+        .setName("remove")
+        .setReturnType(WriteResult.class)
+        .setBody("return ds.delete(query(), wc);")
         .addParameter(WriteConcern.class, "wc");
 
     for (CritterField field : critterClass.getFields()) {
