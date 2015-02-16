@@ -84,13 +84,13 @@ public class CriteriaTest {
 
     Assert.assertEquals(personCriteria.getUpdater()
         .age(30L)
-        .update().getUpdatedCount(), 0);
+        .updateAll().getUpdatedCount(), 0);
 
     Assert.assertEquals(personCriteria.getUpdater()
         .age(30L)
         .upsert().getInsertedCount(), 1);
 
-    UpdateResults update = personCriteria.getUpdater().incAge().update();
+    UpdateResults update = personCriteria.getUpdater().incAge().updateAll();
     Assert.assertEquals(update.getUpdatedCount(), 1);
     Assert.assertEquals(personCriteria.query().get().getAge().longValue(), 31L);
 
@@ -98,6 +98,22 @@ public class CriteriaTest {
 
     WriteResult delete = datastore.delete(query);
     Assert.assertNull(delete.getError());
+  }
+
+  @Test
+  public void updateFirst() {
+    for (int i = 0; i < 100; i++) {
+      getDatastore().save(new Person("First" + i, "Last" + i));
+    }
+    PersonCriteria criteria = new PersonCriteria(getDatastore());
+    criteria.last().contains("Last2");
+    criteria.getUpdater()
+        .age(1000L)
+        .updateFirst();
+
+    criteria = new PersonCriteria(getDatastore());
+    criteria.age(1000L);
+    Assert.assertEquals(criteria.query().countAll(), 1);
   }
 
   public void embeds() {

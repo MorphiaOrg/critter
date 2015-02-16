@@ -29,26 +29,34 @@ public class UpdaterBuilder {
     criteriaClass.addImport(WriteConcern.class);
 
     final FieldSource<JavaClassSource> updateOperations = updater.addField()
-        .setType(format("UpdateOperations<%s>", critterClass.getName()));
+        .setType(format("UpdateOperations<%s>", critterClass.getName()))
+        .setLiteralInitializer(format("ds.createUpdateOperations(%s.class);", critterClass.getName()));
     updateOperations.setName("updateOperations");
 
     updater.addMethod()
         .setPublic()
-        .setName(type)
-        .setConstructor(true)
-        .setBody(format("updateOperations = ds.createUpdateOperations(%s.class);", critterClass.getName()));
-
-    updater.addMethod()
-        .setPublic()
-        .setName("update")
+        .setName("updateAll")
         .setReturnType(UpdateResults.class)
         .setBody("return ds.update(query(), updateOperations, false);");
 
     updater.addMethod()
         .setPublic()
-        .setName("update")
+        .setName("updateFirst")
+        .setReturnType(UpdateResults.class)
+        .setBody("return ds.updateFirst(query(), updateOperations, false);");
+
+    updater.addMethod()
+        .setPublic()
+        .setName("updateAll")
         .setReturnType(UpdateResults.class)
         .setBody("return ds.update(query(), updateOperations, false, wc);")
+        .addParameter(WriteConcern.class, "wc");
+
+    updater.addMethod()
+        .setPublic()
+        .setName("updateFirst")
+        .setReturnType(UpdateResults.class)
+        .setBody("return ds.updateFirst(query(), updateOperations, false, wc);")
         .addParameter(WriteConcern.class, "wc");
 
     updater.addMethod()
