@@ -24,8 +24,6 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <includes>**/*.java</includes>
-                            <sourceDirectory>src/main/java</sourceDirectory>
                             <force>true</force>
                         </configuration>
                     </execution>

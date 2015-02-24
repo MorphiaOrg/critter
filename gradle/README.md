@@ -21,8 +21,8 @@ Both values are optional:
 * `force` will ignore timestamps and generate the critter files always.  By default, new critter files are only
     generated when the entity's source changes.
 * `criteriaPackage` defines the package name used in the generated source.  By default, the entity's package name will
- be used with `.critter` appended.
- 
+ be used with `.criteria` appended.
+
 IDEA
 ----
 If you'll need to add the following to your `build.gradle`:

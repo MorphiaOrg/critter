@@ -19,15 +19,9 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class CritterMojo extends AbstractMojo {
-  @Parameter(property = "critter.source.directory", defaultValue = "src/main/java")
-  private File sourceDirectory;
-
   @Parameter(property = "critter.output.directory", defaultValue = "${project.build.directory}/generated-sources/critter",
       readonly = true, required = true)
   private File outputDirectory;
-
-  @Parameter(property = "critter.includes", defaultValue = "**/*.java")
-  private String includes;
 
   @Parameter(property = "critter.criteria.package")
   private String criteriaPackage;
@@ -36,27 +30,15 @@ public class CritterMojo extends AbstractMojo {
   private boolean force;
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
-  protected MavenProject project;
-
-  public void setCriteriaPackage(final String criteriaPackage) {
-    this.criteriaPackage = criteriaPackage;
-  }
-
-  public void setSourceDirectory(final File sourceDirectory) {
-    this.sourceDirectory = sourceDirectory;
-  }
-
-  public void setIncludes(final String includes) {
-    this.includes = includes;
-  }
+  private MavenProject project;
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     project.addCompileSourceRoot(outputDirectory.getPath());
     CritterContext context = new CritterContext(criteriaPackage, force);
     final DirectoryWalker walker = new DirectoryWalker();
-    walker.setBaseDir(sourceDirectory);
-    walker.setIncludes(asList(includes.split(",")));
+    walker.setBaseDir(new File("src/main/java"));
+    walker.setIncludes(asList("**/*.java"));
 
     walker.addDirectoryWalkListener(new DirectoryWalkListener() {
       @Override

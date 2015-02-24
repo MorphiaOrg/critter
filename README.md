@@ -7,7 +7,7 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
     <plugin>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter-maven</artifactId>
-        <version>${critter.version</version>
+        <version>${critter.version}</version>
         <executions>
             <execution>
                 <id>critter</id>
@@ -15,16 +15,15 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
                     <goal>generate</goal>
                 </goals>
                 <configuration>
-                    <includes>**/*.java</includes>
-                    <sourceDirectory>src/main/java</sourceDirectory>
                     <force>false</force>
+                    <criteriaPackage>com.bob.bar</criteriaPackage>
                 </configuration>
             </execution>
         </executions>
     </plugin>
 
-This will generate your criteria classes in `build/generated-sources/critter` and add the directory as a source
-directory of your maven project.  If the `criteriaPkg` option is left out, the code
+This will generate your criteria classes in `target/generated-sources/critter` and add the directory as a source
+directory of your maven project.  If the `criteriaPackage` option is left out, the code
 will be generated using the package of your entities with `.criteria` appended. (The options are shown here for
 documentation purposes using the default values.  They can be left out altogether if the defaults are acceptable.)
 
@@ -62,3 +61,9 @@ catch model/query conflicts at compile time rather than waiting for things to fa
 lucky enough to those).
 
 You can see a working example in the [tests](https://github.com/evanchooly/critter/tree/master/tests).
+
+
+IDEA Users
+----------
+
+IDEA users will need to enable the plugin registry in the maven configuration options for IDEA to pick up the plugin.
