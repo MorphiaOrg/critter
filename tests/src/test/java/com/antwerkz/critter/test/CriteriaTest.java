@@ -98,7 +98,7 @@ public class CriteriaTest {
     Assert.assertNotNull(new PersonCriteria(datastore).query().get().getFirst());
 
     WriteResult delete = datastore.delete(query);
-    Assert.assertNull(delete.getError());
+    Assert.assertEquals(delete.getN(), 1);
   }
 
   @Test(enabled = false) // waiting morphia issue #711

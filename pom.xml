@@ -129,6 +129,7 @@
     <modules>
         <module>core</module>
         <module>maven</module>
+        <module>gradle</module>
         <module>tests</module>
     </modules>
 </project>
