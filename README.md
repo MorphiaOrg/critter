@@ -35,6 +35,8 @@ Include the dependency in your pom.xml like this:
         <version>${critter.version}</version>
     </dependency>
 
+*Critter also requires morphia 0.110 and 2.13.0 of the mongo-java-driver.*
+
 What difference does it make?
 -----------------------------
 Before critter, your criteria might look something like this:
