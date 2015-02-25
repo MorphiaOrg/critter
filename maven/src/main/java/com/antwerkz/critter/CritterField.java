@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.String.*;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import org.jboss.forge.roaster.model.Field;
 import org.jboss.forge.roaster.model.Type;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
@@ -14,6 +14,7 @@ import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 import org.jboss.forge.roaster.model.util.Strings;
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FieldEndImpl;
@@ -189,5 +190,20 @@ public class CritterField implements Comparable<CritterField> {
         .setBody(format("return new TypeSafeFieldEnd<%s, %s, %s>(this, query, %s).equal(value);",
             criteriaClass.getName(), critterClass.getSourceClass().getName(), fullType, name));
     method.addParameter(getParameterizedType(), "value");
+  }
+
+  public String mappedName() {
+    String name = getName();
+    name = extract(name, Property.class);
+    name = extract(name, Embedded.class);
+
+    return name;
+  }
+
+  private String extract(String name, final Class<? extends Annotation> ann) {
+    final org.jboss.forge.roaster.model.Annotation<JavaClassSource> annotation = source.getAnnotation(ann);
+    return annotation != null && annotation.getStringValue("value") != null
+        ? annotation.getStringValue("value")
+        : name;
   }
 }

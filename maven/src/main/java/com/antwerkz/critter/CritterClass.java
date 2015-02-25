@@ -66,9 +66,37 @@ public class CritterClass {
   public void build(final File directory) {
     if (hasAnnotation(Entity.class) || hasAnnotation(Embedded.class)) {
 
-      final JavaClassSource criteriaClass = Roaster.create(JavaClassSource.class);
-      criteriaClass.setPackage(packageName).setName(sourceClass.getName() + "Criteria");
+      buildCriteria(directory);
+      buildDescriptor(directory);
+    }
+  }
 
+  private void buildDescriptor(final File directory) {
+    final JavaClassSource descriptorClass = Roaster.create(JavaClassSource.class);
+    descriptorClass.setPackage(packageName).setName(sourceClass.getName() + "Descriptor");
+
+    final File outputFile = new File(directory, descriptorClass.getQualifiedName().replace('.', '/') + ".java");
+    if (context.isForce() || outputFile.lastModified() < getLastModified()) {
+      for (CritterField field : getFields()) {
+        descriptorClass.addField()
+            .setPublic()
+            .setStatic(true)
+            .setFinal(true)
+            .setType(String.class)
+            .setName(field.getName())
+            .setStringInitializer(field.mappedName());
+      }
+
+      generate(descriptorClass, outputFile);
+    }
+  }
+
+  private void buildCriteria(final File directory) {
+    final JavaClassSource criteriaClass = Roaster.create(JavaClassSource.class);
+    criteriaClass.setPackage(packageName).setName(sourceClass.getName() + "Criteria");
+
+    final File outputFile = new File(directory, criteriaClass.getQualifiedName().replace('.', '/') + ".java");
+    if (context.isForce() || outputFile.lastModified() < getLastModified()) {
       if (!sourceClass.hasAnnotation(Embedded.class)) {
         criteriaClass.setSuperType(BaseCriteria.class.getName() + "<" + sourceClass.getQualifiedName() + ">");
         final MethodSource<JavaClassSource> method = criteriaClass.addMethod()
@@ -99,22 +127,15 @@ public class CritterClass {
             .addParameter(String.class, "prefix");
       }
 
-      final File outputFile = new File(directory, criteriaClass.getQualifiedName().replace('.', '/') + ".java");
-      if (context.isForce() || outputFile.lastModified() < entitySource().lastModified()) {
-        for (CritterField field : getFields()) {
-          field.build(this, criteriaClass);
-        }
-        if (!sourceClass.hasAnnotation(Embedded.class)) {
-          new UpdaterBuilder(this, criteriaClass);
-        }
-
-        generate(criteriaClass, outputFile);
+      for (CritterField field : getFields()) {
+        field.build(this, criteriaClass);
       }
-    }
-  }
+      if (!sourceClass.hasAnnotation(Embedded.class)) {
+        new UpdaterBuilder(this, criteriaClass);
+      }
 
-  private File entitySource() {
-    return new File("src/main/java", sourceClass.getQualifiedName().replace('.', '/') + ".java");
+      generate(criteriaClass, outputFile);
+    }
   }
 
   private void generate(final JavaClassSource criteriaClass, final File file) {
@@ -124,6 +145,16 @@ public class CritterClass {
     } catch (IOException e) {
       throw new RuntimeException(e.getMessage(), e);
     }
+  }
+
+  private long getLastModified() {
+    long modified = new File("src/main/java", sourceClass.getQualifiedName().replace('.', '/') + ".java")
+        .lastModified();
+    final CritterClass superClass = context.get(sourceClass.getSuperType());
+    if (superClass != null) {
+      modified = Math.min(modified, superClass.getLastModified());
+    }
+    return modified;
   }
 
   public List<CritterField> getFields() {

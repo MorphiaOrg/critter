@@ -19,6 +19,9 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class CritterMojo extends AbstractMojo {
+  @Parameter(defaultValue = "src/main/java", readonly = true, required = true)
+  private File sourceDirectory;
+
   @Parameter(property = "critter.output.directory", defaultValue = "${project.build.directory}/generated-sources/critter",
       readonly = true, required = true)
   private File outputDirectory;
@@ -37,7 +40,7 @@ public class CritterMojo extends AbstractMojo {
     project.addCompileSourceRoot(outputDirectory.getPath());
     CritterContext context = new CritterContext(criteriaPackage, force);
     final DirectoryWalker walker = new DirectoryWalker();
-    walker.setBaseDir(new File("src/main/java"));
+    walker.setBaseDir(sourceDirectory);
     walker.setIncludes(asList("**/*.java"));
 
     walker.addDirectoryWalkListener(new DirectoryWalkListener() {

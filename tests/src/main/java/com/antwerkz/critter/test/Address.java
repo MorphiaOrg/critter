@@ -1,9 +1,11 @@
 package com.antwerkz.critter.test;
 
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Property;
 
 @Embedded
 public class Address {
+  @Property("c")
   private String city;
   private String state;
   private String zip;
