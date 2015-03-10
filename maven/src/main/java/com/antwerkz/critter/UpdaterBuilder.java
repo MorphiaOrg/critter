@@ -87,38 +87,40 @@ public class UpdaterBuilder {
         .setBody("return ds.delete(query(), wc);")
         .addParameter(WriteConcern.class, "wc");
 
-    for (CritterField field : critterClass.getFields()) {
-      if (!field.getParameterTypes().isEmpty()) {
-        field.getParameterTypes()
-            .stream()
-            .forEach(criteriaClass::addImport);
-      }
+    critterClass.getFields().stream()
+        .filter(field -> !field.getSource().isStatic())
+        .forEach(field -> {
+          if (!field.getParameterTypes().isEmpty()) {
+            field.getParameterTypes()
+                .stream()
+                .forEach(criteriaClass::addImport);
+          }
 
-      criteriaClass.addImport(field.getFullType());
-      if (!field.hasAnnotation(Id.class)) {
-        updater.addMethod()
-            .setPublic()
-            .setName(field.getName())
-            .setReturnType(type)
-            .setBody(format("updateOperations.set(\"%s\", value);\nreturn this;", field.getName()))
-            .addParameter(field.getParameterizedType(), "value");
+          criteriaClass.addImport(field.getFullType());
+          if (!field.hasAnnotation(Id.class)) {
+            updater.addMethod()
+                .setPublic()
+                .setName(field.getName())
+                .setReturnType(type)
+                .setBody(format("updateOperations.set(\"%s\", value);\nreturn this;", field.getName()))
+                .addParameter(field.getParameterizedType(), "value");
 
-        updater.addMethod()
-            .setPublic()
-            .setName(format("unset%s", nameCase(field.getName())))
-            .setReturnType(type)
-            .setBody(format("updateOperations.unset(\"%s\");\nreturn this;", field.getName()));
+            updater.addMethod()
+                .setPublic()
+                .setName(format("unset%s", nameCase(field.getName())))
+                .setReturnType(type)
+                .setBody(format("updateOperations.unset(\"%s\");\nreturn this;", field.getName()));
 
-        numerics(type, updater, field);
-        containers(type, updater, field);
-      }
-    }
+            numerics(type, updater, field);
+            containers(type, updater, field);
+          }
+        });
 
     criteriaClass.addNestedType(updater);
   }
 
   private void numerics(final String type, final JavaClassSource updater, final CritterField field) {
-    if(field.isNumeric()) {
+    if (field.isNumeric()) {
       updater.addMethod()
           .setPublic()
           .setName(format("dec%s", nameCase(field.getName())))
@@ -131,7 +133,6 @@ public class UpdaterBuilder {
           .setReturnType(type)
           .setBody(format("updateOperations.inc(\"%s\");\nreturn this;", field.getName()));
 
-
       updater.addMethod()
           .setPublic()
           .setName(format("inc%s", nameCase(field.getName())))
@@ -140,8 +141,9 @@ public class UpdaterBuilder {
           .addParameter(field.getFullType(), "value");
     }
   }
+
   private void containers(final String type, final JavaClassSource updater, final CritterField field) {
-    if(field.isContainer()) {
+    if (field.isContainer()) {
 
       updater.addMethod()
           .setPublic()

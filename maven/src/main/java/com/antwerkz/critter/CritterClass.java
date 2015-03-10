@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.antwerkz.critter.criteria.BaseCriteria;
 import static java.lang.String.format;
@@ -19,6 +21,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.query.Query;
 
 public class CritterClass {
+  private static final Logger LOG = Logger.getLogger(CritterClass.class.getName());
+
   private final CritterContext context;
 
   private String name;
@@ -64,10 +68,14 @@ public class CritterClass {
   }
 
   public void build(final File directory) {
-    if (hasAnnotation(Entity.class) || hasAnnotation(Embedded.class)) {
+    try {
+      if (hasAnnotation(Entity.class) || hasAnnotation(Embedded.class)) {
 
-      buildCriteria(directory);
-      buildDescriptor(directory);
+        buildCriteria(directory);
+        buildDescriptor(directory);
+      }
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, format("Failed to generate criteria class for %s: %s", getName(), e.getMessage()), e);
     }
   }
 

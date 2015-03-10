@@ -127,10 +127,9 @@ public class CritterField implements Comparable<CritterField> {
       buildReference(critterClass, criteriaClass);
     } else if (hasAnnotation(Embedded.class)) {
       buildEmbed(critterClass, criteriaClass);
-    } else {
+    } else if(!getSource().isStatic()) {
       buildField(critterClass, criteriaClass);
     }
-
   }
 
   public void buildReference(final CritterClass critterClass, final JavaClassSource criteriaClass) {
