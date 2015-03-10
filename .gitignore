@@ -1,3 +1,8 @@
+.idea
 *.log
 *.iml
 **/com/antwerkz/critter/criteria/
+target
+.gradle
+*.sw*
+gradle
