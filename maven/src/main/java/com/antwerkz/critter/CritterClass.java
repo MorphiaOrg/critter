@@ -168,6 +168,7 @@ public class CritterClass {
   public List<CritterField> getFields() {
     if (fields == null) {
       fields = sourceClass.getFields().stream()
+          .filter((f) -> !f.isStatic())
           .map(f -> new CritterField(context, f))
           .sorted((l, r) -> l.getName().compareTo(r.getName()))
           .collect(toList());
