@@ -1,10 +1,6 @@
 package com.antwerkz.critter;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SourceTask;
@@ -12,6 +8,9 @@ import org.gradle.api.tasks.TaskAction;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 public class CritterTask extends SourceTask {
   private CritterPluginExtension extension;
