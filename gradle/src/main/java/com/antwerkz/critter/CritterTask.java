@@ -57,7 +57,7 @@ public class CritterTask extends SourceTask {
           throw new RuntimeException(e.getMessage(), e);
         }
         if (type instanceof JavaClassSource) {
-          context.add(type.getPackage(), new CritterClass(context, type));
+          context.add(type.getPackage(), new CritterClass(context, file, type));
         }
       }
     });

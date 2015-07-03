@@ -43,37 +43,41 @@ public class CritterMojo extends AbstractMojo {
     walker.setBaseDir(sourceDirectory);
     walker.setIncludes(asList("**/*.java"));
 
-    walker.addDirectoryWalkListener(new DirectoryWalkListener() {
-      @Override
-      public void directoryWalkStarting(final File basedir) {
-      }
+    try {
+      walker.addDirectoryWalkListener(new DirectoryWalkListener() {
+        @Override
+        public void directoryWalkStarting(final File basedir) {
+        }
 
-      @Override
-      public void directoryWalkStep(final int percentage, final File file) {
-        if (!file.getName().endsWith("Criteria.java")) {
-          final JavaType<?> type;
-          try {
-            type = Roaster.parse(file);
-          } catch (FileNotFoundException e) {
-            throw new RuntimeException(e.getMessage(), e);
-          }
-          if (type instanceof JavaClassSource) {
-            context.add(type.getPackage(), new CritterClass(context, type));
+        @Override
+        public void directoryWalkStep(final int percentage, final File file) {
+          if (!file.getName().endsWith("Criteria.java")) {
+            final JavaType<?> type;
+            try {
+              type = Roaster.parse(file);
+            } catch (FileNotFoundException e) {
+              e.printStackTrace(System.out);
+              throw new RuntimeException(e.getMessage(), e);
+            }
+            if (type instanceof JavaClassSource) {
+              context.add(type.getPackage(), new CritterClass(context, file, type));
+            }
           }
         }
-      }
 
-      @Override
-      public void directoryWalkFinished() {
-      }
+        @Override
+        public void directoryWalkFinished() {
+        }
 
-      @Override
-      public void debug(final String message) {
-      }
-    });
-    walker.scan();
-
-    context.getClasses().stream()
-        .forEach(critterClass -> critterClass.build(outputDirectory));
+        @Override
+        public void debug(final String message) {
+        }
+      });
+      walker.scan();
+      context.getClasses().stream()
+          .forEach(critterClass -> critterClass.build(outputDirectory));
+    } catch (Throwable e) {
+      e.printStackTrace(System.out);
+    }
   }
 }

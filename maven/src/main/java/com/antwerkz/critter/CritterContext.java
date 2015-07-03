@@ -1,5 +1,6 @@
 package com.antwerkz.critter;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +16,6 @@ public class CritterContext {
   private boolean force;
 
   public CritterContext(final String criteriaPkg, final boolean force) {
-
     this.criteriaPkg = criteriaPkg;
     this.force = force;
   }

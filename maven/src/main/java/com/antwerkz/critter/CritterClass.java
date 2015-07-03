@@ -24,8 +24,9 @@ public class CritterClass {
   private static final Logger LOG = Logger.getLogger(CritterClass.class.getName());
 
   private final CritterContext context;
+    private File sourceFile;
 
-  private String name;
+    private String name;
 
   private String packageName;
 
@@ -35,9 +36,10 @@ public class CritterClass {
 
   private List<CritterField> fields;
 
-  public CritterClass(CritterContext context, final JavaType<?> type) {
+  public CritterClass(CritterContext context, final File sourceFile, final JavaType<?> type) {
     this.context = context;
-    sourceClass = (JavaClassSource) type;
+      this.sourceFile = sourceFile;
+      sourceClass = (JavaClassSource) type;
     name = sourceClass.getName();
     embedded = sourceClass.hasAnnotation(Embedded.class);
     packageName = sourceClass.getPackage() + ".criteria";
@@ -156,8 +158,7 @@ public class CritterClass {
   }
 
   private long getLastModified() {
-    long modified = new File("src/main/java", sourceClass.getQualifiedName().replace('.', '/') + ".java")
-        .lastModified();
+    long modified = sourceFile.lastModified();
     final CritterClass superClass = context.get(sourceClass.getSuperType());
     if (superClass != null) {
       modified = Math.min(modified, superClass.getLastModified());
