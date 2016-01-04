@@ -21,6 +21,14 @@
         <url>git@github.com:evanchooly/critter.git</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>jcenter</id>
+            <name>jcenter</name>
+            <url>https://jcenter.bintray.com/</url>
+        </repository>
+    </repositories>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <roaster.version>2.12.0.Final</roaster.version>
@@ -95,18 +103,23 @@
             <dependency>
                 <groupId>org.mongodb.morphia</groupId>
                 <artifactId>morphia</artifactId>
-                <version>0.110</version>
+                <version>1.0.1</version>
             </dependency>
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongo-java-driver</artifactId>
-                <version>2.13.0</version>
+                <version>3.0.4</version>
             </dependency>
             <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
                 <version>2.3</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.dokka</groupId>
+                <artifactId>dokka-fatjar</artifactId>
+                <version>0.9.4</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.forge.roaster</groupId>

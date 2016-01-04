@@ -47,7 +47,7 @@ public class CritterTask extends SourceTask {
 
   @TaskAction
   public void generate() {
-    CritterContext context = new CritterContext(extension.criteriaPackage, extension.force);
+    CritterContext context = new CritterContext();
     getSource().getFiles().forEach(file -> {
       if (!file.getName().endsWith("Criteria.java")) {
         final JavaType<?> type;
@@ -57,7 +57,7 @@ public class CritterTask extends SourceTask {
           throw new RuntimeException(e.getMessage(), e);
         }
         if (type instanceof JavaClassSource) {
-          context.add(type.getPackage(), new CritterClass(context, file, type));
+          context.add(new CritterClass(context, file, type));
         }
       }
     });

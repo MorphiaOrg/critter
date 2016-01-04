@@ -18,8 +18,6 @@ package com.antwerkz.critter.test;
 import java.net.UnknownHostException;
 import java.util.Date;
 
-import com.antwerkz.critter.test.criteria.InvoiceCriteria;
-import com.antwerkz.critter.test.criteria.PersonCriteria;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
