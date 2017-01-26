@@ -85,13 +85,10 @@ class CritterMojo : AbstractMojo() {
                         val type: JavaType<*>
                         try {
                             type = Roaster.parse(file)
+                            context.add(type.getPackage(), CritterClass(context, file, type))
                         } catch (e: FileNotFoundException) {
                             e.printStackTrace(System.out)
                             throw RuntimeException(e.message, e)
-                        }
-
-                        if (type is JavaClassSource) {
-                            context.add(type.getPackage(), CritterClass(context, file, type))
                         }
                     }
                 }
