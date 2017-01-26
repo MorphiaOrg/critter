@@ -209,16 +209,12 @@ public class CriteriaTest {
 
   private Datastore getDatastore() {
     if (datastore == null) {
-      try {
-        MongoClient mongo = new MongoClient();
-        DB critter = mongo.getDB("critter");
-        critter.dropDatabase();
-        final Morphia morphia = new Morphia();
-        morphia.mapPackage("com.antwerkz");
-        datastore = morphia.createDatastore(mongo, "critter");
-      } catch (UnknownHostException e) {
-        throw new RuntimeException(e.getMessage(), e);
-      }
+      MongoClient mongo = new MongoClient();
+      DB critter = mongo.getDB("critter");
+      critter.dropDatabase();
+      final Morphia morphia = new Morphia();
+      morphia.mapPackage("com.antwerkz");
+      datastore = morphia.createDatastore(mongo, "critter");
     }
     return datastore;
   }

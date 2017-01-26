@@ -62,7 +62,7 @@ public class CritterTask extends SourceTask {
       }
     });
 
-    context.getClasses().stream()
+    context.getClasses().values()
         .forEach(critterClass -> critterClass.build(outputDirectory));
   }
 }
