@@ -15,6 +15,7 @@
  */
 package com.antwerkz.critter.test;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,7 +31,7 @@ public class Invoice {
   @Id
   private ObjectId id = new ObjectId();
 
-  private Date date;
+  private LocalDateTime date;
 
   @Reference
   private Person person;
@@ -45,7 +46,7 @@ public class Invoice {
   public Invoice() {
   }
 
-  public Invoice(Date date, Person person, Address address, Item... items) {
+  public Invoice(LocalDateTime date, Person person, Address address, Item... items) {
     this.date = date;
     this.person = person;
     add(address);
@@ -54,11 +55,11 @@ public class Invoice {
     }
   }
 
-  public Date getDate() {
+  public LocalDateTime getDate() {
     return date;
   }
 
-  public void setDate(Date date) {
+  public void setDate(LocalDateTime date) {
     this.date = date;
   }
 

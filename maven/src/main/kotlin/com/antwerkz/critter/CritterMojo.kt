@@ -1,10 +1,5 @@
 package com.antwerkz.critter
 
-import java.io.File
-import java.io.FileNotFoundException
-
-import java.util.Arrays.asList
-
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
@@ -16,9 +11,9 @@ import org.codehaus.plexus.util.DirectoryWalkListener
 import org.codehaus.plexus.util.DirectoryWalker
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
-import org.jboss.forge.roaster.model.source.JavaClassSource
-import jdk.nashorn.internal.objects.NativeArray.forEach
-
+import java.io.File
+import java.io.FileNotFoundException
+import java.util.Arrays.asList
 
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)

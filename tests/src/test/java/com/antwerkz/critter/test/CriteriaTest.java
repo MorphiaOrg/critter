@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2012-2013 Justin Lee <jlee@antwerkz.com>
+/*
+ * Copyright (C) 2012-2017 Justin Lee <jlee@antwerkz.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,12 @@
  */
 package com.antwerkz.critter.test;
 
-import java.net.UnknownHostException;
-import java.util.Date;
-
 import com.antwerkz.critter.test.criteria.InvoiceCriteria;
 import com.antwerkz.critter.test.criteria.PersonCriteria;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
-import org.joda.time.DateTime;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
@@ -32,6 +28,9 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
+
+import java.net.UnknownHostException;
+import java.time.LocalDateTime;
 
 @Test
 public class CriteriaTest {
@@ -47,15 +46,15 @@ public class CriteriaTest {
     Datastore ds = getDatastore();
     Person john = new Person("John", "Doe");
     ds.save(john);
-    ds.save(new Invoice(new DateTime(2012, 12, 21, 13, 15).toDate(), john, new Address("New York City", "NY", "10000"),
+    ds.save(new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john, new Address("New York City", "NY", "10000"),
         new Item("ball", 5.0), new Item("skateboard", 17.35)));
     Person jeff = new Person("Jeff", "Johnson");
     ds.save(jeff);
-    ds.save(new Invoice(new DateTime(2006, 3, 4, 8, 7).toDate(), jeff, new Address("Los Angeles", "CA", "90210"),
+    ds.save(new Invoice(LocalDateTime.of(2006, 3, 4, 8, 7), jeff, new Address("Los Angeles", "CA", "90210"),
         new Item("movie", 29.95)));
     Person sally = new Person("Sally", "Ride");
     ds.save(sally);
-    ds.save(new Invoice(new DateTime(2007, 8, 16, 19, 27).toDate(), sally, new Address("Chicago", "IL", "99999"),
+    ds.save(new Invoice(LocalDateTime.of(2007, 8, 16, 19, 27), sally, new Address("Chicago", "IL", "99999"),
         new Item("kleenex", 3.49), new Item("cough and cold syrup", 5.61)));
     InvoiceCriteria invoiceCriteria = new InvoiceCriteria(ds);
     invoiceCriteria.person(john);
@@ -128,21 +127,21 @@ public class CriteriaTest {
     WriteResult result = criteria.getUpdater()
         .remove();
     Assert.assertEquals(result.getN(), 11);
-    Assert.assertEquals(criteria.query().countAll(), 0);
+    Assert.assertEquals(criteria.query().count(), 0);
 
     criteria = new PersonCriteria(getDatastore());
-    Assert.assertEquals(criteria.query().countAll(), 89);
+    Assert.assertEquals(criteria.query().count(), 89);
 
     criteria = new PersonCriteria(getDatastore());
     criteria.last().contains("Last3");
     result = criteria.getUpdater().remove(WriteConcern.MAJORITY);
     Assert.assertEquals(result.getN(), 11);
-    Assert.assertEquals(criteria.query().countAll(), 0);
+    Assert.assertEquals(criteria.query().count(), 0);
   }
 
   public void embeds() {
     Invoice invoice = new Invoice();
-    invoice.setDate(new Date());
+    invoice.setDate(LocalDateTime.now());
     Person person = new Person("Mike", "Bloomberg");
     getDatastore().save(person);
     invoice.setPerson(person);
@@ -150,7 +149,7 @@ public class CriteriaTest {
     getDatastore().save(invoice);
 
     invoice = new Invoice();
-    invoice.setDate(new Date());
+    invoice.setDate(LocalDateTime.now());
     person = new Person("Andy", "Warhol");
     getDatastore().save(person);
 
