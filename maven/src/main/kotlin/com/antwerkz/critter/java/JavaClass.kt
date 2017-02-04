@@ -1,5 +1,10 @@
-package com.antwerkz.critter
+package com.antwerkz.critter.java
 
+import com.antwerkz.critter.CritterClass
+import com.antwerkz.critter.CritterContext
+import com.antwerkz.critter.CritterField
+import com.antwerkz.critter.CritterMethod
+import com.antwerkz.critter.java.JavaMethod
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.mongodb.morphia.annotations.Embedded

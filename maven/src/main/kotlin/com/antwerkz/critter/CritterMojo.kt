@@ -1,5 +1,6 @@
 package com.antwerkz.critter
 
+import com.antwerkz.critter.java.JavaClass
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException

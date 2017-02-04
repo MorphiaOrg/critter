@@ -1,5 +1,9 @@
-package com.antwerkz.critter
+package com.antwerkz.critter.java
 
+import com.antwerkz.critter.CritterClass
+import com.antwerkz.critter.CritterContext
+import com.antwerkz.critter.CritterField
+import com.antwerkz.critter.TypeSafeFieldEnd
 import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.util.Strings

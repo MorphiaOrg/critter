@@ -1,5 +1,6 @@
 package com.antwerkz.critter
 
+import com.antwerkz.critter.java.JavaClass
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 import org.jboss.forge.roaster.Roaster
