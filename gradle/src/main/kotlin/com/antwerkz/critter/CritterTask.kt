@@ -17,8 +17,8 @@ class CritterTask : SourceTask() {
         getSource().files
                 .filterNot { it.name.endsWith("Criteria.java") }
                 .forEach {
-                    val type: JavaType<*> = Roaster.parse(it)
-                    context.add(type.getPackage(), CritterClass(context, it, type))
+                    val critterClass = JavaClass(context, it)
+                    context.add(critterClass.getPackage(), critterClass)
                 }
 
         context.classes.values

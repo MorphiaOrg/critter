@@ -1,9 +1,8 @@
 package com.antwerkz.critter
 
 import com.antwerkz.critter.criteria.BaseCriteria
-import org.jboss.forge.roaster.Roaster
-import org.jboss.forge.roaster.model.JavaType
-import org.jboss.forge.roaster.model.source.JavaClassSource
+import org.jboss.forge.roaster.model.Visibility
+import org.jboss.forge.roaster.model.source.VisibilityScopedSource
 import org.mongodb.morphia.Datastore
 import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Entity
@@ -14,45 +13,38 @@ import java.lang.String.format
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class CritterClass(private val context: CritterContext, private val sourceFile: File, type: JavaType<*>) {
+abstract class CritterClass(var context: CritterContext) {
 
-    var name: String? = null
+    lateinit var qualifiedName: String
 
-    var pkgName: String? = null
+    lateinit var fields: MutableList<CritterField>
 
-    val sourceClass: JavaClassSource = type as JavaClassSource
+    var isEmbedded: Boolean = false
 
-    val isEmbedded: Boolean
+    var lastModified: Long = 0
 
-    val fields: List<CritterField>
+    abstract fun hasAnnotation(aClass: Class<out Annotation>): Boolean
 
-    private val lastModified: Long by lazy {
-            var modified = sourceFile.lastModified()
-            val superClass = context[sourceClass.superType]
-            if (superClass != null) {
-                modified = Math.min(modified, superClass.lastModified)
-            }
-            modified
-        }
+    abstract fun getName(): String
+    abstract fun setName(name: String): CritterClass
 
-    init {
-        name = sourceClass.name
-        isEmbedded = sourceClass.hasAnnotation(Embedded::class.java)
-        pkgName = sourceClass.`package` + ".criteria"
-        fields = sourceClass.fields
-                .filter { f -> !f.isStatic }
-                .map { f -> CritterField(context, f) }
-                .sortedBy { f -> f.name }
-                .toMutableList()
-        val superClass = context[sourceClass.superType]
-        if (superClass != null) {
-            fields.addAll(superClass.fields)
-        }
-    }
+    abstract fun getPackage(): String
+    abstract fun setPackage(name: String): CritterClass
 
-    fun hasAnnotation(aClass: Class<out Annotation>): Boolean {
-        return sourceClass.hasAnnotation(aClass)
-    }
+    abstract fun getSuperType(): String
+    abstract fun setSuperType(name: String): CritterClass
+
+    abstract fun isPublic(): Boolean
+
+    abstract fun setPublic(): CritterClass
+
+    abstract fun isPrivate(): Boolean
+
+    abstract fun setPrivate(): CritterClass
+
+    abstract fun isProtected(): Boolean
+
+    abstract fun setProtected(): CritterClass
 
     fun build(directory: File) {
         try {
@@ -61,24 +53,26 @@ class CritterClass(private val context: CritterContext, private val sourceFile: 
                 buildDescriptor(directory)
             }
         } catch (e: Exception) {
-            LOG.log(Level.SEVERE, format("Failed to generate criteria class for %s: %s", name, e.message), e)
+            LOG.log(Level.SEVERE, format("Failed to generate criteria class for %s: %s", getName(), e.message), e)
         }
 
     }
 
     private fun buildDescriptor(directory: File) {
-        val descriptorClass = Roaster.create(JavaClassSource::class.java)
-        descriptorClass.setPackage(pkgName).name = sourceClass.name + "Descriptor"
+        val descriptorClass = createClass()
+                .setPackage(getPackage())
+                .setName(getName() + "Descriptor")
 
         val outputFile = File(directory, descriptorClass.qualifiedName.replace('.', '/') + ".java")
         if (context.isForce || outputFile.lastModified() < lastModified) {
             fields.forEach { field ->
                 descriptorClass.addField()
                         .setPublic()
-                        .setStatic(true)
-                        .setFinal(true)
+                        .setStatic()
+                        .setFinal()
                         .setType(String::class.java)
-                        .setName(field.name).stringInitializer = field.mappedName()
+                        .setName(field.name)
+                        .setLiteralInitializer(field.mappedName())
             }
 
             generate(descriptorClass, outputFile)
@@ -86,30 +80,33 @@ class CritterClass(private val context: CritterContext, private val sourceFile: 
     }
 
     private fun buildCriteria(directory: File) {
-        val criteriaClass = Roaster.create(JavaClassSource::class.java)
-        criteriaClass.setPackage(pkgName).name = sourceClass.name + "Criteria"
+        val criteriaClass = createClass()
+                .setPackage(getPackage())
+        criteriaClass.setName(getName() + "Criteria")
 
         val outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
         if (context.isForce || outputFile.lastModified() < lastModified) {
-            if (!sourceClass.hasAnnotation(Embedded::class.java)) {
-                criteriaClass.superType = BaseCriteria::class.java.name + "<" + sourceClass.qualifiedName + ">"
+            if (!hasAnnotation(Embedded::class.java)) {
+                criteriaClass.setSuperType(BaseCriteria::class.java.name + "<" + qualifiedName + ">")
                 criteriaClass.addMethod()
                         .setPublic()
-                        .setName(name)
-                        .setBody(format("super(ds, %s.class);", sourceClass.name))
+                        .setName(getName())
+                        .setBody(format("super(ds, %s.class);", getName()))
                         .setConstructor(true)
                         .addParameter(Datastore::class.java, "ds")
             } else {
                 criteriaClass.addField()
                         .setPrivate()
-                        .setType(Query::class.java).name = "query"
+                        .setType(Query::class.java)
+                        .setName("query")
                 criteriaClass.addField()
                         .setPrivate()
-                        .setType("String").name = "prefix"
+                        .setType("String")
+                        .setName("prefix")
 
                 val method = criteriaClass.addMethod()
                         .setPublic()
-                        .setName(name)
+                        .setName(getName())
                         .setBody("this.query = query;\nthis.prefix = prefix + \".\";")
                         .setConstructor(true)
                 method.addParameter(Query::class.java, "query")
@@ -117,7 +114,7 @@ class CritterClass(private val context: CritterContext, private val sourceFile: 
             }
 
             fields.forEach { it.build(this, criteriaClass) }
-            if (!sourceClass.hasAnnotation(Embedded::class.java)) {
+            if (!hasAnnotation(Embedded::class.java)) {
                 UpdaterBuilder(this, criteriaClass)
             }
 
@@ -125,25 +122,27 @@ class CritterClass(private val context: CritterContext, private val sourceFile: 
         }
     }
 
-    private fun generate(criteriaClass: JavaClassSource, file: File) {
+    abstract fun createClass(): CritterClass
+
+    private fun generate(criteriaClass: CritterClass, file: File) {
         file.parentFile.mkdirs()
-        PrintWriter(file).use { writer -> writer.println(criteriaClass.toString()) }
-
+        PrintWriter(file).use { writer -> writer.println(criteriaClass.toSource()) }
     }
 
-/*
-    fun getFields(): List<CritterField> {
-        if (fields == null) {
-        }
-        return fields
-    }
-*/
+    abstract fun toSource()
 
-    override fun toString(): String {
-        return pkgName + "." + name
-    }
 
     companion object {
         private val LOG = Logger.getLogger(CritterClass::class.java.name)
     }
+
+    abstract fun addImport(klass: Class<*>)
+
+    abstract fun addImport(name: String)
+
+    abstract fun addNestedType(): CritterClass
+
+    abstract fun addField(): CritterField
+
+    abstract fun addMethod(): CritterMethod
 }

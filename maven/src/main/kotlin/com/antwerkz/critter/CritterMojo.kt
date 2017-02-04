@@ -9,10 +9,8 @@ import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.project.MavenProject
 import org.codehaus.plexus.util.DirectoryWalkListener
 import org.codehaus.plexus.util.DirectoryWalker
-import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
 import java.io.File
-import java.io.FileNotFoundException
 import java.util.Arrays.asList
 
 
@@ -51,8 +49,8 @@ class CritterMojo : AbstractMojo() {
 
             override fun directoryWalkStep(percentage: Int, file: File) {
                 if (!file.name.endsWith("Criteria.java")) {
-                    val type = Roaster.parse(file)
-                    context.add(type.getPackage(), CritterClass(context, file, type))
+                    val critterClass = JavaClass(context, file)
+                    context.add(critterClass.getPackage(), critterClass)
                 }
             }
 
@@ -78,6 +76,7 @@ class CritterMojo : AbstractMojo() {
                 override fun directoryWalkStep(percentage: Int, file: File) {
                     if (!file.name.endsWith("Criteria.kt")) {
                         val type: JavaType<*>
+/*
                         try {
                             type = Roaster.parse(file)
                             context.add(type.getPackage(), CritterClass(context, file, type))
@@ -85,6 +84,7 @@ class CritterMojo : AbstractMojo() {
                             e.printStackTrace(System.out)
                             throw RuntimeException(e.message, e)
                         }
+*/
                     }
                 }
 

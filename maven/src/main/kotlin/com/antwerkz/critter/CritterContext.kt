@@ -8,9 +8,9 @@ class CritterContext(private val criteriaPkg: String?, val isForce: Boolean) {
     val classes = HashMap<String, CritterClass>()
 
     fun add(aPackage: String, critterClass: CritterClass) {
-        classes.put(format("%s.%s", aPackage, critterClass.name), critterClass)
+        classes.put(format("%s.%s", aPackage, critterClass.getName()), critterClass)
         if (criteriaPkg != null) {
-            critterClass.pkgName = criteriaPkg
+            critterClass.setPackage(criteriaPkg)
         }
     }
 

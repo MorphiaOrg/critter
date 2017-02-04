@@ -2,44 +2,44 @@ package com.antwerkz.critter
 
 import com.mongodb.WriteConcern
 import com.mongodb.WriteResult
-import org.jboss.forge.roaster.Roaster
-import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.mongodb.morphia.annotations.Id
 import org.mongodb.morphia.query.UpdateOperations
 import org.mongodb.morphia.query.UpdateResults
 
-class UpdaterBuilder(critterClass: CritterClass, criteriaClass: JavaClassSource) {
+class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
     init {
-        val type = critterClass.name + "Updater"
-        val method = criteriaClass.addMethod()
+        val type = sourceClass.getName() + "Updater"
+        val method = targetClass.addMethod()
                 .setPublic()
                 .setName("getUpdater")
                 .setReturnType(type)
-        method.body = "return new ${method.returnType}();"
+        method.setBody("return new ${method.getReturnType()}();")
 
-        val updater = Roaster.create(JavaClassSource::class.java)
+        val updater = targetClass.addNestedType()
                 .setPublic()
                 .setName(type)
 
-        criteriaClass.addImport(UpdateOperations::class.java)
-        criteriaClass.addImport(UpdateResults::class.java)
-        criteriaClass.addImport(WriteConcern::class.java)
-        criteriaClass.addImport(WriteResult::class.java)
+        targetClass.addImport(UpdateOperations::class.java)
+        targetClass.addImport(UpdateResults::class.java)
+        targetClass.addImport(WriteConcern::class.java)
+        targetClass.addImport(WriteResult::class.java)
 
         val updateOperations = updater.addField()
-                .setType("UpdateOperations<${critterClass.name}>")
-                .setLiteralInitializer("ds.createUpdateOperations(${critterClass.name}.class);")
-        updateOperations.name = "updateOperations"
+                .setType("UpdateOperations<${sourceClass.getName()}>")
+                .setLiteralInitializer("ds.createUpdateOperations(${sourceClass.getName()}.class);")
+        updateOperations.setName("updateOperations")
 
         updater.addMethod()
                 .setPublic()
                 .setName("updateAll")
-                .setReturnType(UpdateResults::class.java).body = "return ds.update(query(), updateOperations, false);"
+                .setReturnType(UpdateResults::class.java)
+                .setBody("return ds.update(query(), updateOperations, false);")
 
         updater.addMethod()
                 .setPublic()
                 .setName("updateFirst")
-                .setReturnType(UpdateResults::class.java).body = "return ds.updateFirst(query(), updateOperations, false);"
+                .setReturnType(UpdateResults::class.java)
+                .setBody("return ds.updateFirst(query(), updateOperations, false);")
 
         updater.addMethod()
                 .setPublic()
@@ -58,7 +58,8 @@ class UpdaterBuilder(critterClass: CritterClass, criteriaClass: JavaClassSource)
         updater.addMethod()
                 .setPublic()
                 .setName("upsert")
-                .setReturnType(UpdateResults::class.java).body = "return ds.update(query(), updateOperations, true);"
+                .setReturnType(UpdateResults::class.java)
+                .setBody("return ds.update(query(), updateOperations, true);")
 
         updater.addMethod()
                 .setPublic()
@@ -70,7 +71,8 @@ class UpdaterBuilder(critterClass: CritterClass, criteriaClass: JavaClassSource)
         updater.addMethod()
                 .setPublic()
                 .setName("remove")
-                .setReturnType(WriteResult::class.java).body = "return ds.delete(query());"
+                .setReturnType(WriteResult::class.java)
+                .setBody("return ds.delete(query());")
 
         updater.addMethod()
                 .setPublic()
@@ -79,15 +81,15 @@ class UpdaterBuilder(critterClass: CritterClass, criteriaClass: JavaClassSource)
                 .setBody("return ds.delete(query(), wc);")
                 .addParameter(WriteConcern::class.java, "wc")
 
-        critterClass.fields
-                .filter({ field -> !field.source.isStatic })
+        sourceClass.fields
+                .filter({ field -> !field.isStatic() })
                 .forEach { field ->
                     if (!field.parameterTypes.isEmpty()) {
                         field.parameterTypes
-                                .forEach { criteriaClass.addImport(it) }
+                                .forEach { targetClass.addImport(it) }
                     }
 
-                    criteriaClass.addImport(field.fullType)
+                    targetClass.addImport(field.fullType)
                     if (!field.hasAnnotation(Id::class.java)) {
                         updater.addMethod()
                                 .setPublic()
@@ -99,27 +101,28 @@ class UpdaterBuilder(critterClass: CritterClass, criteriaClass: JavaClassSource)
                         updater.addMethod()
                                 .setPublic()
                                 .setName("unset${nameCase(field.name)}")
-                                .setReturnType(type).body = "updateOperations.unset(\"${field.name}\");\nreturn this;"
+                                .setReturnType(type)
+                                .setBody("updateOperations.unset(\"${field.name}\");\nreturn this;")
 
                         numerics(type, updater, field)
                         containers(type, updater, field)
                     }
                 }
-
-        criteriaClass.addNestedType(updater)
     }
 
-    private fun numerics(type: String, updater: JavaClassSource, field: CritterField) {
-        if (field.isNumeric) {
+    private fun numerics(type: String, updater: CritterClass, field: CritterField) {
+        if (field.isNumeric()) {
             updater.addMethod()
                     .setPublic()
                     .setName("dec${nameCase(field.name)}")
-                    .setReturnType(type).body = "updateOperations.dec(\"${field.name}\");\nreturn this;"
+                    .setReturnType(type)
+                    .setBody("updateOperations.dec(\"${field.name}\");\nreturn this;")
 
             updater.addMethod()
                     .setPublic()
                     .setName("inc${nameCase(field.name)}")
-                    .setReturnType(type).body = "updateOperations.inc(\"${field.name}\");\nreturn this;"
+                    .setReturnType(type)
+                    .setBody("updateOperations.inc(\"${field.name}\");\nreturn this;")
 
             updater.addMethod()
                     .setPublic()
@@ -130,8 +133,8 @@ class UpdaterBuilder(critterClass: CritterClass, criteriaClass: JavaClassSource)
         }
     }
 
-    private fun containers(type: String, updater: JavaClassSource, field: CritterField) {
-        if (field.isContainer!!) {
+    private fun containers(type: String, updater: CritterClass, field: CritterField) {
+        if (field.isContainer()) {
 
             updater.addMethod()
                     .setPublic()
@@ -140,33 +143,33 @@ class UpdaterBuilder(critterClass: CritterClass, criteriaClass: JavaClassSource)
                     .setBody("updateOperations.add(\"${field.name}\", value);\nreturn this;")
                     .addParameter(field.parameterizedType, "value")
 
-            var addItems = updater.addMethod()
+            updater.addMethod()
                     .setPublic()
                     .setName("addTo${nameCase(field.name)}")
                     .setReturnType(type)
                     .setBody("updateOperations.add(\"${field.name}\", value, addDups);\nreturn this;" )
-            addItems
                     .addParameter(field.parameterizedType, "value")
-            addItems
                     .addParameter("boolean", "addDups")
 
-            addItems = updater.addMethod()
+            updater.addMethod()
                     .setPublic()
                     .setName("addAllTo${nameCase(field.name)}")
                     .setReturnType(type)
                     .setBody("updateOperations.addAll(\"${field.name}\", values, addDups);\nreturn this;")
-            addItems.addParameter(field.parameterizedType, "values")
-            addItems.addParameter("boolean", "addDups")
+                    .addParameter(field.parameterizedType, "values")
+                    .addParameter("boolean", "addDups")
 
             updater.addMethod()
                     .setPublic()
                     .setName("removeFirstFrom${nameCase(field.name)}")
-                    .setReturnType(type).body = "updateOperations.removeFirst(\"${field.name}\");\nreturn this;"
+                    .setReturnType(type)
+                    .setBody("updateOperations.removeFirst(\"${field.name}\");\nreturn this;")
 
             updater.addMethod()
                     .setPublic()
                     .setName("removeLastFrom${nameCase(field.name)}")
-                    .setReturnType(type).body = "updateOperations.removeLast(\"${field.name}\");\nreturn this;"
+                    .setReturnType(type)
+                    .setBody("updateOperations.removeLast(\"${field.name}\");\nreturn this;")
 
             updater.addMethod()
                     .setPublic()
@@ -175,12 +178,12 @@ class UpdaterBuilder(critterClass: CritterClass, criteriaClass: JavaClassSource)
                     .setBody("updateOperations.removeAll(\"${field.name}\", value);\nreturn this;")
                     .addParameter(field.parameterizedType, "value")
 
-            val removeAll = updater.addMethod()
+            updater.addMethod()
                     .setPublic()
                     .setName("removeAllFrom${nameCase(field.name)}")
                     .setReturnType(type)
                     .setBody("updateOperations.removeAll(\"${field.name}\", values);\nreturn this;")
-            removeAll.addParameter(field.parameterizedType, "values")
+                    .addParameter(field.parameterizedType, "values")
         }
     }
 
