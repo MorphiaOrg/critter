@@ -36,7 +36,7 @@ class CritterMojo : AbstractMojo() {
     override fun execute() {
         project.addCompileSourceRoot(outputDirectory.path)
         processJava()
-//        processKotlin()
+        processKotlin()
     }
 
     private fun processJava() {

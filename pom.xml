@@ -131,6 +131,16 @@
                 <version>${roaster.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-reflect</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.antwerkz.kibble</groupId>
                 <artifactId>kibble</artifactId>
                 <version>0.1-SNAPSHOT</version>

@@ -190,6 +190,11 @@ return this;""")
     }
 
     override fun setLiteralInitializer(value: String): CritterField {
+        source.literalInitializer = value
+        return this
+    }
+
+    override fun setStringLiteralInitializer(value: String): CritterField {
         source.stringInitializer = value
         return this
     }

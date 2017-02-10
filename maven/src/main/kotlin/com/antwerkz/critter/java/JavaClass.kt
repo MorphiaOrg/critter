@@ -4,7 +4,6 @@ import com.antwerkz.critter.CritterClass
 import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.CritterMethod
-import com.antwerkz.critter.java.JavaMethod
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.mongodb.morphia.annotations.Embedded
@@ -19,7 +18,6 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
                 context[sourceClass.superType]?.lastModified ?: 0)
 
         isEmbedded = hasAnnotation(Embedded::class.java)
-        setPackage(sourceClass.`package` + ".criteria")
         fields = sourceClass.fields
                 .filter { f -> !f.isStatic }
                 .map { f -> JavaField(context, f) }
@@ -81,15 +79,23 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
     }
 
     override fun setSuperType(name: String): CritterClass {
-        throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        sourceClass.superType = name
+        return this
     }
 
     override fun hasAnnotation(aClass: Class<out Annotation>): Boolean {
         return sourceClass.hasAnnotation(aClass)
     }
 
-    override fun createClass(): CritterClass {
+    override fun createClass(pkgName: String, name: String): CritterClass {
         return JavaClass(context)
+                .setPackage(pkgName)
+                .setName(name)
+    }
+
+    override fun addNestedType(type: CritterClass): CritterClass {
+        sourceClass.addNestedType((type as JavaClass).sourceClass)
+        return this
     }
 
     override fun addImport(klass: Class<*>) {
@@ -108,13 +114,11 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
         return JavaMethod(sourceClass.addMethod())
     }
 
-    override fun addNestedType(): CritterClass {
-        return JavaClass(context)
-    }
-
     override fun toString(): String {
         return "${getPackage()}.${getName()}"
     }
 
-    override fun toSource() = TODO("not quite there yet")
+    override fun toSource(): String {
+        return sourceClass.toString()
+    }
 }

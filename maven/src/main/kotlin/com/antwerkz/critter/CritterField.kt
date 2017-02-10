@@ -66,5 +66,6 @@ interface CritterField : Comparable<CritterField> {
     fun setPublic(): CritterField
     fun setStatic(): CritterField
     fun setFinal(): CritterField
+    fun setStringLiteralInitializer(initializer: String): CritterField
     fun setLiteralInitializer(initializer: String): CritterField
 }

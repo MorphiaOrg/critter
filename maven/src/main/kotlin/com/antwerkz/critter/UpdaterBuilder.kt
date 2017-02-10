@@ -15,19 +15,17 @@ class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
                 .setReturnType(type)
         method.setBody("return new ${method.getReturnType()}();")
 
-        val updater = targetClass.addNestedType()
-                .setPublic()
-                .setName(type)
+        val updater = targetClass.createClass(name = type)
 
         targetClass.addImport(UpdateOperations::class.java)
         targetClass.addImport(UpdateResults::class.java)
         targetClass.addImport(WriteConcern::class.java)
         targetClass.addImport(WriteResult::class.java)
 
-        val updateOperations = updater.addField()
+        updater.addField()
                 .setType("UpdateOperations<${sourceClass.getName()}>")
                 .setLiteralInitializer("ds.createUpdateOperations(${sourceClass.getName()}.class);")
-        updateOperations.setName("updateOperations")
+                .setName("updateOperations")
 
         updater.addMethod()
                 .setPublic()
@@ -108,6 +106,7 @@ class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
                         containers(type, updater, field)
                     }
                 }
+        targetClass.addNestedType(updater)
     }
 
     private fun numerics(type: String, updater: CritterClass, field: CritterField) {
@@ -147,7 +146,7 @@ class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
                     .setPublic()
                     .setName("addTo${nameCase(field.name)}")
                     .setReturnType(type)
-                    .setBody("updateOperations.add(\"${field.name}\", value, addDups);\nreturn this;" )
+                    .setBody("updateOperations.add(\"${field.name}\", value, addDups);\nreturn this;")
                     .addParameter(field.parameterizedType, "value")
                     .addParameter("boolean", "addDups")
 

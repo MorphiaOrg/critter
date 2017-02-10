@@ -14,14 +14,19 @@ import java.util.logging.Level
 import java.util.logging.Logger
 
 abstract class CritterClass(var context: CritterContext) {
+    companion object {
+        private val LOG = Logger.getLogger(CritterClass::class.java.name)
+    }
 
-    lateinit var qualifiedName: String
+    val qualifiedName: String by lazy {
+        "${getPackage()}.${getName()}"
+    }
 
     lateinit var fields: MutableList<CritterField>
 
     var isEmbedded: Boolean = false
 
-    var lastModified: Long = 0
+    var lastModified: Long = Long.MIN_VALUE
 
     abstract fun hasAnnotation(aClass: Class<out Annotation>): Boolean
 
@@ -53,15 +58,14 @@ abstract class CritterClass(var context: CritterContext) {
                 buildDescriptor(directory)
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             LOG.log(Level.SEVERE, format("Failed to generate criteria class for %s: %s", getName(), e.message), e)
         }
 
     }
 
     private fun buildDescriptor(directory: File) {
-        val descriptorClass = createClass()
-                .setPackage(getPackage())
-                .setName(getName() + "Descriptor")
+        val descriptorClass = createClass(getPackage() + ".criteria", getName() + "Descriptor")
 
         val outputFile = File(directory, descriptorClass.qualifiedName.replace('.', '/') + ".java")
         if (context.isForce || outputFile.lastModified() < lastModified) {
@@ -72,7 +76,7 @@ abstract class CritterClass(var context: CritterContext) {
                         .setFinal()
                         .setType(String::class.java)
                         .setName(field.name)
-                        .setLiteralInitializer(field.mappedName())
+                        .setStringLiteralInitializer(field.mappedName())
             }
 
             generate(descriptorClass, outputFile)
@@ -80,12 +84,10 @@ abstract class CritterClass(var context: CritterContext) {
     }
 
     private fun buildCriteria(directory: File) {
-        val criteriaClass = createClass()
-                .setPackage(getPackage())
-        criteriaClass.setName(getName() + "Criteria")
+        val criteriaClass = createClass(getPackage() + ".criteria", getName() + "Criteria")
 
         val outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
-        if (context.isForce || outputFile.lastModified() < lastModified) {
+        if (context.isForce || !outputFile.exists() || outputFile.lastModified() > lastModified) {
             if (!hasAnnotation(Embedded::class.java)) {
                 criteriaClass.setSuperType(BaseCriteria::class.java.name + "<" + qualifiedName + ">")
                 criteriaClass.addMethod()
@@ -122,25 +124,20 @@ abstract class CritterClass(var context: CritterContext) {
         }
     }
 
-    abstract fun createClass(): CritterClass
+    abstract fun createClass(pkgName: String = getPackage(), name: String): CritterClass
 
     private fun generate(criteriaClass: CritterClass, file: File) {
         file.parentFile.mkdirs()
         PrintWriter(file).use { writer -> writer.println(criteriaClass.toSource()) }
     }
 
-    abstract fun toSource()
-
-
-    companion object {
-        private val LOG = Logger.getLogger(CritterClass::class.java.name)
-    }
+    abstract fun toSource(): String
 
     abstract fun addImport(klass: Class<*>)
 
     abstract fun addImport(name: String)
 
-    abstract fun addNestedType(): CritterClass
+    abstract fun addNestedType(type: CritterClass): CritterClass
 
     abstract fun addField(): CritterField
 
