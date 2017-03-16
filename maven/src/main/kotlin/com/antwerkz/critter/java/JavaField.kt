@@ -4,6 +4,7 @@ import com.antwerkz.critter.CritterClass
 import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.TypeSafeFieldEnd
+import com.antwerkz.critter.Visible
 import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.util.Strings
@@ -55,25 +56,18 @@ class JavaField(private val context: CritterContext, val source: FieldSource<Jav
         get() = fullParameterTypes
 
     override val parameterizedType: String
-        get() {
-            return if (parameterTypes.isEmpty()) fullType else format("%s<%s>", fullType, Strings.join(fullParameterTypes, ", "))
-        }
+        get() = if (parameterTypes.isEmpty()) fullType else format("%s<%s>", fullType, Strings.join(fullParameterTypes, ", "))
 
     override val fullyQualifiedType: String by lazy {
-            val qualifiedName = source.type.qualifiedName
-            val typeArguments = source.type.typeArguments
-            val types = if (typeArguments.isEmpty())
-                ""
-            else
-                "<" + typeArguments
-                        .map { it.qualifiedName }
-                        .joinToString(",") + ">"
-            "$qualifiedName$types"
-        }
-
-    override fun setPrivate(): CritterField {
-        source.setPrivate()
-        return this
+        val qualifiedName = source.type.qualifiedName
+        val typeArguments = source.type.typeArguments
+        val types = if (typeArguments.isEmpty())
+            ""
+        else
+            "<" + typeArguments
+                    .map { it.qualifiedName }
+                    .joinToString(",") + ">"
+        "$qualifiedName$types"
     }
 
     override fun toString(): String {
@@ -127,7 +121,7 @@ return this;""")
         criteriaClass.addImport(QueryImpl::class.java)
 
         var name = "\"" + source.name + "\""
-        if (source.origin.hasAnnotation(Embedded::class.java) || context.isEmbedded(source.origin)) {
+        if (source.origin.hasAnnotation(Embedded::class.java) || context.isEmbedded(source.origin.name)) {
             name = "prefix + " + name
         }
 
@@ -159,25 +153,32 @@ return this;""")
         return source.getAnnotation(ann)?.getStringValue("value") ?: name
     }
 
-    override fun setType(type: Class<*>): CritterField {
-        source.setType(type)
-        return this
-    }
-
-    override fun setType(type: String): CritterField {
-        source.setType(type)
-        return this
-    }
-
-    override fun setName(name: String): CritterField {
-        source.name = name
-        return this
-    }
-
+    override fun isPublic() = source.isPublic
     override fun setPublic(): CritterField {
         source.setPublic()
         return this
     }
+
+    override fun isPrivate() = source.isPrivate
+    override fun setPrivate(): CritterField {
+        source.setPrivate()
+        return this
+    }
+
+    override fun isPackagePrivate() = source.isPackagePrivate
+    override fun setPackagePrivate(): CritterField {
+        source.setPackagePrivate()
+        return this
+    }
+
+    override fun isProtected() = source.isProtected
+    override fun setProtected(): CritterField {
+        source.setProtected()
+        return this
+    }
+
+    override fun isInternal() = false
+    override fun setInternal() = throw Visible.invalid("internal", "java")
 
     override fun setStatic(): CritterField {
         source.isStatic = true
@@ -189,13 +190,13 @@ return this;""")
         return this
     }
 
-    override fun setLiteralInitializer(value: String): CritterField {
-        source.literalInitializer = value
+    override fun setLiteralInitializer(initializer: String): CritterField {
+        source.literalInitializer = initializer
         return this
     }
 
-    override fun setStringLiteralInitializer(value: String): CritterField {
-        source.stringInitializer = value
+    override fun setStringLiteralInitializer(initializer: String): CritterField {
+        source.stringInitializer = initializer
         return this
     }
 }

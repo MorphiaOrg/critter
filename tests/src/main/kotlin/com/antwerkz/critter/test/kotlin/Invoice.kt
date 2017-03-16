@@ -25,25 +25,25 @@ import java.time.LocalDateTime
 import java.util.ArrayList
 
 @Entity
-class KotlinInvoice {
+class Invoice {
     @Id
-    private val id = ObjectId()
+    private val id: ObjectId = ObjectId()
 
     var date: LocalDateTime? = null
 
     @Reference
-    var person: KotlinPerson? = null
+    var person: Person? = null
 
     @Embedded
-    var addresses: MutableList<KotlinAddress>? = null
+    var addresses: MutableList<Address>? = null
 
     var total: Double = 0.0
 
-    private var items: MutableList<KotlinItem>? = null
+    private var items: MutableList<Item>? = null
 
     constructor() {}
 
-    constructor(date: LocalDateTime, person: KotlinPerson, address: KotlinAddress, vararg items: KotlinItem) {
+    constructor(date: LocalDateTime, person: Person, address: Address, vararg items: Item) {
         this.date = date
         this.person = person
         add(address)
@@ -52,17 +52,17 @@ class KotlinInvoice {
         }
     }
 
-    fun add(item: KotlinItem) {
+    fun add(item: Item) {
         if (items == null) {
-            items = ArrayList<KotlinItem>()
+            items = ArrayList<Item>()
         }
         items!!.add(item)
         total += item.price
     }
 
-    fun add(address: KotlinAddress) {
+    fun add(address: Address) {
         if (addresses == null) {
-            addresses = ArrayList<KotlinAddress>()
+            addresses = ArrayList<Address>()
         }
         addresses!!.add(address)
     }
@@ -74,7 +74,7 @@ class KotlinInvoice {
         if (o == null || javaClass != o.javaClass) {
             return false
         }
-        val invoice = o as KotlinInvoice?
+        val invoice = o as Invoice?
         if (id != invoice!!.id) {
             return false
         }

@@ -20,7 +20,7 @@ import org.mongodb.morphia.annotations.Entity
 import org.mongodb.morphia.annotations.Id
 
 @Entity
-open class KotlinPerson : AbstractKotlinPerson {
+open class Person : AbstractKotlinPerson {
     @Id
     var id: ObjectId? = null
 
@@ -39,7 +39,7 @@ open class KotlinPerson : AbstractKotlinPerson {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
 
-        other as KotlinPerson
+        other as Person
 
         if (id != other.id) return false
         if (first != other.first) return false

@@ -4,7 +4,7 @@ import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Property
 
 @Embedded
-class KotlinAddress {
+class Address {
     @Property("c")
     var city: String? = null
     var state: String? = null

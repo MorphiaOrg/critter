@@ -3,7 +3,7 @@ package com.antwerkz.critter
 import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Property
 
-interface CritterField : Comparable<CritterField> {
+interface CritterField : Comparable<CritterField>, Visible<CritterField> {
     companion object {
 
         val NUMERIC_TYPES = listOf("java.lang.Float",
@@ -29,7 +29,6 @@ interface CritterField : Comparable<CritterField> {
 
     val fullyQualifiedType: String
 
-    fun setPrivate(): CritterField
 
     fun hasAnnotation(aClass: Class<out Annotation>): Boolean
 
@@ -38,6 +37,9 @@ interface CritterField : Comparable<CritterField> {
     fun isNumeric(): Boolean = CritterField.NUMERIC_TYPES.contains(fullType)
 
     fun isStatic(): Boolean
+    fun setStatic(): CritterField
+
+    fun setFinal(): CritterField
 
     fun build(sourceClass: CritterClass, targetClass: CritterClass)
 
@@ -57,15 +59,6 @@ interface CritterField : Comparable<CritterField> {
 
     fun extract(name: String, ann: Class<out Annotation>): String
 
-    fun setType(type: Class<*>): CritterField
-
-    fun setType(type: String): CritterField
-
-    fun setName(name: String): CritterField
-
-    fun setPublic(): CritterField
-    fun setStatic(): CritterField
-    fun setFinal(): CritterField
     fun setStringLiteralInitializer(initializer: String): CritterField
     fun setLiteralInitializer(initializer: String): CritterField
 }

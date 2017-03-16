@@ -18,7 +18,7 @@ package com.antwerkz.critter.test.kotlin
 import org.mongodb.morphia.annotations.Embedded
 
 @Embedded
-class KotlinItem(var name: String, var price: Double) {
+class Item(var name: String, var price: Double) {
 
     constructor() : this("", 0.0)
 }

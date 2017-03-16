@@ -7,19 +7,18 @@ import java.util.HashMap
 class CritterContext(private val criteriaPkg: String?, val isForce: Boolean) {
     val classes = HashMap<String, CritterClass>()
 
-    fun add(aPackage: String, critterClass: CritterClass) {
-        classes.put(format("%s.%s", aPackage, critterClass.getName()), critterClass)
+    fun add(pkgName: String?, critterClass: CritterClass) {
+        classes.put(format("%s.%s", pkgName, critterClass.getName()), critterClass)
         if (criteriaPkg != null) {
             critterClass.setPackage(criteriaPkg)
         }
     }
 
-    operator fun get(name: String): CritterClass? {
+    operator fun get(name: String?): CritterClass? {
         return classes[name]
     }
 
-    fun isEmbedded(clazz: JavaClassSource): Boolean {
-        val critterClass = get(clazz.name)
-        return critterClass != null && critterClass.isEmbedded
+    fun isEmbedded(name: String?): Boolean {
+        return get(name)?.isEmbedded ?: false
     }
 }

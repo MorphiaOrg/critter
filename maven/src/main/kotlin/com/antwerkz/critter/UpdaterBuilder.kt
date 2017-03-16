@@ -22,10 +22,8 @@ class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
         targetClass.addImport(WriteConcern::class.java)
         targetClass.addImport(WriteResult::class.java)
 
-        updater.addField()
-                .setType("UpdateOperations<${sourceClass.getName()}>")
+        updater.addField("updateOperations", "UpdateOperations<${sourceClass.getName()}>")
                 .setLiteralInitializer("ds.createUpdateOperations(${sourceClass.getName()}.class);")
-                .setName("updateOperations")
 
         updater.addMethod()
                 .setPublic()
