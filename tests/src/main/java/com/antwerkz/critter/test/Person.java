@@ -22,7 +22,7 @@ import org.bson.types.ObjectId;
 @Entity
 public class Person extends AbstractPerson {
   @Id
-  private ObjectId id;
+  private ObjectId objectId;
 
   private String first;
 
@@ -36,12 +36,12 @@ public class Person extends AbstractPerson {
     this.last = last;
   }
 
-  public ObjectId getId() {
-    return id;
+  public ObjectId getObjectId() {
+    return objectId;
   }
 
-  public void setId(final ObjectId id) {
-    this.id = id;
+  public void setObjectId(final ObjectId objectId) {
+    this.objectId = objectId;
   }
 
   public String getFirst() {
@@ -74,7 +74,7 @@ public class Person extends AbstractPerson {
     if (first != null ? !first.equals(person.first) : person.first != null) {
       return false;
     }
-    if (id != null ? !id.equals(person.id) : person.id != null) {
+    if (objectId != null ? !objectId.equals(person.objectId) : person.objectId != null) {
       return false;
     }
     if (last != null ? !last.equals(person.last) : person.last != null) {
@@ -86,7 +86,7 @@ public class Person extends AbstractPerson {
 
   @Override
   public int hashCode() {
-    int result = id != null ? id.hashCode() : 0;
+    int result = objectId != null ? objectId.hashCode() : 0;
     result = 31 * result + (first != null ? first.hashCode() : 0);
     result = 31 * result + (last != null ? last.hashCode() : 0);
     return result;

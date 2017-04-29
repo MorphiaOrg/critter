@@ -19,7 +19,7 @@ class CritterTask : SourceTask() {
                 .filterNot { it.name.endsWith("Criteria.java") }
                 .forEach {
                     val critterClass = JavaClass(context, it)
-                    context.add(critterClass.getPackage(), critterClass)
+                    context.add(critterClass)
                 }
 
         context.classes.values

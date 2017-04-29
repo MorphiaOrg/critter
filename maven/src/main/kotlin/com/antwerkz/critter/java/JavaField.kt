@@ -121,7 +121,8 @@ return this;""")
         criteriaClass.addImport(QueryImpl::class.java)
 
         var name = "\"" + source.name + "\""
-        if (source.origin.hasAnnotation(Embedded::class.java) || context.isEmbedded(source.origin.name)) {
+        val origin = source.origin
+        if (origin.hasAnnotation(Embedded::class.java) || context.isEmbedded(origin.`package`, origin.name)) {
             name = "prefix + " + name
         }
 

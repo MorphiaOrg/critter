@@ -1,6 +1,7 @@
 package com.antwerkz.critter
 
 import org.mongodb.morphia.annotations.Embedded
+import org.mongodb.morphia.annotations.Id
 import org.mongodb.morphia.annotations.Property
 
 interface CritterField : Comparable<CritterField>, Visible<CritterField> {
@@ -50,11 +51,12 @@ interface CritterField : Comparable<CritterField>, Visible<CritterField> {
     fun buildField(critterClass: CritterClass, criteriaClass: CritterClass)
 
     fun mappedName(): String {
-        var name = name
-        name = extract(name, Property::class.java)
-        name = extract(name, Embedded::class.java)
-
-        return name
+        return if (hasAnnotation(Id::class.java)) {
+            "\"_id\""
+        } else {
+            val fieldName = extract("\"$name\"", Property::class.java)
+            extract(fieldName, Embedded::class.java)
+        }
     }
 
     fun extract(name: String, ann: Class<out Annotation>): String

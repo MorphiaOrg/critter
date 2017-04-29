@@ -17,62 +17,80 @@ import org.mongodb.morphia.query.Criteria
 import org.mongodb.morphia.query.FieldEndImpl
 import org.mongodb.morphia.query.QueryImpl
 
-class KotlinField(private val context: CritterContext, val source: KibbleProperty) : CritterField {
+class KotlinField(private val context: CritterContext, val parent: KibbleClass, val property: KibbleProperty) : CritterField {
+    companion object {
+        val NUMERIC_TYPES = listOf("Float",
+                "Double",
+                "Long",
+                "Integer",
+                "Byte",
+                "Short",
+                "Number")
+                .map { listOf(it, "${it}?", "kotlin.${it}", "kotlin.${it}?") }
+                .flatMap { it }
+    }
+
     override val shortParameterTypes = mutableListOf<String>()
     override val fullParameterTypes = mutableListOf<String>()
-    override val fullType: String = source.type.toString()
+    override val fullType: String = property.type.toString()
     override val name: String
-        get() = source.name
+        get() = property.name
     override val parameterTypes: List<String>
-        get() = source.type.parameters.map { it.toString() }
+        get() = property.type!!.parameters.map { it.toString() }
     override val parameterizedType: String
-        get() = source.type.toString()
+        get() = property.type.toString()
 
     override val fullyQualifiedType: String
-        get() = source.type.qualifiedName
+        get() = property.type!!.name
 
     init {
-        if (source.isParameterized()) {
-            source.type.parameters.forEach {
-                shortParameterTypes.add(it.name)
-                fullParameterTypes.add(it.qualifiedName)
-            }
+        property.type?.parameters?.forEach {
+            shortParameterTypes.add(it.name)
+            fullParameterTypes.add(it.name)
         }
     }
 
-    override fun isPublic() = source.isPublic()
+    override fun isPublic() = property.isPublic()
     override fun setPublic(): CritterField {
-        source.visibility = PUBLIC
+        property.visibility = PUBLIC
         return this
     }
 
-    override fun isPrivate() = source.isPrivate()
+    override fun isPrivate() = property.isPrivate()
     override fun setPrivate(): CritterField {
-        source.visibility = PRIVATE
+        property.visibility = PRIVATE
         return this
     }
 
-    override fun isProtected() = source.isProtected()
+    override fun isProtected() = property.isProtected()
     override fun setProtected(): CritterField {
-        source.visibility = PROTECTED
+        property.visibility = PROTECTED
         return this
     }
 
-    override fun isInternal() = source.isInternal()
+    override fun isInternal() = property.isInternal()
     override fun setInternal(): CritterField {
-        source.visibility = INTERNAL
+        property.visibility = INTERNAL
         return this
     }
 
     override fun isPackagePrivate() = false
     override fun setPackagePrivate() = throw Visible.invalid("package private", "kotlin")
 
-    override fun hasAnnotation(aClass: Class<out Annotation>) = source.hasAnnotation(aClass)
+    override fun hasAnnotation(aClass: Class<out Annotation>) = property.hasAnnotation(aClass)
 
     override fun isStatic() = false
 
+    override fun isContainer(): Boolean {
+        return super.isContainer()
+    }
+
+    override fun isNumeric(): Boolean {
+        return NUMERIC_TYPES.contains(fullType) || super.isNumeric()
+    }
+
     override fun build(sourceClass: CritterClass, targetClass: CritterClass) {
-        if (source.hasAnnotation(Reference::class.java)) {
+        if (property.hasAnnotation(Reference::class.java)) {
             buildReference(targetClass)
         } else if (hasAnnotation(Embedded::class.java)) {
             buildEmbed(targetClass)
@@ -84,11 +102,11 @@ class KotlinField(private val context: CritterContext, val source: KibblePropert
     override fun buildReference(criteriaClass: CritterClass) {
         criteriaClass.addMethod()
                 .setPublic()
-                .setName(source.name)
+                .setName(property.name)
                 .setReturnType(criteriaClass.qualifiedName)
-                .setBody("""query.filter("${source.name} = ", reference)
+                .setBody("""query.filter("${property.name} = ", reference)
 return this""")
-                .addParameter(source.type.qualifiedName, "reference")
+                .addParameter(property.type!!.name, "reference")
     }
 
     override fun buildEmbed(criteriaClass: CritterClass) {
@@ -98,15 +116,15 @@ return this""")
             criteriaType = shortParameterTypes[0] + "Criteria"
             criteriaClass.addImport("${criteriaClass.getPackage()}.$criteriaType")
         } else {
-            val type = source.type
-            criteriaType = type.qualifiedName + "Criteria"
-            criteriaClass.addImport(source.type.qualifiedName)
+            val type = property.type!!
+            criteriaType = type.name + "Criteria"
+            criteriaClass.addImport(type.name)
         }
         val method = criteriaClass.addMethod()
                 .setPublic()
-                .setName(source.name)
+                .setName(property.name)
                 .setReturnType(criteriaType)
-        method.setBody("return ${method.getReturnType()}(query, \"${source.name}\");")
+        method.setBody("return ${method.getReturnType()}(query, \"${property.name}\");")
     }
 
     override fun buildField(critterClass: CritterClass, criteriaClass: CritterClass) {
@@ -117,23 +135,21 @@ return this""")
         criteriaClass.addImport(FieldEndImpl::class.java)
         criteriaClass.addImport(QueryImpl::class.java)
 
-        var name = "\"" + source.name + "\""
-        val parent = source.parent
-        if (source.hasAnnotation(Embedded::class.java) ||
-                if(parent is KibbleClass) context.isEmbedded(parent.name) else false) {
+        var name = "\"" + property.name + "\""
+        if (property.hasAnnotation(Embedded::class.java) || context.isEmbedded(parent.pkgName!!, parent.name)) {
             name = "prefix + " + name
         }
 
         criteriaClass.addMethod()
                 .setPublic()
-                .setName(source.name)
+                .setName(property.name)
                 .setReturnType(java.lang.String.format("%s<%s, %s, %s>", TypeSafeFieldEnd::class.java.name, criteriaClass.qualifiedName,
                         critterClass.qualifiedName, fullType)).setBody(
                 "return TypeSafeFieldEnd<${criteriaClass.getName()}, ${critterClass.getName()}, $fullType>(this, query, $name)")
 
         val method = criteriaClass.addMethod()
                 .setPublic()
-                .setName(source.name)
+                .setName(property.name)
                 .setReturnType(Criteria::class.java)
                 .setBody(java.lang.String.format("return TypeSafeFieldEnd<%s, %s, %s>(this, query, %s).equal(value)",
                         criteriaClass.getName(), critterClass.getName(), fullType, name))
@@ -141,23 +157,23 @@ return this""")
     }
 
     override fun extract(name: String, ann: Class<out Annotation>): String {
-        TODO("not implemented")
+        return property.getAnnotation(ann)?.get("value") ?: name
     }
 
     override fun setStatic(): CritterField = throw Visible.invalid("static", "kotlin")
 
     override fun setFinal(): CritterField {
-        source.markFinal()
+        property.markFinal()
         return this
     }
 
     override fun setStringLiteralInitializer(initializer: String): CritterField {
-        source.initializer = initializer
+        property.initializer = initializer
         return this
     }
 
     override fun setLiteralInitializer(initializer: String): CritterField {
-        source.initializer = initializer
+        property.initializer = initializer
         return this
     }
 

@@ -1,29 +1,26 @@
 package com.antwerkz.critter
 
+import com.antwerkz.critter.kotlin.KotlinClass
+import com.antwerkz.kibble.model.Visibility.PRIVATE
 import com.mongodb.WriteConcern
 import com.mongodb.WriteResult
+import org.mongodb.morphia.Datastore
 import org.mongodb.morphia.annotations.Id
+import org.mongodb.morphia.query.Query
 import org.mongodb.morphia.query.UpdateOperations
 import org.mongodb.morphia.query.UpdateResults
 
-class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
+abstract class UpdaterBuilder(val sourceClass: CritterClass, val targetClass: CritterClass) {
     init {
-        val type = sourceClass.getName() + "Updater"
-        val method = targetClass.addMethod()
-                .setPublic()
-                .setName("getUpdater")
-                .setReturnType(type)
-        method.setBody("return new ${method.getReturnType()}();")
-
-        val updater = targetClass.createClass(name = type)
-
+        targetClass.addImport(Query::class.java)
         targetClass.addImport(UpdateOperations::class.java)
         targetClass.addImport(UpdateResults::class.java)
         targetClass.addImport(WriteConcern::class.java)
         targetClass.addImport(WriteResult::class.java)
 
-        updater.addField("updateOperations", "UpdateOperations<${sourceClass.getName()}>")
-                .setLiteralInitializer("ds.createUpdateOperations(${sourceClass.getName()}.class);")
+        val type = addUpdaterMethod(sourceClass, targetClass)
+
+        val updater = createUpdaterClass(targetClass, type)
 
         updater.addMethod()
                 .setPublic()
@@ -107,6 +104,18 @@ class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
         targetClass.addNestedType(updater)
     }
 
+    abstract protected fun createUpdaterClass(targetClass: CritterClass, type: String): CritterClass
+
+    open protected fun addUpdaterMethod(sourceClass: CritterClass, targetClass: CritterClass): String {
+        val type = sourceClass.getName() + "Updater"
+        val method = targetClass.addMethod()
+                .setPublic()
+                .setName("getUpdater")
+                .setReturnType(type)
+        method.setBody("return new ${method.getReturnType()}();")
+        return type
+    }
+
     private fun numerics(type: String, updater: CritterClass, field: CritterField) {
         if (field.isNumeric()) {
             updater.addMethod()
@@ -114,6 +123,13 @@ class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
                     .setName("dec${nameCase(field.name)}")
                     .setReturnType(type)
                     .setBody("updateOperations.dec(\"${field.name}\");\nreturn this;")
+
+            updater.addMethod()
+                    .setPublic()
+                    .setName("dec${nameCase(field.name)}")
+                    .setReturnType(type)
+                    .setBody("updateOperations.dec(\"${field.name}\", value);\nreturn this;")
+                    .addParameter(field.fullType, "value")
 
             updater.addMethod()
                     .setPublic()
@@ -186,5 +202,48 @@ class UpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) {
 
     private fun nameCase(name: String): String {
         return name.substring(0, 1).toUpperCase() + name.substring(1)
+    }
+}
+
+class JavaUpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) : UpdaterBuilder(sourceClass, targetClass) {
+    override fun createUpdaterClass(targetClass: CritterClass, type: String): CritterClass {
+        val updater = targetClass.createClass(name = type)
+        updater.addField("updateOperations", "UpdateOperations<${sourceClass.getName()}>")
+                .setLiteralInitializer("ds.createUpdateOperations(${sourceClass.getName()}.class);")
+
+
+        return updater;
+    }
+}
+class KotlinUpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) : UpdaterBuilder(sourceClass, targetClass) {
+    override fun createUpdaterClass(targetClass: CritterClass, type: String): CritterClass {
+        val updater = targetClass.createClass(name = type) as KotlinClass
+        try {
+            updater.source.addProperty("criteria", targetClass.qualifiedName, visibility = PRIVATE, constructorParam = true)
+        } catch(e: KotlinNullPointerException) {
+            println("e = ${e}")
+        }
+        updater.source.addProperty("ds", Datastore::class.java.name, visibility = PRIVATE, initializer = "criteria.datastore()")
+        updater.source.addProperty("query", "Query<${sourceClass.getName()}>", visibility = PRIVATE, initializer = "criteria.query")
+        updater.addField("updateOperations", "UpdateOperations<${sourceClass.getName()}>")
+                .setPrivate()
+                .setLiteralInitializer("ds.createUpdateOperations(${sourceClass.getName()}::class.java);")
+
+        updater.addMethod()
+                .setPrivate()
+                .setName("query")
+                .setReturnType("Query<${sourceClass.getName()}>")
+                .setBody("return criteria.query")
+        return updater
+    }
+
+    override fun addUpdaterMethod(sourceClass: CritterClass, targetClass: CritterClass): String {
+        val type = sourceClass.getName() + "Updater"
+        val method = targetClass.addMethod()
+                .setPublic()
+                .setName("getUpdater")
+                .setReturnType(type)
+        method.setBody("return ${method.getReturnType()}(this)")
+        return type
     }
 }

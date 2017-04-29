@@ -3,7 +3,6 @@ package com.antwerkz.critter
 import com.antwerkz.critter.java.JavaClass
 import com.antwerkz.critter.kotlin.KotlinClass
 import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.model.KibbleFile
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
@@ -26,7 +25,7 @@ class CritterMojo : AbstractMojo() {
     private lateinit var outputDirectory: File
 
     @Parameter(property = "critter.criteria.package")
-    private val criteriaPackage: String? = null
+    private var criteriaPackage: String? = null
 
     @Parameter(property = "critter.force", defaultValue = "false")
     private var force: Boolean = false
@@ -50,13 +49,12 @@ class CritterMojo : AbstractMojo() {
 
                 override fun directoryWalkStep(percentage: Int, file: File) {
                     if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
-                        val critterClass = JavaClass(context, file)
-                        context.add(critterClass.getPackage(), critterClass)
+                        JavaClass(context, file).apply {
+                            context.add(this)
+                        }
                     } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
-                        println("file = ${file}")
-                        val files = Kibble.parse(file)
-                        files.classes.forEach {
-                            context.add(it.getPackage(), KotlinClass(context, it))
+                        Kibble.parseFile(file).classes.forEach {
+                            context.add(KotlinClass(context, it))
                         }
                     }
                 }

@@ -24,8 +24,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <roaster.version>2.19.4.Final</roaster.version>
-        <kotlin.version>1.0.6</kotlin.version>
+        <kotlin.version>1.1.2</kotlin.version>
         <maven.version>3.3.9</maven.version>
+        <kibble.version>0.4-SNAPSHOT</kibble.version>
     </properties>
 
     <build>
@@ -166,12 +167,12 @@
             <dependency>
                 <groupId>com.antwerkz.kibble</groupId>
                 <artifactId>kibble</artifactId>
-                <version>0.1-SNAPSHOT</version>
+                <version>${kibble.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>6.8.5</version>
+                <version>6.11</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -195,7 +196,7 @@
     <modules>
         <module>core</module>
         <module>maven</module>
-        <module>gradle</module>
+        <!--<module>gradle</module>-->
         <module>tests</module>
     </modules>
 </project>

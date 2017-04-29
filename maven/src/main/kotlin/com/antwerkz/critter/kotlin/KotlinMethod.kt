@@ -61,12 +61,12 @@ class KotlinMethod(val source: KibbleFunction) : CritterMethod {
     }
 
     override fun addParameter(type: String, name: String): CritterMethod {
-        source += source.addParameter(name, type)
+        source.addParameter(name, type)
         return this
     }
 
     override fun addParameter(type: Class<*>, name: String): CritterMethod {
-        source += source.addParameter(name, type.name)
+        source.addParameter(name, type.name)
         return this
     }
 }

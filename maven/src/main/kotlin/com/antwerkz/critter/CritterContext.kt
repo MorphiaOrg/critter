@@ -1,24 +1,20 @@
 package com.antwerkz.critter
 
-import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.lang.String.format
 import java.util.HashMap
 
-class CritterContext(private val criteriaPkg: String?, val isForce: Boolean) {
+class CritterContext(val criteriaPkg: String? = null, val force: Boolean = false) {
     val classes = HashMap<String, CritterClass>()
 
-    fun add(pkgName: String?, critterClass: CritterClass) {
-        classes.put(format("%s.%s", pkgName, critterClass.getName()), critterClass)
-        if (criteriaPkg != null) {
-            critterClass.setPackage(criteriaPkg)
-        }
+    fun add(critterClass: CritterClass) {
+        classes.put(format("%s.%s", critterClass.getPackage(), critterClass.getName()), critterClass)
     }
 
-    operator fun get(name: String?): CritterClass? {
-        return classes[name]
+    fun resolve(currentPkg: String, name: String): CritterClass? {
+        return classes[name] ?: classes["$currentPkg.$name"]
     }
 
-    fun isEmbedded(name: String?): Boolean {
-        return get(name)?.isEmbedded ?: false
+    fun isEmbedded(currentPkg: String, name: String): Boolean {
+        return resolve(currentPkg, name)?.isEmbedded ?: false
     }
 }

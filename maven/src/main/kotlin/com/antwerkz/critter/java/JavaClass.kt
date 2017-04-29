@@ -5,7 +5,7 @@ import com.antwerkz.critter.CritterConstructor
 import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.CritterMethod
-import com.antwerkz.critter.UpdaterBuilder
+import com.antwerkz.critter.JavaUpdaterBuilder
 import com.antwerkz.critter.Visible
 import com.antwerkz.critter.criteria.BaseCriteria
 import org.jboss.forge.roaster.Roaster
@@ -20,9 +20,10 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
     : CritterClass(context) {
 
     constructor(context: CritterContext, sourceFile: File) : this(context, Roaster.parse(sourceFile) as JavaClassSource) {
+        val superClass = context.resolve(sourceClass.`package`, sourceClass.superType)
         lastModified = Math.min(
                 sourceFile.lastModified(),
-                context[sourceClass.superType]?.lastModified ?: 0)
+                superClass?.lastModified ?: 0)
 
         isEmbedded = hasAnnotation(Embedded::class.java)
         fields = sourceClass.fields
@@ -30,7 +31,6 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
                 .map { f -> JavaField(context, f) }
                 .sortedBy { f -> f.name }
                 .toMutableList()
-        val superClass = context[sourceClass.superType]
         if (superClass != null) {
             fields.addAll(superClass.fields)
         }
@@ -127,7 +127,7 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
         val descriptorClass = createClass(getPackage() + ".criteria", getName() + "Descriptor")
 
         val outputFile = File(directory, descriptorClass.qualifiedName.replace('.', '/') + ".java")
-        if (context.isForce || outputFile.lastModified() < lastModified) {
+        if (context.force || outputFile.lastModified() < lastModified) {
             fields.forEach { field ->
                 descriptorClass.addField(field.name, String::class.java.name)
                         .setPublic()
@@ -144,7 +144,7 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
         val criteriaClass = createClass(getPackage() + ".criteria", getName() + "Criteria")
 
         val outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
-        if (context.isForce || !outputFile.exists() || outputFile.lastModified() > lastModified) {
+        if (context.force || !outputFile.exists() || outputFile.lastModified() > lastModified) {
             if (!hasAnnotation(Embedded::class.java)) {
                 criteriaClass.setSuperType(BaseCriteria::class.java.name + "<" + qualifiedName + ">")
                 criteriaClass.addConstructor()
@@ -167,7 +167,7 @@ this.prefix = prefix + ".";""")
 
             fields.forEach { it.build(this, criteriaClass) }
             if (!hasAnnotation(Embedded::class.java)) {
-                UpdaterBuilder(this, criteriaClass)
+                JavaUpdaterBuilder(this, criteriaClass)
             }
 
             generate(criteriaClass, outputFile)

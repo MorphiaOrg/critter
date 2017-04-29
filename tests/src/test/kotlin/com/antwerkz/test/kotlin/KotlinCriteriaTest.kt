@@ -60,8 +60,8 @@ class KotlinCriteriaTest {
         val invoice = invoiceCriteria.query().get()
         val doe = datastore.createQuery<Invoice>(Invoice::class.java).filter("person =", john).get()
         Assert.assertEquals(invoice, doe)
-        Assert.assertEquals(doe.person.last, "Doe")
-        Assert.assertEquals(invoice.person.last, "Doe")
+        Assert.assertEquals(doe.person?.last, "Doe")
+        Assert.assertEquals(invoice.person?.last, "Doe")
         val query = datastore.createQuery<Invoice>(Invoice::class.java).field("addresses.city").equal("Chicago").get()
         Assert.assertNotNull(query)
         invoiceCriteria = InvoiceCriteria(datastore)
@@ -74,26 +74,26 @@ class KotlinCriteriaTest {
     @Test
     @Throws(UnknownHostException::class)
     fun updates() {
-        val personCriteria = KotlinPersonCriteria(datastore)
+        val personCriteria = PersonCriteria(datastore)
         personCriteria.delete()
         personCriteria.first("Jim")
         personCriteria.last("Beam")
 
         val query = personCriteria.query()
 
-        Assert.assertEquals(personCriteria.updater
+        Assert.assertEquals(personCriteria.getUpdater()
                 .age(30L)
                 .updateAll().updatedCount, 0)
 
-        Assert.assertEquals(personCriteria.updater
+        Assert.assertEquals(personCriteria.getUpdater()
                 .age(30L)
                 .upsert().insertedCount, 1)
 
-        val update = personCriteria.updater.incAge().updateAll()
+        val update = personCriteria.getUpdater().incAge().updateAll()
         Assert.assertEquals(update.updatedCount, 1)
         Assert.assertEquals(personCriteria.query().get().age!!.toLong(), 31L)
 
-        Assert.assertNotNull(KotlinPersonCriteria(datastore).query().get().first)
+        Assert.assertNotNull(PersonCriteria(datastore).query().get().first)
 
         val delete = datastore.delete(query)
         Assert.assertEquals(delete.n, 1)
@@ -104,13 +104,13 @@ class KotlinCriteriaTest {
         for (i in 0..99) {
             datastore.save(Person("First" + i, "Last" + i))
         }
-        var criteria = KotlinPersonCriteria(datastore)
+        var criteria = PersonCriteria(datastore)
         criteria.last().contains("Last2")
-        criteria.updater
+        criteria.getUpdater()
                 .age(1000L)
                 .updateFirst()
 
-        criteria = KotlinPersonCriteria(datastore)
+        criteria = PersonCriteria(datastore)
         criteria.age(1000L)
 
         //    Assert.assertEquals(criteria.query().countAll(), 1);
@@ -121,19 +121,19 @@ class KotlinCriteriaTest {
         for (i in 0..99) {
             datastore.save(Person("First" + i, "Last" + i))
         }
-        var criteria = KotlinPersonCriteria(datastore)
+        var criteria = PersonCriteria(datastore)
         criteria.last().contains("Last2")
-        var result = criteria.updater
+        var result = criteria.getUpdater()
                 .remove()
         Assert.assertEquals(result.n, 11)
         Assert.assertEquals(criteria.query().count(), 0)
 
-        criteria = KotlinPersonCriteria(datastore)
+        criteria = PersonCriteria(datastore)
         Assert.assertEquals(criteria.query().count(), 89)
 
-        criteria = KotlinPersonCriteria(datastore)
+        criteria = PersonCriteria(datastore)
         criteria.last().contains("Last3")
-        result = criteria.updater.remove(WriteConcern.MAJORITY)
+        result = criteria.getUpdater().remove(WriteConcern.MAJORITY)
         Assert.assertEquals(result.n, 11)
         Assert.assertEquals(criteria.query().count(), 0)
     }
@@ -158,11 +158,11 @@ class KotlinCriteriaTest {
 
         val criteria1 = InvoiceCriteria(datastore)
         criteria1.addresses().city().order()
-        Assert.assertEquals(criteria1.query().asList()[0].addresses[0].city, "NYC")
+        Assert.assertEquals(criteria1.query().asList()[0].addresses!![0].city, "NYC")
 
         val criteria2 = InvoiceCriteria(datastore)
         criteria2.addresses().city().order(false)
-        Assert.assertEquals(criteria2.query().asList()[0].addresses[0].city, "New York City")
+        Assert.assertEquals(criteria2.query().asList()[0].addresses!![0].city, "New York City")
     }
 
     fun orQueries() {
@@ -175,7 +175,7 @@ class KotlinCriteriaTest {
                 query.criteria("last").equal("Tyson")
         )
 
-        val criteria = KotlinPersonCriteria(datastore)
+        val criteria = PersonCriteria(datastore)
         criteria.or(
                 criteria.last("Bloomberg"),
                 criteria.last("Tyson")
@@ -195,7 +195,7 @@ class KotlinCriteriaTest {
                 query.criteria("last").equal("Tyson")
         )
 
-        val criteria = KotlinPersonCriteria(datastore)
+        val criteria = PersonCriteria(datastore)
         criteria.and(
                 criteria.first("Mike"),
                 criteria.last("Tyson")

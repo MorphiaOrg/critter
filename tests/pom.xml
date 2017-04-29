@@ -12,7 +12,7 @@
     <artifactId>critter-tests</artifactId>
 
     <properties>
-        <kotlin.version>1.0.6</kotlin.version>
+        <kotlin.version>1.1.2</kotlin.version>
     </properties>
 
     <build>
@@ -48,6 +48,7 @@
                             <sourceDirs>
                                 <source>src/main/java</source>
                                 <source>src/main/kotlin</source>
+                                <source>target/generated-sources/critter</source>
                             </sourceDirs>
                         </configuration>
                     </execution>
@@ -57,15 +58,18 @@
                         <goals>
                             <goal>test-compile</goal>
                         </goals>
+<!--
                         <configuration>
                             <sourceDirs>
                                 <source>src/test/java</source>
                                 <source>src/test/kotlin</source>
                             </sourceDirs>
                         </configuration>
+-->
                     </execution>
                 </executions>
             </plugin>
+<!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -86,6 +90,7 @@
                     </execution>
                 </executions>
             </plugin>
+-->
         </plugins>
     </build>
 

@@ -23,32 +23,36 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
 public class BaseCriteria<T> {
-  protected final Query<T> query;
+    protected final Query<T> query;
 
-  protected final Datastore ds;
+    protected final Datastore ds;
 
-  public BaseCriteria(Datastore ds, Class<T> klass) {
-    query = ds.find(klass);
-    this.ds = ds;
-  }
+    public BaseCriteria(Datastore ds, Class<T> klass) {
+        query = ds.find(klass);
+        this.ds = ds;
+    }
 
-  public Query<T> query() {
-    return query;
-  }
+    public Query<T> query() {
+        return query;
+    }
 
-  public WriteResult delete() {
-     return ds.delete(query());
-  }
+    public Datastore datastore() {
+        return ds;
+    }
 
-  public WriteResult delete(WriteConcern wc) {
-     return ds.delete(query(), wc);
-  }
+    public WriteResult delete() {
+        return ds.delete(query());
+    }
 
-  public CriteriaContainer or(Criteria... criteria) {
-    return query.or(criteria);
-  }
+    public WriteResult delete(WriteConcern wc) {
+        return ds.delete(query(), wc);
+    }
 
-  public CriteriaContainer and(Criteria... criteria) {
-    return query.and(criteria);
-  }
+    public CriteriaContainer or(Criteria... criteria) {
+        return query.or(criteria);
+    }
+
+    public CriteriaContainer and(Criteria... criteria) {
+        return query.and(criteria);
+    }
 }

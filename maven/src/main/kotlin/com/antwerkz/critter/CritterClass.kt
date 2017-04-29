@@ -20,7 +20,7 @@ abstract class CritterClass(var context: CritterContext): Visible<CritterClass> 
         "${getPackage()}.${getName()}"
     }
 
-    lateinit var fields: MutableList<CritterField>
+    var fields = mutableListOf<CritterField>()
 
     var isEmbedded: Boolean = false
 
@@ -37,17 +37,15 @@ abstract class CritterClass(var context: CritterContext): Visible<CritterClass> 
     abstract fun getSuperType(): String
     abstract fun setSuperType(name: String): CritterClass
 
-    fun build(directory: File) {
+    open fun build(directory: File) {
         try {
             if (hasAnnotation(Entity::class.java) || hasAnnotation(Embedded::class.java)) {
                 buildCriteria(directory)
                 buildDescriptor(directory)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
             LOG.log(Level.SEVERE, format("Failed to generate criteria class for %s: %s", getName(), e.message), e)
         }
-
     }
 
     abstract fun buildCriteria(directory: File)
@@ -62,7 +60,9 @@ abstract class CritterClass(var context: CritterContext): Visible<CritterClass> 
 
     abstract fun addImport(name: String)
 
-    abstract fun addNestedType(type: CritterClass): CritterClass
+    open fun addNestedType(type: CritterClass): CritterClass {
+        return this
+    }
 
     abstract fun addField(name : String, type: String): CritterField
 
