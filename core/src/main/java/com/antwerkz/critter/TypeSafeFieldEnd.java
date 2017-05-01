@@ -26,30 +26,30 @@ import static org.mongodb.morphia.query.Shape.box;
 import static org.mongodb.morphia.query.Shape.center;
 import static org.mongodb.morphia.query.Shape.centerSphere;
 
-public class TypeSafeFieldEnd<T, Q, V> {
+public class TypeSafeFieldEnd<T, V> {
   private T criteria;
 
-  private final Query<Q> query;
+  private final Query<?> query;
 
   private final String fieldName;
 
   @Deprecated
-  public TypeSafeFieldEnd(Query<Q> query, String fieldName) {
+  public TypeSafeFieldEnd(Query<?> query, String fieldName) {
     throw new RuntimeException("Old constructor");
   }
 
   @Deprecated
-  public TypeSafeFieldEnd(Query<Q> query, FieldEnd<T> criteria) {
+  public TypeSafeFieldEnd(Query<?> query, FieldEnd<T> criteria) {
     throw new RuntimeException("Old constructor");
   }
 
-  public TypeSafeFieldEnd(T criteria, Query<Q> query, String fieldName) {
+  public TypeSafeFieldEnd(T criteria, Query<?> query, String fieldName) {
     this.criteria = criteria;
     this.query = query;
     this.fieldName = fieldName;
   }
 
-  public Query<Q> query() {
+  public Query<?> query() {
     return query;
   }
 

@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.antwerkz.critter.test.kotlin
+package com.antwerkz.critter.kotlin.model
 
 import org.bson.types.ObjectId
 import org.mongodb.morphia.annotations.Entity
 import org.mongodb.morphia.annotations.Id
+import org.mongodb.morphia.annotations.Property
 
 @Entity
 open class Person : AbstractKotlinPerson {
     @Id
     var id: ObjectId? = null
 
+    @Property("f")
     var first: String? = null
 
     var last: String? = null

@@ -36,6 +36,7 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
         source.file.imports.forEach {
             kibbleFile.addImport(it.type.name, it.alias)
         }
+        kibbleFile.addImport(source.pkgName + "." + source.name)
         lastModified = 0 //Math.min(
 //                sourceFile?.lastModified() ?: 0,
 //                context[source.superType?.qualifiedName]?.lastModified ?: 0)
@@ -51,11 +52,17 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
                 .toMutableList())
         kibble.superType?.let {
             (context.resolve(getPackage(), it.name) as KotlinClass?)?.let {
+                it.source.file.imports.forEach {
+                    kibbleFile.addImport(it.type.name, it.alias)
+                }
                 addFields(context, it.source)
             }
         }
         kibble.superTypes.forEach {
             (context.resolve(getPackage(), it.name) as KotlinClass?)?.let {
+                it.source.file.imports.forEach {
+                    kibbleFile.addImport(it.type.name, it.alias)
+                }
                 addFields(context, it.source)
             }
         }
@@ -150,17 +157,15 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
         kibbleFile.addImport(source.pkgName + "." + source.name)
         val primary = criteriaClass.constructor
         if (!hasAnnotation(Embedded::class.java)) {
-            criteriaClass.superType = KibbleType.from(BaseCriteria::class.java.name + "<" + qualifiedName + ">")
+            criteriaClass.superType = KibbleType.from("${BaseCriteria::class.java.simpleName}<${getName()}>")
             criteriaClass.superCallArgs = listOf("ds", "${getName()}::class.java")
-            primary.addParameter("ds", Datastore::class.java.name)
+            primary.addParameter("ds", Datastore::class.java.simpleName)
         } else {
-            criteriaClass.addProperty("query", "Query<${getName()}>", mutability = VAR, visibility = PRIVATE, constructorParam = true)
+            criteriaClass.addProperty("query", "Query<out Any>", mutability = VAR, visibility = PRIVATE, constructorParam = true)
             criteriaClass.addProperty("prefix", "String", mutability = VAR, visibility = PRIVATE, constructorParam = true)
 
             kibbleFile.addImport(Query::class.java)
-            val ctor = criteriaClass.addSecondaryConstructor()
-            ctor.visibility = PUBLIC
-            ctor.body = "this.prefix = prefix + \".\""
+            criteriaClass.initBlock = "this.prefix = prefix + \".\""
         }
 
         val targetClass = KotlinClass(context, criteriaClass)
@@ -180,8 +185,8 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
 
     private fun generate(kibbleFile: KibbleFile, file: File) {
         file.parentFile.mkdirs()
-            kibbleFile.toSource(SourceWriter())
-                    .toFile(file)
+        kibbleFile.toSource(SourceWriter())
+                .toFile(file)
     }
 
     override fun toSource(): String {

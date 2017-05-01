@@ -218,22 +218,16 @@ class JavaUpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) :
 class KotlinUpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) : UpdaterBuilder(sourceClass, targetClass) {
     override fun createUpdaterClass(targetClass: CritterClass, type: String): CritterClass {
         val updater = targetClass.createClass(name = type) as KotlinClass
-        try {
-            updater.source.addProperty("criteria", targetClass.qualifiedName, visibility = PRIVATE, constructorParam = true)
-        } catch(e: KotlinNullPointerException) {
-            println("e = ${e}")
-        }
-        updater.source.addProperty("ds", Datastore::class.java.name, visibility = PRIVATE, initializer = "criteria.datastore()")
-        updater.source.addProperty("query", "Query<${sourceClass.getName()}>", visibility = PRIVATE, initializer = "criteria.query")
-        updater.addField("updateOperations", "UpdateOperations<${sourceClass.getName()}>")
-                .setPrivate()
-                .setLiteralInitializer("ds.createUpdateOperations(${sourceClass.getName()}::class.java);")
 
-        updater.addMethod()
-                .setPrivate()
-                .setName("query")
-                .setReturnType("Query<${sourceClass.getName()}>")
-                .setBody("return criteria.query")
+        updater.source.addProperty("criteria", targetClass.qualifiedName, visibility = PRIVATE, constructorParam = true)
+        updater.source.addProperty("ds", visibility = PRIVATE, initializer = "criteria.datastore()")
+        updater.source.addProperty("query", visibility = PRIVATE, initializer = "criteria.query")
+        updater.source.addProperty("updateOperations", visibility = PRIVATE,
+                initializer = "ds.createUpdateOperations(${sourceClass.getName()}::class.java);")
+
+        val queryFun = updater.source.addFunction("query", "Query<${sourceClass.getName()}>", "return criteria.query")
+        queryFun.visibility = PRIVATE
+
         return updater
     }
 

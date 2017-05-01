@@ -129,16 +129,14 @@ return this;""")
         criteriaClass.addMethod()
                 .setPublic()
                 .setName(source.name)
-                .setReturnType(format("%s<%s, %s, %s>", TypeSafeFieldEnd::class.java.name, criteriaClass.qualifiedName,
-                        critterClass.qualifiedName, fullType)).setBody(
-                "return new TypeSafeFieldEnd<${criteriaClass.getName()}, ${critterClass.getName()}, $fullType>(this, query, $name);")
+                .setReturnType("${TypeSafeFieldEnd::class.java.name}<${criteriaClass.qualifiedName}, $fullType>")
+                .setBody("return new TypeSafeFieldEnd<${criteriaClass.getName()}, $fullType>(this, query, $name);")
 
         val method = criteriaClass.addMethod()
                 .setName(source.name)
                 .setPublic()
                 .setReturnType(Criteria::class.java)
-                .setBody(format("return new TypeSafeFieldEnd<%s, %s, %s>(this, query, %s).equal(value);",
-                        criteriaClass.getName(), critterClass.getName(), fullType, name))
+                .setBody("return new TypeSafeFieldEnd<${criteriaClass.getName()}, $fullType>(this, query, $name).equal(value);")
         method.addParameter(parameterizedType, "value")
     }
 

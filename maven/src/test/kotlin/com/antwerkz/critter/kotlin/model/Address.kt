@@ -1,4 +1,4 @@
-package com.antwerkz.critter.test.kotlin
+package com.antwerkz.critter.kotlin.model
 
 import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Property

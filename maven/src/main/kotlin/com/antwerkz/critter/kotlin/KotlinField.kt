@@ -77,7 +77,19 @@ class KotlinField(private val context: CritterContext, val parent: KibbleClass, 
     override fun isPackagePrivate() = false
     override fun setPackagePrivate() = throw Visible.invalid("package private", "kotlin")
 
-    override fun hasAnnotation(aClass: Class<out Annotation>) = property.hasAnnotation(aClass)
+    override fun hasAnnotation(aClass: Class<out Annotation>): Boolean {
+        return property.hasAnnotation(aClass)
+                || resolveFieldType()?.hasAnnotation(aClass)
+                ?: false
+    }
+
+    private fun resolveFieldType(): CritterClass? {
+        return if (!shortParameterTypes.isEmpty()) {
+            context.resolve(parent.pkgName!!, fullParameterTypes[0])
+        } else {
+            context.resolve(parent.pkgName!!, property.type!!.name)
+        }
+    }
 
     override fun isStatic() = false
 
@@ -100,6 +112,9 @@ class KotlinField(private val context: CritterContext, val parent: KibbleClass, 
     }
 
     override fun buildReference(criteriaClass: CritterClass) {
+        resolveFieldType()?.let {
+            criteriaClass.addImport(it.qualifiedName)
+        }
         criteriaClass.addMethod()
                 .setPublic()
                 .setName(property.name)
@@ -112,13 +127,17 @@ return this""")
     override fun buildEmbed(criteriaClass: CritterClass) {
         criteriaClass.addImport(Criteria::class.java)
         val criteriaType: String
-        if (!shortParameterTypes.isEmpty()) {
+        val resolved = if (!shortParameterTypes.isEmpty()) {
             criteriaType = shortParameterTypes[0] + "Criteria"
-            criteriaClass.addImport("${criteriaClass.getPackage()}.$criteriaType")
+//            criteriaClass.addImport("${criteriaClass.getPackage()}.$criteriaType")
+            context.resolve(parent.pkgName!!, fullParameterTypes[0])
         } else {
             val type = property.type!!
             criteriaType = type.name + "Criteria"
-            criteriaClass.addImport(type.name)
+            context.resolve(parent.pkgName!!, type.name)
+        }
+        resolved?.let {
+            criteriaClass.addImport(it.qualifiedName)
         }
         val method = criteriaClass.addMethod()
                 .setPublic()
@@ -132,8 +151,6 @@ return this""")
         criteriaClass.addImport(qualifiedName)
         criteriaClass.addImport(fullType)
         criteriaClass.addImport(Criteria::class.java)
-        criteriaClass.addImport(FieldEndImpl::class.java)
-        criteriaClass.addImport(QueryImpl::class.java)
 
         var name = "\"" + property.name + "\""
         if (property.hasAnnotation(Embedded::class.java) || context.isEmbedded(parent.pkgName!!, parent.name)) {
@@ -143,17 +160,16 @@ return this""")
         criteriaClass.addMethod()
                 .setPublic()
                 .setName(property.name)
-                .setReturnType(java.lang.String.format("%s<%s, %s, %s>", TypeSafeFieldEnd::class.java.name, criteriaClass.qualifiedName,
-                        critterClass.qualifiedName, fullType)).setBody(
-                "return TypeSafeFieldEnd<${criteriaClass.getName()}, ${critterClass.getName()}, $fullType>(this, query, $name)")
+                .setReturnType("${TypeSafeFieldEnd::class.java.simpleName}<${criteriaClass.getName()}, ${fullType}>")
+                .setBody("return TypeSafeFieldEnd(this, query, $name)")
 
-        val method = criteriaClass.addMethod()
+        val criteriaName = criteriaClass.getName()
+        criteriaClass.addMethod()
                 .setPublic()
                 .setName(property.name)
-                .setReturnType(Criteria::class.java)
-                .setBody(java.lang.String.format("return TypeSafeFieldEnd<%s, %s, %s>(this, query, %s).equal(value)",
-                        criteriaClass.getName(), critterClass.getName(), fullType, name))
-        method.addParameter(parameterizedType, "value")
+                .setReturnType(Criteria::class.java.simpleName)
+                .setBody("return TypeSafeFieldEnd<$criteriaName, $fullType>(this, query, $name).equal(value)")
+                .addParameter(parameterizedType, "value")
     }
 
     override fun extract(name: String, ann: Class<out Annotation>): String {
@@ -179,5 +195,9 @@ return this""")
 
     override fun compareTo(other: CritterField): Int {
         TODO("not implemented")
+    }
+
+    override fun toString(): String {
+        return "KotlinField(property=$property)"
     }
 }

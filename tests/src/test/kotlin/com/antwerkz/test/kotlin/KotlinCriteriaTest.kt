@@ -15,10 +15,10 @@
  */
 package com.antwerkz.test.kotlin
 
-import com.antwerkz.critter.test.kotlin.Address
-import com.antwerkz.critter.test.kotlin.Invoice
-import com.antwerkz.critter.test.kotlin.Item
-import com.antwerkz.critter.test.kotlin.Person
+import com.antwerkz.critter.kotlin.model.Address
+import com.antwerkz.critter.kotlin.model.Invoice
+import com.antwerkz.critter.kotlin.model.Item
+import com.antwerkz.critter.kotlin.model.Person
 import com.antwerkz.critter.test.kotlin.criteria.InvoiceCriteria
 import com.antwerkz.critter.test.kotlin.criteria.PersonCriteria
 import com.mongodb.MongoClient
@@ -43,26 +43,26 @@ class KotlinCriteriaTest {
     }
 
     fun invoice() {
-        val john = Person("John", "Doe")
+        val john = com.antwerkz.critter.kotlin.model.Person("John", "Doe")
         datastore.save(john)
-        datastore.save(Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john, Address("New York City", "NY", "10000"),
+        datastore.save(com.antwerkz.critter.kotlin.model.Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john, com.antwerkz.critter.kotlin.model.Address("New York City", "NY", "10000"),
                 Item("ball", 5.0), Item("skateboard", 17.35)))
-        val jeff = Person("Jeff", "Johnson")
+        val jeff = com.antwerkz.critter.kotlin.model.Person("Jeff", "Johnson")
         datastore.save(jeff)
-        datastore.save(Invoice(LocalDateTime.of(2006, 3, 4, 8, 7), jeff, Address("Los Angeles", "CA", "90210"),
+        datastore.save(com.antwerkz.critter.kotlin.model.Invoice(LocalDateTime.of(2006, 3, 4, 8, 7), jeff, com.antwerkz.critter.kotlin.model.Address("Los Angeles", "CA", "90210"),
                 Item("movie", 29.95)))
-        val sally = Person("Sally", "Ride")
+        val sally = com.antwerkz.critter.kotlin.model.Person("Sally", "Ride")
         datastore.save(sally)
-        datastore.save(Invoice(LocalDateTime.of(2007, 8, 16, 19, 27), sally, Address("Chicago", "IL", "99999"),
+        datastore.save(com.antwerkz.critter.kotlin.model.Invoice(LocalDateTime.of(2007, 8, 16, 19, 27), sally, com.antwerkz.critter.kotlin.model.Address("Chicago", "IL", "99999"),
                 Item("kleenex", 3.49), Item("cough and cold syrup", 5.61)))
         var invoiceCriteria = InvoiceCriteria(datastore)
         invoiceCriteria.person(john)
         val invoice = invoiceCriteria.query().get()
-        val doe = datastore.createQuery<Invoice>(Invoice::class.java).filter("person =", john).get()
+        val doe = datastore.createQuery<com.antwerkz.critter.kotlin.model.Invoice>(com.antwerkz.critter.kotlin.model.Invoice::class.java).filter("person =", john).get()
         Assert.assertEquals(invoice, doe)
         Assert.assertEquals(doe.person?.last, "Doe")
         Assert.assertEquals(invoice.person?.last, "Doe")
-        val query = datastore.createQuery<Invoice>(Invoice::class.java).field("addresses.city").equal("Chicago").get()
+        val query = datastore.createQuery<com.antwerkz.critter.kotlin.model.Invoice>(com.antwerkz.critter.kotlin.model.Invoice::class.java).field("addresses.city").equal("Chicago").get()
         Assert.assertNotNull(query)
         invoiceCriteria = InvoiceCriteria(datastore)
         invoiceCriteria.addresses().city("Chicago")
@@ -102,7 +102,7 @@ class KotlinCriteriaTest {
     @Test(enabled = false) // waiting morphia issue #711
     fun updateFirst() {
         for (i in 0..99) {
-            datastore.save(Person("First" + i, "Last" + i))
+            datastore.save(com.antwerkz.critter.kotlin.model.Person("First" + i, "Last" + i))
         }
         var criteria = PersonCriteria(datastore)
         criteria.last().contains("Last2")
@@ -119,7 +119,7 @@ class KotlinCriteriaTest {
     @Test
     fun removes() {
         for (i in 0..99) {
-            datastore.save(Person("First" + i, "Last" + i))
+            datastore.save(com.antwerkz.critter.kotlin.model.Person("First" + i, "Last" + i))
         }
         var criteria = PersonCriteria(datastore)
         criteria.last().contains("Last2")
@@ -139,21 +139,21 @@ class KotlinCriteriaTest {
     }
 
     fun embeds() {
-        var invoice = Invoice()
+        var invoice = com.antwerkz.critter.kotlin.model.Invoice()
         invoice.date = LocalDateTime.now()
-        var person = Person("Mike", "Bloomberg")
+        var person = com.antwerkz.critter.kotlin.model.Person("Mike", "Bloomberg")
         datastore.save(person)
         invoice.person = person
-        invoice.add(Address("New York City", "NY", "10036"))
+        invoice.add(com.antwerkz.critter.kotlin.model.Address("New York City", "NY", "10036"))
         datastore.save(invoice)
 
-        invoice = Invoice()
+        invoice = com.antwerkz.critter.kotlin.model.Invoice()
         invoice.date = LocalDateTime.now()
-        person = Person("Andy", "Warhol")
+        person = com.antwerkz.critter.kotlin.model.Person("Andy", "Warhol")
         datastore.save(person)
 
         invoice.person = person
-        invoice.add(Address("NYC", "NY", "10018"))
+        invoice.add(com.antwerkz.critter.kotlin.model.Address("NYC", "NY", "10018"))
         datastore.save(invoice)
 
         val criteria1 = InvoiceCriteria(datastore)
@@ -166,10 +166,10 @@ class KotlinCriteriaTest {
     }
 
     fun orQueries() {
-        datastore.save(Person("Mike", "Bloomberg"))
-        datastore.save(Person("Mike", "Tyson"))
+        datastore.save(com.antwerkz.critter.kotlin.model.Person("Mike", "Bloomberg"))
+        datastore.save(com.antwerkz.critter.kotlin.model.Person("Mike", "Tyson"))
 
-        val query = datastore.createQuery<Person>(Person::class.java)
+        val query = datastore.createQuery<com.antwerkz.critter.kotlin.model.Person>(com.antwerkz.critter.kotlin.model.Person::class.java)
         query.or(
                 query.criteria("last").equal("Bloomberg"),
                 query.criteria("last").equal("Tyson")
@@ -186,10 +186,10 @@ class KotlinCriteriaTest {
     }
 
     fun andQueries() {
-        datastore.save(Person("Mike", "Bloomberg"))
-        datastore.save(Person("Mike", "Tyson"))
+        datastore.save(com.antwerkz.critter.kotlin.model.Person("Mike", "Bloomberg"))
+        datastore.save(com.antwerkz.critter.kotlin.model.Person("Mike", "Tyson"))
 
-        val query = datastore.createQuery<Person>(Person::class.java)
+        val query = datastore.createQuery<com.antwerkz.critter.kotlin.model.Person>(com.antwerkz.critter.kotlin.model.Person::class.java)
         query.and(
                 query.criteria("first").equal("Mike"),
                 query.criteria("last").equal("Tyson")
