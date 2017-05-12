@@ -153,6 +153,8 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
     override fun buildCriteria(directory: File) {
         criteriaClass = kibbleFile.addClass(getName() + "Criteria")
 
+        kibbleFile.addImport(Datastore::class.java)
+        kibbleFile.addImport(BaseCriteria::class.java)
         kibbleFile.addImport(TypeSafeFieldEnd::class.java)
         kibbleFile.addImport(source.pkgName + "." + source.name)
         val primary = criteriaClass.constructor
@@ -161,7 +163,7 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
             criteriaClass.superCallArgs = listOf("ds", "${getName()}::class.java")
             primary.addParameter("ds", Datastore::class.java.simpleName)
         } else {
-            criteriaClass.addProperty("query", "Query<out Any>", mutability = VAR, visibility = PRIVATE, constructorParam = true)
+            criteriaClass.addProperty("query", "Query<*>", mutability = VAR, visibility = PRIVATE, constructorParam = true)
             criteriaClass.addProperty("prefix", "String", mutability = VAR, visibility = PRIVATE, constructorParam = true)
 
             kibbleFile.addImport(Query::class.java)

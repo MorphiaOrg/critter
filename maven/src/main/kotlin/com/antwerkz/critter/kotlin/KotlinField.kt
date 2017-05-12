@@ -14,8 +14,6 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Reference
 import org.mongodb.morphia.query.Criteria
-import org.mongodb.morphia.query.FieldEndImpl
-import org.mongodb.morphia.query.QueryImpl
 
 class KotlinField(private val context: CritterContext, val parent: KibbleClass, val property: KibbleProperty) : CritterField {
     companion object {
@@ -36,7 +34,7 @@ class KotlinField(private val context: CritterContext, val parent: KibbleClass, 
     override val name: String
         get() = property.name
     override val parameterTypes: List<String>
-        get() = property.type!!.parameters.map { it.toString() }
+        get() = property.type!!.typeParameters.map { it.toString() }
     override val parameterizedType: String
         get() = property.type.toString()
 
@@ -44,7 +42,7 @@ class KotlinField(private val context: CritterContext, val parent: KibbleClass, 
         get() = property.type!!.name
 
     init {
-        property.type?.parameters?.forEach {
+        property.type?.typeParameters?.forEach {
             shortParameterTypes.add(it.name)
             fullParameterTypes.add(it.name)
         }

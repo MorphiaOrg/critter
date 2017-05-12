@@ -38,33 +38,34 @@ class CritterMojo : AbstractMojo() {
         project.addCompileSourceRoot(outputDirectory.path)
 
         val context = CritterContext(criteriaPackage, force)
-        sourceDirectory.forEach {
+        sourceDirectory
+                .filter { it.exists() }
+                .forEach {
+                    val walker = DirectoryWalker()
+                    walker.baseDir = it
+                    walker.includes = asList("**/*.java", "**/*.kt")
 
-            val walker = DirectoryWalker()
-            walker.baseDir = it
-            walker.includes = asList("**/*.java", "**/*.kt")
+                    walker.addDirectoryWalkListener(object : DirectoryWalkListener {
+                        override fun directoryWalkStarting(basedir: File) {}
 
-            walker.addDirectoryWalkListener(object : DirectoryWalkListener {
-                override fun directoryWalkStarting(basedir: File) {}
-
-                override fun directoryWalkStep(percentage: Int, file: File) {
-                    if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
-                        JavaClass(context, file).apply {
-                            context.add(this)
+                        override fun directoryWalkStep(percentage: Int, file: File) {
+                            if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
+                                JavaClass(context, file).apply {
+                                    context.add(this)
+                                }
+                            } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
+                                Kibble.parseFile(file).classes.forEach {
+                                    context.add(KotlinClass(context, it))
+                                }
+                            }
                         }
-                    } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
-                        Kibble.parseFile(file).classes.forEach {
-                            context.add(KotlinClass(context, it))
-                        }
-                    }
+
+                        override fun directoryWalkFinished() {}
+
+                        override fun debug(message: String) {}
+                    })
+                    walker.scan()
                 }
-
-                override fun directoryWalkFinished() {}
-
-                override fun debug(message: String) {}
-            })
-            walker.scan()
-        }
         context.classes.values.forEach { it.build(outputDirectory) }
     }
 }
