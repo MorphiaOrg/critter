@@ -13,13 +13,12 @@ import org.apache.maven.project.MavenProject
 import org.codehaus.plexus.util.DirectoryWalkListener
 import org.codehaus.plexus.util.DirectoryWalker
 import java.io.File
-import java.util.Arrays.asList
 
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 class CritterMojo : AbstractMojo() {
     @Parameter
-    private var sourceDirectory: Set<File> = setOf(File("src/main/java"), File("src/main/kotlin"))
+    private var sourceDirectory = setOf("src/main/java", "src/main/kotlin")
 
     @Parameter(property = "critter.output.directory", defaultValue = "\${project.build.directory}/generated-sources/critter", readonly = true, required = true)
     private lateinit var outputDirectory: File
@@ -39,11 +38,12 @@ class CritterMojo : AbstractMojo() {
 
         val context = CritterContext(criteriaPackage, force)
         sourceDirectory
+                .map { File(project.basedir, it) }
                 .filter { it.exists() }
                 .forEach {
                     val walker = DirectoryWalker()
                     walker.baseDir = it
-                    walker.includes = asList("**/*.java", "**/*.kt")
+                    walker.includes = listOf("**/*.java", "**/*.kt")
 
                     walker.addDirectoryWalkListener(object : DirectoryWalkListener {
                         override fun directoryWalkStarting(basedir: File) {}
@@ -66,6 +66,7 @@ class CritterMojo : AbstractMojo() {
                     })
                     walker.scan()
                 }
+
         context.classes.values.forEach { it.build(outputDirectory) }
     }
 }
