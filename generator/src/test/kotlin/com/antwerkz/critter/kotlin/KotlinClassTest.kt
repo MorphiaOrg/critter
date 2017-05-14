@@ -1,11 +1,6 @@
 package com.antwerkz.critter.kotlin
 
 import com.antwerkz.critter.CritterContext
-import com.antwerkz.critter.kotlin.model.AbstractKotlinPerson
-import com.antwerkz.critter.kotlin.model.Address
-import com.antwerkz.critter.kotlin.model.Invoice
-import com.antwerkz.critter.kotlin.model.Item
-import com.antwerkz.critter.kotlin.model.Person
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFunction
@@ -26,13 +21,14 @@ class KotlinClassTest {
     fun build() {
         val context = CritterContext(force = true)
 
-        var files = Kibble.parse(File("src/test/kotlin/com/antwerkz/critter/kotlin/model"))
+        val path = File("../tests/kotlin/src/main/kotlin/")
+        var files = Kibble.parse(path)
         files.forEach { file ->
             file.classes.forEach { klass ->
                 context.add(KotlinClass(context, klass))
             }
         }
-        val personClass = context.resolve("com.antwerkz.critter.kotlin.model", Person::class.java.name)
+        val personClass = context.resolve("com.antwerkz.critter.test", "Person")
         Assert.assertNotNull(personClass)
         personClass as KotlinClass
         Assert.assertEquals(personClass.fields.size, 4)
@@ -48,21 +44,21 @@ class KotlinClassTest {
     }
 
     private fun validateInvoiceCriteria(invoiceCriteria: KibbleClass) {
-        shouldImport(invoiceCriteria, Address::class.java.name)
-        shouldImport(invoiceCriteria, Invoice::class.java.name)
-        shouldImport(invoiceCriteria, Item::class.java.name)
-        shouldImport(invoiceCriteria, Person::class.java.name)
+        shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Address")
+        shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Invoice")
+        shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Item")
+        shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Person")
     }
 
     private fun validateAddressCriteria(addressCriteria: KibbleClass) {
-        shouldNotImport(addressCriteria, AbstractKotlinPerson::class.java.name )
-        shouldImport(addressCriteria, Address::class.java.name)
+        shouldNotImport(addressCriteria, "com.antwerkz.critter.test.AbstractPerson")
+        shouldImport(addressCriteria, "com.antwerkz.critter.test.Address")
     }
 
     private fun validatePersonCriteria(personCriteria: KibbleClass) {
         shouldImport(personCriteria, ObjectId::class.java.name)
-        shouldNotImport(personCriteria, AbstractKotlinPerson::class.java.name)
-        shouldImport(personCriteria, Person::class.java.name )
+        shouldNotImport(personCriteria, "com.antwerkz.critter.test.AbstractPerson")
+        shouldImport(personCriteria, "com.antwerkz.critter.test.Person")
 
         val companion = personCriteria.companion() as KibbleObject
         properties.forEach {
@@ -74,7 +70,6 @@ class KotlinClassTest {
             Assert.assertEquals(functions.size, 2)
             Assert.assertEquals(functions[0].parameters.size, 0)
             Assert.assertEquals(functions[1].parameters.size, 1)
-
         }
 
         val updater = personCriteria.getClass("PersonUpdater") as KibbleClass
@@ -134,17 +129,17 @@ class KotlinClassTest {
 
     private fun shouldNotImport(kibble: KibbleClass, type: String?) {
         Assert.assertNull(kibble.file.imports.firstOrNull { it.type.name == type }, "Should not find an import for $type " +
-                        "in ${kibble.file.name}")
+                "in ${kibble.file.name}")
     }
 
     private fun check(function: KibbleFunction, parameters: List<Pair<String, String>>, type: String) {
         Assert.assertEquals(parameters.size, function.parameters.size)
         Assert.assertEquals(type, function.type)
         Assert.assertEquals(parameters.size, function.parameters.size)
-        parameters.forEachIndexed { p, param ->
+        parameters.forEachIndexed { p, (first, second) ->
             val functionParam = function.parameters[p]
-            Assert.assertEquals(param.first, functionParam.name)
-            Assert.assertEquals(param.second, functionParam.type?.name)
+            Assert.assertEquals(first, functionParam.name)
+            Assert.assertEquals(second, functionParam.type?.name)
         }
     }
 }

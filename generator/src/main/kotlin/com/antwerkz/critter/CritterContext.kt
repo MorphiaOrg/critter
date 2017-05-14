@@ -17,4 +17,8 @@ class CritterContext(val criteriaPkg: String? = null, val force: Boolean = false
     fun isEmbedded(currentPkg: String, name: String): Boolean {
         return resolve(currentPkg, name)?.isEmbedded ?: false
     }
+
+    operator fun get(name: String): CritterClass? {
+        return classes[name]
+    }
 }
