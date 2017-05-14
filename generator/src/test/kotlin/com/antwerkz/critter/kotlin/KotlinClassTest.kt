@@ -26,43 +26,6 @@ class KotlinClassTest {
     fun build() {
         val context = CritterContext(force = true)
 
-/*
-        @Language("kotlin")
-        val file = Kibble.parseSource("""package critter.test.source
-
-import org.bson.types.ObjectId
-import org.mongodb.morphia.annotations.Entity
-import org.mongodb.morphia.annotations.Id
-
-open class AbstractKotlinPerson {
-    var age: Long = 0
-}
-
-@Entity
-open class Person : AbstractKotlinPerson {
-    @Id
-    var objectId: ObjectId? = null
-
-    @Property("f")
-    var first: String? = null
-
-    var last: String? = null
-
-    @Embedded
-    var address: Address? = null
-}
-
-@Embedded
-class Address(
-        @Property("c")
-        var city: String? = null,
-        var state: String? = null,
-        var zip: String? = null) {
-
-    constructor()
-}
-""")
-*/
         var files = Kibble.parse(File("src/test/kotlin/com/antwerkz/critter/kotlin/model"))
         files.forEach { file ->
             file.classes.forEach { klass ->

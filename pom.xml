@@ -195,6 +195,7 @@
 
     <modules>
         <module>core</module>
+        <module>generator</module>
         <module>maven</module>
         <!--<module>gradle</module>-->
         <module>tests</module>
