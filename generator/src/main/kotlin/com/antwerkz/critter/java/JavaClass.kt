@@ -75,7 +75,7 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
         return this
     }
 
-    override fun getSuperType(): String = sourceClass.superType
+    override fun getSuperType(): String? = sourceClass.superType
     override fun setSuperType(name: String): CritterClass {
         sourceClass.superType = name
         return this

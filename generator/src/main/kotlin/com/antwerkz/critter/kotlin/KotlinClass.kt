@@ -82,7 +82,7 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
         return this
     }
 
-    override fun getSuperType() = source.superType.toString()
+    override fun getSuperType() = source.superType?.toString()
     override fun setSuperType(name: String): CritterClass {
         source.superType = KibbleType.from(name)
         return this

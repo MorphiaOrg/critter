@@ -34,7 +34,7 @@ abstract class CritterClass(var context: CritterContext): Visible<CritterClass> 
     abstract fun getPackage(): String?
     abstract fun setPackage(name: String?): CritterClass
 
-    abstract fun getSuperType(): String
+    abstract fun getSuperType(): String?
     abstract fun setSuperType(name: String): CritterClass
 
     open fun build(directory: File) {
