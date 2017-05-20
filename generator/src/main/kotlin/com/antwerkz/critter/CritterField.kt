@@ -52,7 +52,7 @@ interface CritterField : Comparable<CritterField>, Visible<CritterField> {
 
     fun mappedName(): String {
         return if (hasAnnotation(Id::class.java)) {
-            "\"_id\""
+            "_id"
         } else {
             val fieldName = extract("\"$name\"", Property::class.java)
             extract(fieldName, Embedded::class.java)

@@ -173,11 +173,11 @@ this.prefix = prefix + ".";""")
             generate(criteriaClass, outputFile)
         }
     }
+
     private fun generate(criteriaClass: CritterClass, file: File) {
         file.parentFile.mkdirs()
         PrintWriter(file).use { writer -> writer.println(criteriaClass.toSource()) }
     }
-
 
     override fun toSource(): String {
         return sourceClass.toString()

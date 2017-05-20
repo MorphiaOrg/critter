@@ -5,6 +5,7 @@ import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.TypeSafeFieldEnd
 import com.antwerkz.critter.Visible
+import org.jboss.forge.roaster.model.source.AnnotationSource
 import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.util.Strings
@@ -46,6 +47,10 @@ class JavaField(private val context: CritterContext, val source: FieldSource<Jav
 
     override fun hasAnnotation(aClass: Class<out Annotation>): Boolean {
         return source.hasAnnotation(aClass)
+    }
+
+    fun getAnnotation(aClass: Class<out Annotation>): AnnotationSource<JavaClassSource>? {
+        return source.getAnnotation(aClass)
     }
 
     override fun isStatic(): Boolean {
@@ -140,6 +145,7 @@ return this;""")
         method.addParameter(parameterizedType, "value")
     }
 
+/*
     override fun mappedName(): String {
         var name = name
         name = extract(name, Property::class.java)
@@ -147,9 +153,10 @@ return this;""")
 
         return name
     }
+*/
 
     override fun extract(name: String, ann: Class<out Annotation>): String {
-        return source.getAnnotation(ann)?.getStringValue("value") ?: name
+        return Strings.unquote(source.getAnnotation(ann)?.getStringValue("value") ?: name)
     }
 
     override fun isPublic() = source.isPublic
