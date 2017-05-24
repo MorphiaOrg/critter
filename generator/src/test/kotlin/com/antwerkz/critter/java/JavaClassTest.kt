@@ -55,11 +55,10 @@ class JavaClassTest {
         shouldNotImport(personCriteria, "com.antwerkz.critter.test.AbstractPerson")
         shouldImport(personCriteria, "com.antwerkz.critter.test.Person")
 
-        val descriptor = criteriaFiles.find { it.getName() == "PersonDescriptor" } as JavaClassSource
         val fields = personClass.fields
-        Assert.assertEquals(descriptor.fields.size, fields.size)
+        Assert.assertEquals(personCriteria.fields.size, fields.size)
         fields.forEach {
-            val field = descriptor.getField(it.name)
+            val field = personCriteria.getField(it.name)
             val stringInitializer = field.stringInitializer
             Assert.assertEquals(
                     stringInitializer?.replace("\"", ""),

@@ -28,7 +28,6 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
 
     private var kibbleFile: KibbleFile
     private lateinit var criteriaClass: KibbleClass
-    private lateinit var outputFile: File
 
     init {
         val criteriaPkg = context.criteriaPkg ?: source.pkgName + ".criteria"
@@ -144,10 +143,7 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
     override fun build(directory: File) {
         outputFile = kibbleFile.outputFile(directory)
 
-        if (context.force || !outputFile.exists() /*|| outputFile.lastModified() > lastModified*/) {
-            super.build(directory)
-            generate(kibbleFile, outputFile)
-        }
+        super.build(directory)
     }
 
     override fun buildCriteria(directory: File) {
@@ -175,20 +171,15 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
         if (!hasAnnotation(Embedded::class.java)) {
             KotlinUpdaterBuilder(this, targetClass)
         }
-    }
-
-    override fun buildDescriptor(directory: File) {
         val companion = criteriaClass.addCompanionObject()
 
         fields.forEach { field ->
             companion.addProperty(field.name, modality = FINAL, initializer = field.mappedName())
         }
-    }
 
-    private fun generate(kibbleFile: KibbleFile, file: File) {
-        file.parentFile.mkdirs()
+        outputFile.parentFile.mkdirs()
         kibbleFile.toSource(SourceWriter())
-                .toFile(file)
+                .toFile(outputFile)
     }
 
     override fun toSource(): String {

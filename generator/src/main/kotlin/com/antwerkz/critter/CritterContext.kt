@@ -3,7 +3,7 @@ package com.antwerkz.critter
 import java.lang.String.format
 import java.util.HashMap
 
-class CritterContext(val criteriaPkg: String? = null, val force: Boolean = false) {
+class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false) {
     val classes = HashMap<String, CritterClass>()
 
     fun add(critterClass: CritterClass) {

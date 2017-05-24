@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.query.Query
 import java.io.File
 import java.io.PrintWriter
+import kotlin.properties.Delegates
 
 class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roaster.create(JavaClassSource::class.java))
     : CritterClass(context) {
@@ -35,6 +36,8 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
             fields.addAll(superClass.fields)
         }
     }
+
+    private var criteriaClass by Delegates.notNull<CritterClass>()
 
     override fun isInternal() = false
     override fun setInternal() = throw Visible.invalid("internal", "java")
@@ -123,60 +126,53 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
         return "${getPackage()}.${getName()}"
     }
 
-    override fun buildDescriptor(directory: File) {
-        val descriptorClass = createClass(getPackage() + ".criteria", getName() + "Descriptor")
+    override fun build(directory: File) {
+        criteriaClass = createClass(getPackage() + ".criteria", getName() + "Criteria")
+        outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
 
-        val outputFile = File(directory, descriptorClass.qualifiedName.replace('.', '/') + ".java")
-        if (context.force || outputFile.lastModified() < lastModified) {
-            fields.forEach { field ->
-                descriptorClass.addField(field.name, String::class.java.name)
-                        .setPublic()
-                        .setStatic()
-                        .setFinal()
-                        .setStringLiteralInitializer(field.mappedName())
-            }
-
-            generate(descriptorClass, outputFile)
-        }
+        super.build(directory)
     }
 
     override fun buildCriteria(directory: File) {
-        val criteriaClass = createClass(getPackage() + ".criteria", getName() + "Criteria")
+        if (!hasAnnotation(Embedded::class.java)) {
+            criteriaClass.setSuperType(BaseCriteria::class.java.name + "<" + qualifiedName + ">")
+            criteriaClass.addConstructor()
+                    .setPublic()
+                    .setBody(java.lang.String.format("super(ds, %s.class);", getName()))
+                    .addParameter(Datastore::class.java, "ds")
+        } else {
+            criteriaClass.addField("query", Query::class.java.name)
+                    .setPrivate()
+            criteriaClass.addField("prefix", "String")
+                    .setPrivate()
 
-        val outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
-        if (context.force || !outputFile.exists() || outputFile.lastModified() > lastModified) {
-            if (!hasAnnotation(Embedded::class.java)) {
-                criteriaClass.setSuperType(BaseCriteria::class.java.name + "<" + qualifiedName + ">")
-                criteriaClass.addConstructor()
-                        .setPublic()
-                        .setBody(java.lang.String.format("super(ds, %s.class);", getName()))
-                        .addParameter(Datastore::class.java, "ds")
-            } else {
-                criteriaClass.addField("query", Query::class.java.name)
-                        .setPrivate()
-                criteriaClass.addField("prefix", "String")
-                        .setPrivate()
-
-                val method = criteriaClass.addConstructor()
-                        .setPublic()
-                        .setBody("""this.query = query;
+            val method = criteriaClass.addConstructor()
+                    .setPublic()
+                    .setBody("""this.query = query;
 this.prefix = prefix + ".";""")
-                method.addParameter(Query::class.java, "query")
-                method.addParameter(String::class.java, "prefix")
-            }
-
-            fields.forEach { it.build(this, criteriaClass) }
-            if (!hasAnnotation(Embedded::class.java)) {
-                JavaUpdaterBuilder(this, criteriaClass)
-            }
-
-            generate(criteriaClass, outputFile)
+            method.addParameter(Query::class.java, "query")
+            method.addParameter(String::class.java, "prefix")
         }
+
+        fields.forEach { it.build(this, criteriaClass) }
+        if (!hasAnnotation(Embedded::class.java)) {
+            JavaUpdaterBuilder(this, criteriaClass)
+        }
+
+        fields.forEach { field ->
+            criteriaClass.addField(field.name, String::class.java.name)
+                    .setPublic()
+                    .setStatic()
+                    .setFinal()
+                    .setStringLiteralInitializer(field.mappedName())
+        }
+
+        generate()
     }
 
-    private fun generate(criteriaClass: CritterClass, file: File) {
-        file.parentFile.mkdirs()
-        PrintWriter(file).use { writer -> writer.println(criteriaClass.toSource()) }
+    private fun generate() {
+        outputFile.parentFile.mkdirs()
+        PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toSource()) }
     }
 
     override fun toSource(): String {
