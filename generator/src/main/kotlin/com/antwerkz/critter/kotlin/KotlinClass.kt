@@ -153,6 +153,13 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
         kibbleFile.addImport(BaseCriteria::class.java)
         kibbleFile.addImport(TypeSafeFieldEnd::class.java)
         kibbleFile.addImport(source.pkgName + "." + source.name)
+
+        val companion = criteriaClass.addCompanionObject()
+
+        fields.forEach { field ->
+            companion.addProperty(field.name, modality = FINAL, initializer = field.mappedName())
+        }
+
         val primary = criteriaClass.constructor
         if (!hasAnnotation(Embedded::class.java)) {
             criteriaClass.superType = KibbleType.from("${BaseCriteria::class.java.simpleName}<${getName()}>")
@@ -171,12 +178,6 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
         if (!hasAnnotation(Embedded::class.java)) {
             KotlinUpdaterBuilder(this, targetClass)
         }
-        val companion = criteriaClass.addCompanionObject()
-
-        fields.forEach { field ->
-            companion.addProperty(field.name, modality = FINAL, initializer = field.mappedName())
-        }
-
         outputFile.parentFile.mkdirs()
         kibbleFile.toSource(SourceWriter())
                 .toFile(outputFile)

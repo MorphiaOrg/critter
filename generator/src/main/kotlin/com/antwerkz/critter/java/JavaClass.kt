@@ -134,6 +134,14 @@ class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roas
     }
 
     override fun buildCriteria(directory: File) {
+        fields.forEach { field ->
+            criteriaClass.addField(field.name, String::class.java.name)
+                    .setPublic()
+                    .setStatic()
+                    .setFinal()
+                    .setStringLiteralInitializer(field.mappedName())
+        }
+
         if (!hasAnnotation(Embedded::class.java)) {
             criteriaClass.setSuperType(BaseCriteria::class.java.name + "<" + qualifiedName + ">")
             criteriaClass.addConstructor()
@@ -157,14 +165,6 @@ this.prefix = prefix + ".";""")
         fields.forEach { it.build(this, criteriaClass) }
         if (!hasAnnotation(Embedded::class.java)) {
             JavaUpdaterBuilder(this, criteriaClass)
-        }
-
-        fields.forEach { field ->
-            criteriaClass.addField(field.name, String::class.java.name)
-                    .setPublic()
-                    .setStatic()
-                    .setFinal()
-                    .setStringLiteralInitializer(field.mappedName())
         }
 
         generate()
