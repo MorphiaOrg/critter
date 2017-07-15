@@ -12,7 +12,7 @@ class CritterContextTest {
                 .filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
 
-        val critterContext = CritterContext(force = true)
+        val critterContext = CritterContext<CritterClass>(force = true)
         files.forEach { critterContext.add(JavaClass(critterContext, it)) }
         critterContext.classes.values.forEach {
             it.build(directory)

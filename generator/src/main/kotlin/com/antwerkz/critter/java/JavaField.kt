@@ -10,7 +10,6 @@ import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.util.Strings
 import org.mongodb.morphia.annotations.Embedded
-import org.mongodb.morphia.annotations.Property
 import org.mongodb.morphia.annotations.Reference
 import org.mongodb.morphia.query.Criteria
 import org.mongodb.morphia.query.FieldEndImpl
@@ -18,7 +17,7 @@ import org.mongodb.morphia.query.QueryImpl
 import java.lang.String.format
 import java.util.ArrayList
 
-class JavaField(private val context: CritterContext, val source: FieldSource<JavaClassSource>) : CritterField {
+class JavaField(private val context: CritterContext<*>, val source: FieldSource<JavaClassSource>) : CritterField {
     override val shortParameterTypes = ArrayList<String>()
 
     override val fullParameterTypes = ArrayList<String>()

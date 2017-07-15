@@ -17,10 +17,10 @@ import java.io.File
 import java.io.PrintWriter
 import kotlin.properties.Delegates
 
-class JavaClass(context: CritterContext, val sourceClass: JavaClassSource = Roaster.create(JavaClassSource::class.java))
+class JavaClass(context: CritterContext<*>, val sourceClass: JavaClassSource = Roaster.create(JavaClassSource::class.java))
     : CritterClass(context) {
 
-    constructor(context: CritterContext, sourceFile: File) : this(context, Roaster.parse(sourceFile) as JavaClassSource) {
+    constructor(context: CritterContext<*>, sourceFile: File) : this(context, Roaster.parse(sourceFile) as JavaClassSource) {
         val superClass = context.resolve(sourceClass.`package`, sourceClass.superType)
         lastModified = Math.min(
                 sourceFile.lastModified(),

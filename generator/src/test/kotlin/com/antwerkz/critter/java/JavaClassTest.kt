@@ -14,7 +14,7 @@ import org.testng.annotations.Test
 import java.io.File
 
 class JavaClassTest {
-    lateinit var critterContext: CritterContext
+    lateinit var critterContext: CritterContext<*>
     val files = File("../tests/java/src/main/java/").walkTopDown()
             .filter { it.name.endsWith(".java") }
 
@@ -22,8 +22,9 @@ class JavaClassTest {
 
     @BeforeTest
     fun scan() {
-        critterContext = CritterContext(force = true)
-        files.forEach { critterContext.add(JavaClass(critterContext, it)) }
+        critterContext = CritterContext<JavaClass>(force = true).also { context ->
+            files.forEach { context.add(JavaClass(context, it)) }
+        }
         critterContext.classes.values.forEach {
             it.build(directory)
         }

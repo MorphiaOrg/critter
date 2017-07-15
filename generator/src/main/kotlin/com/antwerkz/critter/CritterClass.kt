@@ -8,7 +8,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.properties.Delegates
 
-abstract class CritterClass(var context: CritterContext): Visible<CritterClass> {
+abstract class CritterClass(var context: CritterContext<*>): Visible<CritterClass> {
     companion object {
         private val LOG = Logger.getLogger(CritterClass::class.java.name)
     }

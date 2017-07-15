@@ -1,6 +1,6 @@
 package com.antwerkz.critter.kotlin
 
-import com.antwerkz.critter.CritterContext
+import com.antwerkz.critter.CritterKotlinContext
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFunction
@@ -15,13 +15,14 @@ import org.testng.annotations.Test
 import java.io.File
 
 class KotlinClassTest {
-    lateinit var critterContext: CritterContext
-    val files = Kibble.parse(File("../tests/kotlin/src/main/kotlin/"))
+    lateinit var critterContext: CritterKotlinContext
+//    val files = Kibble.parse(listOf(File("../../javabot/src/main/kotlin/javabot/javadoc/")))
+    val files = Kibble.parse(listOf(File("../tests/kotlin/src/main/kotlin/")))
     val directory = File("target/kotlinClassTest/")
 
     @BeforeTest
     fun scan() {
-        critterContext = CritterContext(force = true)
+        critterContext = CritterKotlinContext(force = true)
         files.forEach { file ->
             file.classes.forEach { klass ->
                 critterContext.add(KotlinClass(critterContext, klass))
@@ -37,11 +38,11 @@ class KotlinClassTest {
         val personClass = critterContext.resolve("com.antwerkz.critter.test", "Person")
         Assert.assertNotNull(personClass)
         personClass as KotlinClass
-        Assert.assertEquals(personClass.fields.size, 4)
+        Assert.assertEquals(personClass.fields.size, 5)
 
-        val criteriaFiles = Kibble.parse(directory)
+        val criteriaFiles = Kibble.parse(listOf(directory))
         validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!.classes[0],
-                (critterContext.resolve("com.antwerkz.critter.test", "Person")!! as KotlinClass).source)
+                critterContext.resolve("com.antwerkz.critter.test", "Person")!!.source)
         validateAddressCriteria(criteriaFiles.find { it.name == "AddressCriteria.kt" }!!.classes[0])
         validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria.kt" }!!.classes[0])
     }
@@ -62,6 +63,7 @@ class KotlinClassTest {
         shouldImport(personCriteria, ObjectId::class.java.name)
         shouldNotImport(personCriteria, "com.antwerkz.critter.test.AbstractPerson")
         shouldImport(personCriteria, "com.antwerkz.critter.test.Person")
+        shouldImport(personCriteria, "com.antwerkz.critter.test.SSN")
 
         val companion = personCriteria.companion() as KibbleObject
         val properties = findAllProperties(personClass)
@@ -140,7 +142,7 @@ class KotlinClassTest {
         }
         kotlinClass.superTypes.forEach {
             critterContext.resolve(kotlinClass.pkgName ?: "", it.fullName)?.let {
-                list += findAllProperties((it as KotlinClass).source)
+                list += findAllProperties(it.source)
             }
         }
         return list

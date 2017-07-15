@@ -2,8 +2,8 @@ package com.antwerkz.critter.kotlin
 
 import com.antwerkz.critter.CritterClass
 import com.antwerkz.critter.CritterConstructor
-import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
+import com.antwerkz.critter.CritterKotlinContext
 import com.antwerkz.critter.CritterMethod
 import com.antwerkz.critter.KotlinUpdaterBuilder
 import com.antwerkz.critter.TypeSafeFieldEnd
@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.query.Query
 import java.io.File
 
-class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterClass(context) {
+class KotlinClass(context: CritterKotlinContext, val source: KibbleClass) : CritterClass(context) {
 
     private var kibbleFile: KibbleFile
     private lateinit var criteriaClass: KibbleClass
@@ -44,13 +44,21 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
         addFields(context, source)
     }
 
-    private fun addFields(context: CritterContext, kibble: KibbleClass) {
-        fields.addAll(kibble.properties
-                .map { f -> KotlinField(context, kibble, f) }
-                .sortedBy { f -> f.name }
-                .toMutableList())
+    private fun addFields(context: CritterKotlinContext, kibble: KibbleClass) {
+        val elements = kibble.properties
+                .map { KotlinField(context, kibble, it) }
+                .sortedBy(KotlinField::name)
+                .toMutableList()
+        kibble.properties
+                .map { it.type }
+                .filterNotNull()
+                .map { kibble.file.resolve(it)}
+                .filter { it.pkgName != null }
+                .forEach { addImport(it.fullName) }
+        fields.addAll(elements)
+
         kibble.superType?.let {
-            (context.resolve(getPackage(), it.name) as KotlinClass?)?.let {
+            context.resolve(getPackage(), it.name)?.let {
                 it.source.file.imports.forEach {
                     kibbleFile.addImport(it.type.name, it.alias)
                 }
@@ -58,7 +66,7 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
             }
         }
         kibble.superTypes.forEach {
-            (context.resolve(getPackage(), it.name) as KotlinClass?)?.let {
+            context.resolve(getPackage(), it.name)?.let {
                 it.source.file.imports.forEach {
                     kibbleFile.addImport(it.type.name, it.alias)
                 }
@@ -129,7 +137,7 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
     }
 
     override fun addField(name: String, type: String): CritterField {
-        return KotlinField(context, source, source.addProperty(name, type))
+        return KotlinField(context as CritterKotlinContext, source, source.addProperty(name, type))
     }
 
     override fun addMethod(): CritterMethod {
@@ -137,7 +145,7 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
     }
 
     override fun createClass(pkgName: String?, name: String): KotlinClass {
-        return KotlinClass(context, source.addClass(name))
+        return KotlinClass(context as CritterKotlinContext, source.addClass(name))
     }
 
     override fun build(directory: File) {
@@ -152,7 +160,12 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
         kibbleFile.addImport(Datastore::class.java)
         kibbleFile.addImport(BaseCriteria::class.java)
         kibbleFile.addImport(TypeSafeFieldEnd::class.java)
-        kibbleFile.addImport(source.pkgName + "." + source.name)
+        kibbleFile.addImport("${source.pkgName}.${source.name}")
+/*
+        source.file.imports.forEach {
+            kibbleFile.addImport(it.type.toString(), it.alias)
+        }
+*/
 
         val companion = criteriaClass.addCompanionObject()
 
@@ -173,7 +186,7 @@ class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterCla
             criteriaClass.initBlock = "this.prefix = prefix + \".\""
         }
 
-        val targetClass = KotlinClass(context, criteriaClass)
+        val targetClass = KotlinClass(context as CritterKotlinContext, criteriaClass)
         fields.forEach { it.build(this, targetClass) }
         if (!hasAnnotation(Embedded::class.java)) {
             KotlinUpdaterBuilder(this, targetClass)

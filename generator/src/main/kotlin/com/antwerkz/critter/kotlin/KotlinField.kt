@@ -1,8 +1,8 @@
 package com.antwerkz.critter.kotlin
 
 import com.antwerkz.critter.CritterClass
-import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
+import com.antwerkz.critter.CritterKotlinContext
 import com.antwerkz.critter.TypeSafeFieldEnd
 import com.antwerkz.critter.Visible
 import com.antwerkz.kibble.model.KibbleClass
@@ -15,7 +15,7 @@ import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Reference
 import org.mongodb.morphia.query.Criteria
 
-class KotlinField(private val context: CritterContext, val parent: KibbleClass, val property: KibbleProperty) : CritterField {
+class KotlinField(private val context: CritterKotlinContext, val parent: KibbleClass, val property: KibbleProperty) : CritterField {
     companion object {
         val NUMERIC_TYPES = listOf("Float",
                 "Double",
@@ -30,7 +30,8 @@ class KotlinField(private val context: CritterContext, val parent: KibbleClass, 
 
     override val shortParameterTypes = mutableListOf<String>()
     override val fullParameterTypes = mutableListOf<String>()
-    override val fullType: String = property.type.toString()
+    override val fullType: String
+        get() = parent.file.resolve(property.type!!).name
     override val name: String
         get() = property.name
     override val parameterTypes: List<String>
@@ -99,13 +100,13 @@ class KotlinField(private val context: CritterContext, val parent: KibbleClass, 
         return NUMERIC_TYPES.contains(fullType) || super.isNumeric()
     }
 
-    override fun build(sourceClass: CritterClass, targetClass: CritterClass) {
-        if (property.hasAnnotation(Reference::class.java)) {
-            buildReference(targetClass)
-        } else if (hasAnnotation(Embedded::class.java)) {
-            buildEmbed(targetClass)
-        } else {
-            buildField(sourceClass, targetClass)
+    override fun  build(sourceClass: CritterClass, targetClass: CritterClass) {
+        sourceClass as KotlinClass
+        val resolve = sourceClass.source.file.resolve(property.type!!)
+        when {
+            property.hasAnnotation(Reference::class.java) -> buildReference(targetClass)
+            hasAnnotation(Embedded::class.java) -> buildEmbed(targetClass)
+            else -> buildField(sourceClass, targetClass)
         }
     }
 
