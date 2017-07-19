@@ -52,9 +52,8 @@ class KotlinClass(context: CritterKotlinContext, val source: KibbleClass) : Crit
         kibble.properties
                 .map { it.type }
                 .filterNotNull()
-                .map { kibble.file.resolve(it)}
-                .filter { it.pkgName != null }
-                .forEach { addImport(it.fullName) }
+                .map { kibble.file.resolve(it).name}
+                .forEach { addImport(it) }
         fields.addAll(elements)
 
         kibble.superType?.let {
@@ -161,11 +160,6 @@ class KotlinClass(context: CritterKotlinContext, val source: KibbleClass) : Crit
         kibbleFile.addImport(BaseCriteria::class.java)
         kibbleFile.addImport(TypeSafeFieldEnd::class.java)
         kibbleFile.addImport("${source.pkgName}.${source.name}")
-/*
-        source.file.imports.forEach {
-            kibbleFile.addImport(it.type.toString(), it.alias)
-        }
-*/
 
         val companion = criteriaClass.addCompanionObject()
 

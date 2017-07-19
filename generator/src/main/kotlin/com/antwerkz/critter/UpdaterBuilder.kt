@@ -82,7 +82,7 @@ abstract class UpdaterBuilder(val sourceClass: CritterClass, val targetClass: Cr
                                 .forEach { targetClass.addImport(it) }
                     }
 
-                    targetClass.addImport(field.fullType)
+                    targetClass.addImport(field.fullyQualifiedType)
                     if (!field.hasAnnotation(Id::class.java)) {
                         updater.addMethod()
                                 .setPublic()

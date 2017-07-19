@@ -1,7 +1,6 @@
 package com.antwerkz.critter
 
 import com.antwerkz.critter.kotlin.KotlinClass
-import com.antwerkz.kibble.model.KibbleImport
 import java.lang.String.format
 import java.util.HashMap
 
@@ -21,5 +20,4 @@ open class CritterContext<T: CritterClass>(val criteriaPkg: String? = null, var 
     }
 }
 
-class CritterKotlinContext(criteriaPkg: String? = null, force: Boolean): CritterContext<KotlinClass>(criteriaPkg, force) {
-}
+class CritterKotlinContext(criteriaPkg: String? = null, force: Boolean): CritterContext<KotlinClass>(criteriaPkg, force)

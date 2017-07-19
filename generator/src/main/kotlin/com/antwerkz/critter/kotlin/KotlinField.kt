@@ -40,7 +40,7 @@ class KotlinField(private val context: CritterKotlinContext, val parent: KibbleC
         get() = property.type.toString()
 
     override val fullyQualifiedType: String
-        get() = property.type!!.name
+        get() = property.type!!.fqcn
 
     init {
         property.type?.typeParameters?.forEach {
@@ -101,8 +101,6 @@ class KotlinField(private val context: CritterKotlinContext, val parent: KibbleC
     }
 
     override fun  build(sourceClass: CritterClass, targetClass: CritterClass) {
-        sourceClass as KotlinClass
-        val resolve = sourceClass.source.file.resolve(property.type!!)
         when {
             property.hasAnnotation(Reference::class.java) -> buildReference(targetClass)
             hasAnnotation(Embedded::class.java) -> buildEmbed(targetClass)
@@ -148,7 +146,7 @@ return this""")
     override fun buildField(critterClass: CritterClass, criteriaClass: CritterClass) {
         val qualifiedName = critterClass.qualifiedName
         criteriaClass.addImport(qualifiedName)
-        criteriaClass.addImport(fullType)
+        criteriaClass.addImport(fullyQualifiedType)
         criteriaClass.addImport(Criteria::class.java)
 
         var name = "\"" + property.name + "\""
@@ -159,7 +157,7 @@ return this""")
         criteriaClass.addMethod()
                 .setPublic()
                 .setName(property.name)
-                .setReturnType("${TypeSafeFieldEnd::class.java.simpleName}<${criteriaClass.getName()}, ${fullType}>")
+                .setReturnType("${TypeSafeFieldEnd::class.java.simpleName}<${criteriaClass.getName()}, ${property.type!!.name}>")
                 .setBody("return TypeSafeFieldEnd(this, query, $name)")
 
         val criteriaName = criteriaClass.getName()

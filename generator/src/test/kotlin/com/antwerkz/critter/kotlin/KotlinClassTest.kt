@@ -16,7 +16,6 @@ import java.io.File
 
 class KotlinClassTest {
     lateinit var critterContext: CritterKotlinContext
-//    val files = Kibble.parse(listOf(File("../../javabot/src/main/kotlin/javabot/javadoc/")))
     val files = Kibble.parse(listOf(File("../tests/kotlin/src/main/kotlin/")))
     val directory = File("target/kotlinClassTest/")
 
@@ -108,7 +107,7 @@ class KotlinClassTest {
 
         functions = updater.getFunctions("age")
         Assert.assertEquals(1, functions.size)
-        check(functions[0], listOf("value" to "Long"), "PersonUpdater")
+        check(functions[0], listOf("value" to "Long?"), "PersonUpdater")
 
         functions = updater.getFunctions("unsetAge")
         Assert.assertEquals(1, functions.size)
@@ -117,17 +116,17 @@ class KotlinClassTest {
         functions = updater.getFunctions("incAge")
         Assert.assertEquals(2, functions.size)
         check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
-        check(functions[1], listOf("value" to "Long"), "PersonUpdater")
+        check(functions[1], listOf("value" to "Long?"), "PersonUpdater")
 
         functions = updater.getFunctions("decAge")
         Assert.assertEquals(2, functions.size)
         check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
-        check(functions[1], listOf("value" to "Long"), "PersonUpdater")
+        check(functions[1], listOf("value" to "Long?"), "PersonUpdater")
 
         listOf("first", "last").forEach {
             functions = updater.getFunctions(it)
             Assert.assertEquals(1, functions.size, "Should have found $it")
-            check(functions[0], listOf("value" to "String"), "PersonUpdater")
+            check(functions[0], listOf("value" to "String?"), "PersonUpdater")
 
             functions = updater.getFunctions("unset${it.capitalize()}")
             Assert.assertEquals(1, functions.size, "Should have found unset${it.capitalize()}")
@@ -138,10 +137,10 @@ class KotlinClassTest {
     private fun findAllProperties(kotlinClass: KibbleClass): MutableList<KibbleProperty> {
         val list = kotlinClass.properties
         kotlinClass.superType?.let {
-            list += findAllProperties((critterContext.resolve(kotlinClass.pkgName ?: "", it.fullName) as KotlinClass).source)
+            list += findAllProperties((critterContext.resolve(kotlinClass.pkgName ?: "", it.className) as KotlinClass).source)
         }
         kotlinClass.superTypes.forEach {
-            critterContext.resolve(kotlinClass.pkgName ?: "", it.fullName)?.let {
+            critterContext.resolve(kotlinClass.pkgName ?: "", it.className)?.let {
                 list += findAllProperties(it.source)
             }
         }
@@ -160,23 +159,26 @@ class KotlinClassTest {
     }
 
     private fun shouldImport(kibble: KibbleClass, type: String?) {
-        Assert.assertNotNull(kibble.file.imports.firstOrNull { it.type.name == type }, "Should find an import for $type " +
-                "in ${kibble.file.name}")
+        println("type = ${type}")
+        Assert.assertNotNull(kibble.file.imports.firstOrNull {
+            println("it = ${it}")
+            it.type.fqcn == type
+        }, "Should find an import for $type in ${kibble.file.name}")
     }
 
     private fun shouldNotImport(kibble: KibbleClass, type: String?) {
-        Assert.assertNull(kibble.file.imports.firstOrNull { it.type.name == type }, "Should not find an import for $type " +
+        Assert.assertNull(kibble.file.imports.firstOrNull { it.type.fqcn == type }, "Should not find an import for $type " +
                 "in ${kibble.file.name}")
     }
 
     private fun check(function: KibbleFunction, parameters: List<Pair<String, String>>, type: String) {
-        Assert.assertEquals(parameters.size, function.parameters.size)
-        Assert.assertEquals(type, function.type)
-        Assert.assertEquals(parameters.size, function.parameters.size)
+        Assert.assertEquals(function.parameters.size, parameters.size)
+        Assert.assertEquals(function.type, type)
+        println("function.toSource() = ${function.toSource()}")
         parameters.forEachIndexed { p, (first, second) ->
             val functionParam = function.parameters[p]
-            Assert.assertEquals(first, functionParam.name)
-            Assert.assertEquals(second, functionParam.type?.name)
+            Assert.assertEquals(functionParam.name, first)
+            Assert.assertEquals(functionParam.type?.name, second)
         }
     }
 }
