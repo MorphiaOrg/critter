@@ -1,9 +1,8 @@
 package com.antwerkz.critter
 
 import com.antwerkz.critter.java.JavaClass
-import com.antwerkz.critter.kotlin.KotlinClass
-import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.KibbleContext
+import com.antwerkz.critter.kotlin.KotlinBuilder
+import com.antwerkz.critter.kotlin.KotlinParser
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
@@ -30,6 +29,9 @@ class CritterMojo : AbstractMojo() {
     @Parameter(property = "critter.force", defaultValue = "false")
     private var force: Boolean = false
 
+    @Parameter(property = "critter.output.type", defaultValue = "kotlin")
+    private var outputType = "kotlin"
+
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
     private lateinit var project: MavenProject
 
@@ -37,9 +39,9 @@ class CritterMojo : AbstractMojo() {
     override fun execute() {
         project.addCompileSourceRoot(outputDirectory.path)
 
-        val javaContext = CritterContext<JavaClass>(criteriaPackage, force)
+        val context = CritterContext<CritterClass>(criteriaPackage, force)
         val kotlinContext = CritterKotlinContext(criteriaPackage, force)
-        val kibbleContext = KibbleContext()
+        val kotlinParser = KotlinParser()
         sourceDirectory
                 .map { File(project.basedir, it) }
                 .filter { it.exists() }
@@ -53,12 +55,10 @@ class CritterMojo : AbstractMojo() {
 
                         override fun directoryWalkStep(percentage: Int, file: File) {
                             if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
-                                JavaClass(javaContext, file).apply {
-                                    javaContext.add(this)
-                                }
+                                context.add(JavaClass(context, file))
                             } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
-                                Kibble.parse(file, kibbleContext).classes.forEach {
-                                    kotlinContext.add(KotlinClass(kotlinContext, it))
+                                kotlinParser.parse(file).forEach {
+                                    context.add(it)
                                 }
                             }
                         }
@@ -70,7 +70,15 @@ class CritterMojo : AbstractMojo() {
                     walker.scan()
                 }
 
-        javaContext.classes.values.forEach { it.build(outputDirectory) }
-        kotlinContext.classes.values.forEach { it.build(outputDirectory) }
+        when (outputType) {
+            "java" -> {
+                val builder = JavaBuilder()
+                context.classes.values.forEach { builder.build(outputDirectory) }
+            }
+            "kotlin" -> {
+                val builder = KotlinBuilder()
+                context.classes.values.forEach { builder.build(outputDirectory) }
+            }
+        }
     }
 }

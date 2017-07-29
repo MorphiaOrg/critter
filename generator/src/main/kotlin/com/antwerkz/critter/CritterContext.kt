@@ -8,7 +8,7 @@ open class CritterContext<T: CritterClass>(val criteriaPkg: String? = null, var 
     val classes = HashMap<String, T>()
 
     fun add(critterClass: T) {
-        classes.put(format("%s.%s", critterClass.getPackage(), critterClass.getName()), critterClass)
+        classes.put(format("%s.%s", critterClass.pkgName, critterClass.name), critterClass)
     }
 
     fun resolve(currentPkg: String, name: String): T? {
