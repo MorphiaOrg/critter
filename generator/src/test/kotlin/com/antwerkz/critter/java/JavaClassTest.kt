@@ -1,6 +1,7 @@
 package com.antwerkz.critter.java
 
 import com.antwerkz.critter.CritterContext
+import com.antwerkz.critter.CritterField
 import org.bson.types.ObjectId
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
@@ -14,7 +15,7 @@ import org.testng.annotations.Test
 import java.io.File
 
 class JavaClassTest {
-    lateinit var critterContext: CritterContext<*>
+    lateinit var critterContext: CritterContext
     val files = File("../tests/java/src/main/java/").walkTopDown()
             .filter { it.name.endsWith(".java") }
 
@@ -22,11 +23,12 @@ class JavaClassTest {
 
     @BeforeTest
     fun scan() {
-        critterContext = CritterContext<JavaClass>(force = true).also { context ->
+        critterContext = CritterContext(force = true).also { context ->
             files.forEach { context.add(JavaClass(context, it)) }
         }
+        val builder = JavaBuilder(critterContext)
         critterContext.classes.values.forEach {
-            it.build(directory)
+            builder.build(directory, it)
         }
     }
 
@@ -63,7 +65,7 @@ class JavaClassTest {
             val stringInitializer = field.stringInitializer
             Assert.assertEquals(
                     stringInitializer?.replace("\"", ""),
-                    extractName(it as JavaField))
+                    extractName(it))
         }
 
         fields.forEach { field ->
@@ -157,14 +159,11 @@ class JavaClassTest {
                 "Should not find an import for $type in ${javaClass.name}")
     }
 
-    private fun extractName(property: JavaField): String {
+    private fun extractName(property: CritterField): String {
         return if (property.hasAnnotation(Id::class.java)) {
             "_id"
-        } else if (property.hasAnnotation(Property::class.java)) {
-            val annotation = property.getAnnotation(Property::class.java)!!
-            annotation.getStringValue("value")?.replace("\"", "") ?: property.name
         } else {
-            property.name
+            property.getValue(Property::class.java, property.name).replace("\"", "")
         }
     }
 

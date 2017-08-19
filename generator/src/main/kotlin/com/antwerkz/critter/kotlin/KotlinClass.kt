@@ -6,32 +6,47 @@ import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.Visibility
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleProperty
-import com.antwerkz.kibble.model.KibbleType
 
 class KotlinClass(pkgName: String?, name: String, val source: KibbleClass) : CritterClass(pkgName, name) {
     override val annotations: List<CritterAnnotation>
     override val fields: List<CritterField> by lazy {
-        val list = source.properties +
-                listProperties(source.superType) +
-                source.superTypes.map { listProperties(it) }
-                        .flatMap { it }
-        list.map { property ->
-            CritterField(property.name, source.file.resolve(property.type!!).fqcn).also { field ->
+        listProperties(source).map { property: KibbleProperty ->
+            CritterField(property.name, property.type.toString()).also { field ->
                 property.type?.typeParameters?.forEach {
                     field.shortParameterTypes.add(it.name)
                     field.fullParameterTypes.add(it.name)
                 }
+                field.parameterizedType = property.type.toString()
+                field.fullyQualifiedType = source.file.resolve(property.type!!).fqcn
             }
         }
                 .sortedBy(CritterField::name)
                 .toMutableList()
     }
 
-    private fun listProperties(type: KibbleType?): List<KibbleProperty> {
-        val file = source.file
-        val context = file.context
+    private fun listProperties(type: KibbleClass?): List<KibbleProperty> {
+        return type?.let { current ->
+            val context = type.file.context
 
-        return type?.let { context.findClass(file.resolve(it.fqcn))?.properties } ?: listOf<KibbleProperty>()
+            val list = mutableListOf<KibbleProperty>()
+            list.addAll(current.properties)
+            current.superType?.let {
+                list.addAll(listProperties(context.findClass(it)))
+            }
+            list.addAll(current.superTypes
+                    .map { context.resolve(source.file, it) }
+                    .filterNotNull()
+                    .map { listProperties(context.findClass(it)) }
+                    .flatMap { it })
+
+/*
+            current.let {
+                val findClass = context.findClass(source.file.resolve(it.fqcn))
+                findClass?.properties
+            }
+*/
+            list
+        } ?: listOf<KibbleProperty>()
     }
 
     init {

@@ -1,6 +1,7 @@
 package com.antwerkz.critter
 
 import com.antwerkz.critter.java.JavaClass
+import com.antwerkz.critter.kotlin.KotlinBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
@@ -12,10 +13,11 @@ class CritterContextTest {
                 .filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
 
-        val critterContext = CritterContext<CritterClass>(force = true)
+        val critterContext = CritterContext(force = true)
         files.forEach { critterContext.add(JavaClass(critterContext, it)) }
+        val builder = KotlinBuilder(critterContext)
         critterContext.classes.values.forEach {
-            it.build(directory)
+            builder.build(directory, it)
         }
 
         val file = File(directory, "com/antwerkz/critter/test/criteria/PersonCriteria.java")
@@ -25,7 +27,7 @@ class CritterContextTest {
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
         critterContext.classes.values.forEach {
-            it.build(directory)
+            builder.build(directory, it)
         }
         Assert.assertFalse(file.readLines().contains("test update"))
 
@@ -33,13 +35,13 @@ class CritterContextTest {
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
         critterContext.classes.values.forEach {
-            it.build(directory)
+            builder.build(directory, it)
         }
         Assert.assertTrue(file.readLines().contains("test update"))
 
         critterContext.force = true
         critterContext.classes.values.forEach {
-            it.build(directory)
+            builder.build(directory, it)
         }
         Assert.assertFalse(file.readLines().contains("test update"))
     }

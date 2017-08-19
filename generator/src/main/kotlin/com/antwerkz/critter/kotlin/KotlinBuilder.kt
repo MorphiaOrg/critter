@@ -1,10 +1,11 @@
 package com.antwerkz.critter.kotlin
 
 import com.antwerkz.critter.CritterClass
+import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
-import com.antwerkz.critter.CritterKotlinContext
 import com.antwerkz.critter.TypeSafeFieldEnd
 import com.antwerkz.critter.criteria.BaseCriteria
+import com.antwerkz.critter.nameCase
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFile
@@ -24,7 +25,7 @@ import org.mongodb.morphia.query.UpdateOperations
 import org.mongodb.morphia.query.UpdateResults
 import java.io.File
 
-class KotlinBuilder(val context: CritterKotlinContext) {
+class KotlinBuilder(val context: CritterContext) {
     companion object {
         val UPDATE_RESULTS: String = UpdateResults::class.java.simpleName
         val WRITE_CONCERN: String = WriteConcern::class.java.simpleName
@@ -42,7 +43,6 @@ class KotlinBuilder(val context: CritterKotlinContext) {
         val criteriaClass = kibbleFile.addClass("${source.name}Criteria")
 
         kibbleFile.addImport(source.pkgName + "." + source.name)
-        val isEmbedded = source.hasAnnotation(Embedded::class.java)
 
         kibbleFile.addImport(Datastore::class.java)
         kibbleFile.addImport(BaseCriteria::class.java)
@@ -52,13 +52,13 @@ class KotlinBuilder(val context: CritterKotlinContext) {
         val companion = criteriaClass.addCompanionObject()
 
         source.fields.forEach { field ->
-            kibbleFile.addImport(field.fullType)
+            kibbleFile.addImport(field.type)
             companion.addProperty(field.name, modality = FINAL, initializer = field.mappedName())
             addField(source, criteriaClass, field)
         }
 
         val primary = criteriaClass.constructor
-        if (!isEmbedded) {
+        if (!source.hasAnnotation(Embedded::class.java)) {
             criteriaClass.superType = KibbleType.from("${BaseCriteria::class.java.simpleName}<${source.name}>")
             criteriaClass.superCallArgs = listOf("ds", "${source.name}::class.java")
             primary.addParameter("ds", Datastore::class.java.simpleName)
@@ -81,7 +81,7 @@ class KotlinBuilder(val context: CritterKotlinContext) {
             source.hasAnnotation(Reference::class.java) -> {
                 criteriaClass.addFunction(field.name, criteriaClass.name,
                         """query.filter("${field.name} = ", reference)""")
-                        .addParameter("reference", field.fullType)
+                        .addParameter("reference", field.type)
             }
             field.hasAnnotation(Embedded::class.java) -> {
                 criteriaClass.addFunction(field.name, criteriaClass.name,
@@ -92,10 +92,10 @@ class KotlinBuilder(val context: CritterKotlinContext) {
                         "prefix + " + field.name
                     } else field.name
                 criteriaClass.addFunction(field.name,
-                            "${TypeSafeFieldEnd::class.java.simpleName}<${criteriaClass.name}, ${field.fullType}>",
+                            "${TypeSafeFieldEnd::class.java.simpleName}<${criteriaClass.name}, ${field.type}>",
                             "return TypeSafeFieldEnd(this, query, $name)")
                 criteriaClass.addFunction(field.name, Criteria::class.java.simpleName,
-                            "return TypeSafeFieldEnd<${criteriaClass.name}, ${field.fullType}>(this, query, $name).equal(value)")
+                            "return TypeSafeFieldEnd<${criteriaClass.name}, ${field.type}>(this, query, $name).equal(value)")
                             .addParameter("value", field.parameterizedType)
             }
         }
@@ -149,7 +149,7 @@ class KotlinBuilder(val context: CritterKotlinContext) {
                     criteriaClass.file.addImport(field.fullyQualifiedType)
                     if (!field.hasAnnotation(Id::class.java)) {
                         updater.addFunction(field.name, updaterType, "updateOperations.set(\"${field.name}\", value)")
-                                .addParameter(field.parameterizedType, "value")
+                                .addParameter("value", field.parameterizedType)
 
                         updater.addFunction("unset${field.name.nameCase()}", updaterType,
                                 "updateOperations.unset(\"${field.name}\")")
@@ -165,12 +165,12 @@ class KotlinBuilder(val context: CritterKotlinContext) {
             updater.addFunction("dec${field.name.nameCase()}", type, "updateOperations.dec(\"${field.name}\")")
 
             updater.addFunction("dec${field.name.nameCase()}", type, "updateOperations.dec(\"${field.name}\", value)")
-                    .addParameter("value", field.fullType)
+                    .addParameter("value", field.type)
 
             updater.addFunction("inc${field.name.nameCase()}", type, "updateOperations.inc(\"${field.name}\")")
 
             updater.addFunction("inc${field.name.nameCase()}", type, "updateOperations.inc(\"${field.name}\", value)")
-                    .addParameter("value", field.fullType)
+                    .addParameter("value", field.type)
         }
     }
 
@@ -207,7 +207,4 @@ class KotlinBuilder(val context: CritterKotlinContext) {
         }
     }
 
-    private fun String.nameCase(): String {
-        return substring(0, 1).toUpperCase() + substring(1)
-    }
 }

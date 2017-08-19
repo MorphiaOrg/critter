@@ -1,6 +1,6 @@
 package com.antwerkz.critter.kotlin
 
-import com.antwerkz.critter.CritterKotlinContext
+import com.antwerkz.critter.CritterContext
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFunction
@@ -15,33 +15,65 @@ import org.testng.annotations.Test
 import java.io.File
 
 class KotlinClassTest {
-    lateinit var critterContext: CritterKotlinContext
+    lateinit var critterContext: CritterContext
     val files = Kibble.parse(listOf(File("../tests/kotlin/src/main/kotlin/")))
     val directory = File("target/kotlinClassTest/")
 
     @BeforeTest
     fun scan() {
-        critterContext = CritterKotlinContext(force = true)
+        critterContext = CritterContext(force = true)
         files.forEach { file ->
             file.classes.forEach { klass ->
-                critterContext.add(KotlinClass(critterContext, klass))
+                critterContext.add(KotlinClass(klass.pkgName, klass.name, klass))
             }
         }
+
+        val builder = KotlinBuilder(critterContext)
+
         critterContext.classes.values.forEach {
-            it.build(directory)
+            builder.build(directory, it)
         }
     }
 
     @Test
     fun build() {
+        var critterContext = CritterContext(force = true)
+        val files = Kibble.parse(listOf(File("../tests/kotlin/src/main/kotlin/")))
+               files.forEach { file ->
+                   file.classes.forEach { klass ->
+                       critterContext.add(KotlinClass(klass.pkgName, klass.name, klass))
+                   }
+               }
+
+               val builder = KotlinBuilder(critterContext)
+
+               critterContext.classes.values.forEach {
+                   builder.build(directory, it)
+               }
+            val directory = File("target/kotlinClassTest/")
+
         val personClass = critterContext.resolve("com.antwerkz.critter.test", "Person")
         Assert.assertNotNull(personClass)
         personClass as KotlinClass
-        Assert.assertEquals(personClass.fields.size, 5)
+        Assert.assertEquals(personClass.fields.size, 5, "Found: \n${personClass.fields.joinToString(",\n")}")
 
         val criteriaFiles = Kibble.parse(listOf(directory))
-        validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!.classes[0],
-                critterContext.resolve("com.antwerkz.critter.test", "Person")!!.source)
+        val kibble = critterContext.resolve("com.antwerkz.critter.test", "Person")!! as KotlinClass
+        validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!.classes[0], kibble.source)
+        validateAddressCriteria(criteriaFiles.find { it.name == "AddressCriteria.kt" }!!.classes[0])
+        validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria.kt" }!!.classes[0])
+    }
+
+    @Test
+    fun parentProperties() {
+        val personClass = critterContext.resolve("com.antwerkz.critter.test", "Person")
+        Assert.assertNotNull(personClass)
+        personClass as KotlinClass
+        Assert.assertEquals(personClass.fields.size, 5, "Found: \n${personClass.fields.joinToString(",\n")}")
+
+        val criteriaFiles = Kibble.parse(listOf(directory))
+        val kibble = critterContext.resolve("com.antwerkz.critter.test", "Person")!! as KotlinClass
+        validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!.classes[0], kibble.source)
         validateAddressCriteria(criteriaFiles.find { it.name == "AddressCriteria.kt" }!!.classes[0])
         validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria.kt" }!!.classes[0])
     }
@@ -137,11 +169,11 @@ class KotlinClassTest {
     private fun findAllProperties(kotlinClass: KibbleClass): MutableList<KibbleProperty> {
         val list = kotlinClass.properties
         kotlinClass.superType?.let {
-            list += findAllProperties((critterContext.resolve(kotlinClass.pkgName ?: "", it.className) as KotlinClass).source)
+            list += findAllProperties((critterContext.resolve(kotlinClass.pkgName, it.className) as KotlinClass).source)
         }
         kotlinClass.superTypes.forEach {
-            critterContext.resolve(kotlinClass.pkgName ?: "", it.className)?.let {
-                list += findAllProperties(it.source)
+            critterContext.resolve(kotlinClass.pkgName, it.className)?.let {
+                list += findAllProperties((it as KotlinClass).source)
             }
         }
         return list

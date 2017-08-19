@@ -10,7 +10,7 @@ import org.mongodb.morphia.query.Query
 import org.mongodb.morphia.query.UpdateOperations
 import org.mongodb.morphia.query.UpdateResults
 
-abstract class UpdaterBuilder(val sourceClass: CritterClass, val targetClass: CritterClass) {
+abstract class UpdaterBuilder(val sourceClass: CritterClass, val targetClass: CritterClass) /*{
     init {
         targetClass.addImport(Query::class.java)
         targetClass.addImport(UpdateOperations::class.java)
@@ -204,7 +204,6 @@ abstract class UpdaterBuilder(val sourceClass: CritterClass, val targetClass: Cr
         return name.substring(0, 1).toUpperCase() + name.substring(1)
     }
 }
-
 class JavaUpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) : UpdaterBuilder(sourceClass, targetClass) {
     override fun createUpdaterClass(targetClass: CritterClass, type: String): CritterClass {
         val updater = targetClass.createClass(name = type)
@@ -215,29 +214,4 @@ class JavaUpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) :
         return updater;
     }
 }
-class KotlinUpdaterBuilder(sourceClass: CritterClass, targetClass: CritterClass) : UpdaterBuilder(sourceClass, targetClass) {
-    override fun createUpdaterClass(targetClass: CritterClass, type: String): CritterClass {
-        val updater = targetClass.createClass(name = type) as KotlinClass
-
-        updater.source.addProperty("criteria", targetClass.qualifiedName, visibility = PRIVATE, constructorParam = true)
-        updater.source.addProperty("ds", visibility = PRIVATE, initializer = "criteria.datastore()")
-        updater.source.addProperty("query", visibility = PRIVATE, initializer = "criteria.query")
-        updater.source.addProperty("updateOperations", visibility = PRIVATE,
-                initializer = "ds.createUpdateOperations(${sourceClass.getName()}::class.java);")
-
-        val queryFun = updater.source.addFunction("query", "Query<${sourceClass.getName()}>", "return criteria.query")
-        queryFun.visibility = PRIVATE
-
-        return updater
-    }
-
-    override fun addUpdaterMethod(sourceClass: CritterClass, targetClass: CritterClass): String {
-        val type = sourceClass.getName() + "Updater"
-        val method = targetClass.addMethod()
-                .setPublic()
-                .setName("getUpdater")
-                .setReturnType(type)
-        method.setBody("return ${method.getReturnType()}(this)")
-        return type
-    }
-}
+*/

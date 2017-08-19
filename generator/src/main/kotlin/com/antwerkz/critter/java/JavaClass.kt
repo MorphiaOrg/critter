@@ -1,182 +1,78 @@
 package com.antwerkz.critter.java
 
+import com.antwerkz.critter.CritterAnnotation
 import com.antwerkz.critter.CritterClass
-import com.antwerkz.critter.CritterConstructor
 import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
-import com.antwerkz.critter.CritterMethod
-import com.antwerkz.critter.JavaUpdaterBuilder
+import com.antwerkz.critter.Visibility.PACKAGE
+import com.antwerkz.critter.Visibility.PRIVATE
+import com.antwerkz.critter.Visibility.PROTECTED
+import com.antwerkz.critter.Visibility.PUBLIC
 import com.antwerkz.critter.Visible
-import com.antwerkz.critter.criteria.BaseCriteria
 import org.jboss.forge.roaster.Roaster
+import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
-import org.mongodb.morphia.Datastore
-import org.mongodb.morphia.annotations.Embedded
-import org.mongodb.morphia.query.Query
 import java.io.File
-import java.io.PrintWriter
-import kotlin.properties.Delegates
+import org.jboss.forge.roaster.model.Visibility.PACKAGE_PRIVATE as rPACKAGE_PRIVATE
+import org.jboss.forge.roaster.model.Visibility.PRIVATE as rPRIVATE
+import org.jboss.forge.roaster.model.Visibility.PROTECTED as rPROTECTED
+import org.jboss.forge.roaster.model.Visibility.PUBLIC as rPUBLIC
 
-class JavaClass(context: CritterContext<*>, val sourceClass: JavaClassSource = Roaster.create(JavaClassSource::class.java))
-    : CritterClass(context, ) {
+class JavaClass(val context: CritterContext, val sourceFile: File,
+                val sourceClass: JavaClassSource = Roaster.parse(sourceFile) as JavaClassSource)
+    : CritterClass(sourceClass.name, sourceClass.`package`), Visible {
 
-    constructor(context: CritterContext<*>, sourceFile: File) : this(context, Roaster.parse(sourceFile) as JavaClassSource) {
-        val superClass = context.resolve(sourceClass.`package`, sourceClass.superType)
-        lastModified = Math.min(
-                sourceFile.lastModified(),
-                superClass?.lastModified ?: 0)
+    val superClass: CritterClass? by lazy {
+        context.resolve(sourceClass.`package`, sourceClass.superType)
+    }
 
-        isEmbedded = hasAnnotation(Embedded::class.java)
-        fields = sourceClass.fields
+    override val annotations: List<CritterAnnotation>
+/*
+    override val fields: List<CritterField> by lazy {
+
+        sourceClass.fields
                 .filter { f -> !f.isStatic }
                 .map { f -> JavaField(context, f) }
                 .sortedBy { f -> f.name }
                 .toMutableList()
-        if (superClass != null) {
-            fields.addAll(superClass.fields)
+    }
+*/
+    override val fields: List<CritterField> by lazy {
+        listFields(sourceClass).map { javaField ->
+            CritterField(javaField.name, javaField.type.qualifiedName).also { field ->
+                javaField.type?.typeArguments?.forEach {
+                    field.shortParameterTypes.add(it.name)
+                    field.fullParameterTypes.add(it.name)
+                }
+            }
         }
+                .sortedBy(CritterField::name)
+                .toMutableList()
     }
 
-    private var criteriaClass by Delegates.notNull<CritterClass>()
-
-    override fun isInternal() = false
-    override fun setInternal() = throw Visible.invalid("internal", "java")
-
-    override fun isPackagePrivate() = sourceClass.isPackagePrivate
-    override fun setPackagePrivate(): CritterClass {
-        sourceClass.setPackagePrivate()
-        return this
+    private fun listFields(type: JavaClassSource?): List<FieldSource<JavaClassSource>> {
+        return type?.let { current ->
+            mutableListOf<FieldSource<JavaClassSource>>() + current.fields
+        } ?: listOf<FieldSource<JavaClassSource>>()
     }
 
-    override fun isPublic() = sourceClass.isPublic
-    override fun setPublic(): CritterClass {
-        sourceClass.setPublic()
-        return this
-    }
-
-    override fun isPrivate() = sourceClass.isPrivate
-    override fun setPrivate(): CritterClass {
-        sourceClass.setPrivate()
-        return this
-    }
-
-    override fun isProtected() = sourceClass.isProtected
-    override fun setProtected(): CritterClass {
-        sourceClass.setProtected()
-        return this
-    }
-
-    override fun getName(): String = sourceClass.name
-    override fun setName(name: String): CritterClass {
-        sourceClass.name = name
-        return this
-    }
-
-    override fun getPackage(): String? = sourceClass.`package`
-    override fun setPackage(name: String?): CritterClass {
-        sourceClass.`package` = name
-        return this
-    }
-
-    override fun getSuperType(): String? = sourceClass.superType
-    override fun setSuperType(name: String): CritterClass {
-        sourceClass.superType = name
-        return this
-    }
-
-    override fun hasAnnotation(aClass: Class<out Annotation>): Boolean {
-        return sourceClass.hasAnnotation(aClass)
-    }
-
-    override fun createClass(pkgName: String?, name: String): CritterClass {
-        return JavaClass(context)
-                .setPackage(pkgName)
-                .setName(name)
-    }
-
-    override fun addNestedType(type: CritterClass): CritterClass {
-        sourceClass.addNestedType((type as JavaClass).sourceClass)
-        return this
-    }
-
-    override fun addImport(klass: Class<*>) {
-        sourceClass.addImport(klass)
-    }
-
-    override fun addImport(name: String) {
-        sourceClass.addImport(name)
-    }
-
-    override fun addConstructor(): CritterConstructor {
-        return JavaConstructor(sourceClass.addMethod())
-    }
-
-    override fun addField(name: String, type: String): CritterField {
-        val source = sourceClass.addField()
-                .setName(name)
-                .setType(type)
-        return JavaField(context, source)
-    }
-
-    override fun addMethod(): CritterMethod {
-        return JavaMethod(sourceClass.addMethod())
-    }
-
-    override fun toString(): String {
-        return "${getPackage()}.${getName()}"
-    }
-
-    override fun build(directory: File) {
-        criteriaClass = createClass(getPackage() + ".criteria", getName() + "Criteria")
-        outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
-
-        super.build(directory)
-    }
-
-    override fun buildCriteria(directory: File) {
-        fields.forEach { field ->
-            criteriaClass.addField(field.name, String::class.java.name)
-                    .setPublic()
-                    .setStatic()
-                    .setFinal()
-                    .setStringLiteralInitializer(field.mappedName())
+    init {
+        annotations = sourceClass.annotations.map { ann ->
+            CritterAnnotation(ann.name, ann.values.map { Pair<String, Any>(it.name, it.stringValue)}
+                    .toMap())
+        }
+        visibility = when (sourceClass.visibility) {
+            rPUBLIC -> PUBLIC
+            rPROTECTED -> PROTECTED
+            rPRIVATE -> PRIVATE
+            rPACKAGE_PRIVATE -> PACKAGE
+            else -> PRIVATE
         }
 
-        if (!hasAnnotation(Embedded::class.java)) {
-            criteriaClass.setSuperType(BaseCriteria::class.java.name + "<" + qualifiedName + ">")
-            criteriaClass.addConstructor()
-                    .setPublic()
-                    .setBody(java.lang.String.format("super(ds, %s.class);", getName()))
-                    .addParameter(Datastore::class.java, "ds")
-        } else {
-            criteriaClass.addField("query", Query::class.java.name)
-                    .setPrivate()
-            criteriaClass.addField("prefix", "String")
-                    .setPrivate()
-
-            val method = criteriaClass.addConstructor()
-                    .setPublic()
-                    .setBody("""this.query = query;
-this.prefix = prefix + ".";""")
-            method.addParameter(Query::class.java, "query")
-            method.addParameter(String::class.java, "prefix")
-        }
-
-        fields.forEach { it.build(this, criteriaClass) }
-        if (!hasAnnotation(Embedded::class.java)) {
-            JavaUpdaterBuilder(this, criteriaClass)
-        }
-
-        generate()
     }
 
-    private fun generate() {
-        outputFile.parentFile.mkdirs()
-        PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toSource()) }
-    }
-
-    override fun toSource(): String {
-        return sourceClass.toString()
+    override fun lastModified(): Long {
+        return Math.min(sourceFile.lastModified(), superClass?.lastModified() ?: -1)
     }
 }
 

@@ -5,7 +5,7 @@ import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Id
 import org.mongodb.morphia.annotations.Property
 
-class CritterField(val name: String, val fullType: String) : AnnotationHolder, Comparable<CritterField>, Visible {
+class CritterField(val name: String, val type: String) : AnnotationHolder,/* Comparable<CritterField>,*/ Visible {
     companion object {
         val NUMERIC_TYPES =
                 listOf("Float", "Double", "Long", "Integer", "Byte", "Short", "Number")
@@ -36,20 +36,20 @@ class CritterField(val name: String, val fullType: String) : AnnotationHolder, C
     lateinit var fullyQualifiedType: String
     override var visibility: Visibility = PUBLIC
 
-    fun isContainer(): Boolean = fullType in CritterField.CONTAINER_TYPES
+    fun isContainer() = type in CritterField.CONTAINER_TYPES
 
-    fun isNumeric(): Boolean = CritterField.NUMERIC_TYPES.contains(fullType)
+    fun isNumeric() = CritterField.NUMERIC_TYPES.contains(type)
 
     fun mappedName(): String {
         return if (hasAnnotation(Id::class.java)) {
             "\"_id\""
         } else {
-            val fieldName = getValue(Property::class.java, "\"$name\"")
-            getValue(Embedded::class.java, fieldName)
+            getValue(Embedded::class.java, getValue(Property::class.java, "\"${name}\""))
         }
     }
 
-    override fun compareTo(other: CritterField): Int {
-        TODO("not implemented")
+    override fun toString(): String {
+        return "CritterField(name='$name', type='$type', parameterizedType='$parameterizedType', fullyQualifiedType='$fullyQualifiedType')"
     }
+
 }

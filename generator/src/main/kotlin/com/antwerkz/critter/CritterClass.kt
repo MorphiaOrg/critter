@@ -10,24 +10,16 @@ abstract class CritterClass(var pkgName: String?, var name: String) : Annotation
 
     abstract val fields: List<CritterField>
 
-    var isEmbedded: Boolean = false
-
-    abstract fun lastModified(): Long
+    val isEmbedded: Boolean by lazy {
+        hasAnnotation(Embedded::class.java)
+    }
 
     override var visibility: Visibility = PUBLIC
 
-    val nested = mutableListOf<CritterClass>()
-
-    init {
-        isEmbedded = hasAnnotation(Embedded::class.java)
-    }
+    abstract fun lastModified(): Long
 }
 
 class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf<String, Any>()) {
-
-    constructor(klass: Class<out Annotation>) : this(klass::javaClass.name) {
-        this.klass = klass
-    }
 
     var klass: Class<out Annotation>? = null
 
@@ -39,4 +31,8 @@ class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf<S
         return values["value"] as String?
     }
 
+}
+
+fun String.nameCase(): String {
+    return substring(0, 1).toUpperCase() + substring(1)
 }

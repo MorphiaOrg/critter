@@ -1,5 +1,6 @@
 package com.antwerkz.critter
 
+import com.antwerkz.critter.java.JavaBuilder
 import com.antwerkz.critter.java.JavaClass
 import com.antwerkz.critter.kotlin.KotlinBuilder
 import com.antwerkz.critter.kotlin.KotlinParser
@@ -39,8 +40,7 @@ class CritterMojo : AbstractMojo() {
     override fun execute() {
         project.addCompileSourceRoot(outputDirectory.path)
 
-        val context = CritterContext<CritterClass>(criteriaPackage, force)
-        val kotlinContext = CritterKotlinContext(criteriaPackage, force)
+        val context = CritterContext(criteriaPackage, force)
         val kotlinParser = KotlinParser()
         sourceDirectory
                 .map { File(project.basedir, it) }
@@ -72,12 +72,12 @@ class CritterMojo : AbstractMojo() {
 
         when (outputType) {
             "java" -> {
-                val builder = JavaBuilder()
-                context.classes.values.forEach { builder.build(outputDirectory) }
+                val builder = JavaBuilder(context)
+                context.classes.values.forEach { builder.build(outputDirectory, it) }
             }
             "kotlin" -> {
-                val builder = KotlinBuilder()
-                context.classes.values.forEach { builder.build(outputDirectory) }
+                val builder = KotlinBuilder(context)
+                context.classes.values.forEach { builder.build(outputDirectory, it) }
             }
         }
     }
