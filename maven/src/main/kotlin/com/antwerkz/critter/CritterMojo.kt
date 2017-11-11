@@ -77,7 +77,7 @@ class CritterMojo : AbstractMojo() {
             }
             "kotlin" -> {
                 val builder = KotlinBuilder(context)
-                context.classes.values.forEach { builder.build(outputDirectory, it) }
+                builder.build(outputDirectory)
             }
         }
     }

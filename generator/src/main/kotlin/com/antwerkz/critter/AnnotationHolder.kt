@@ -1,7 +1,7 @@
 package com.antwerkz.critter
 
 interface AnnotationHolder {
-    val annotations: List<CritterAnnotation>
+    val annotations: MutableList<CritterAnnotation>
 
     fun getValue(ann: Class<out Annotation>, defaultValue: String): String {
         return annotations.firstOrNull { it.matches(ann) }

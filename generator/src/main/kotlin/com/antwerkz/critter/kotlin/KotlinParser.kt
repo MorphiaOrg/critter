@@ -7,15 +7,15 @@ import com.antwerkz.kibble.model.KibbleClass
 import java.io.File
 
 class KotlinParser {
-    val kibbleContext = KibbleContext()
+    private val kibbleContext = KibbleContext()
 
     fun parse(file: File) : List<CritterClass> {
-        return Kibble.parse(file, kibbleContext).classes.map {
+        return Kibble.parse(file.absolutePath, kibbleContext).classes.map {
             parse(it)
         }
     }
 
     private fun parse(kibble: KibbleClass): CritterClass {
-        return KotlinClass(kibble.pkgName, kibble.name, kibble)
+        return KotlinClass(kibbleContext, kibble.file.pkgName, kibble.name, kibble)
     }
 }

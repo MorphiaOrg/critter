@@ -2,6 +2,7 @@ package com.antwerkz.critter
 
 import java.util.HashMap
 
+@Suppress("UNCHECKED_CAST")
 class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false) {
     val classes = HashMap<String, CritterClass>()
 

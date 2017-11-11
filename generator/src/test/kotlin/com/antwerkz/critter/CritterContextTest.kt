@@ -16,9 +16,7 @@ class CritterContextTest {
         val critterContext = CritterContext(force = true)
         files.forEach { critterContext.add(JavaClass(critterContext, it)) }
         val builder = KotlinBuilder(critterContext)
-        critterContext.classes.values.forEach {
-            builder.build(directory, it)
-        }
+        builder.build(directory)
 
         val file = File(directory, "com/antwerkz/critter/test/criteria/PersonCriteria.java")
         Assert.assertTrue(file.exists())
@@ -26,23 +24,17 @@ class CritterContextTest {
 
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
-        critterContext.classes.values.forEach {
-            builder.build(directory, it)
-        }
+        builder.build(directory)
         Assert.assertFalse(file.readLines().contains("test update"))
 
         critterContext.force = false
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
-        critterContext.classes.values.forEach {
-            builder.build(directory, it)
-        }
+        builder.build(directory)
         Assert.assertTrue(file.readLines().contains("test update"))
 
         critterContext.force = true
-        critterContext.classes.values.forEach {
-            builder.build(directory, it)
-        }
+        builder.build(directory)
         Assert.assertFalse(file.readLines().contains("test update"))
     }
 }

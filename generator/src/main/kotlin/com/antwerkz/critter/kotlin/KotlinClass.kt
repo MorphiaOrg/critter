@@ -4,20 +4,26 @@ import com.antwerkz.critter.CritterAnnotation
 import com.antwerkz.critter.CritterClass
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.Visibility
+import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleProperty
+import com.antwerkz.kibble.model.TypeParameter
 
-class KotlinClass(pkgName: String?, name: String, val source: KibbleClass) : CritterClass(pkgName, name) {
-    override val annotations: List<CritterAnnotation>
+@Suppress("UNCHECKED_CAST")
+class KotlinClass(val context: KibbleContext, pkgName: String?, name: String, val source: KibbleClass)
+    : CritterClass(pkgName, name) {
+    override val annotations = mutableListOf<CritterAnnotation>()
     override val fields: List<CritterField> by lazy {
         listProperties(source).map { property: KibbleProperty ->
             CritterField(property.name, property.type.toString()).also { field ->
-                property.type?.typeParameters?.forEach {
-                    field.shortParameterTypes.add(it.name)
-                    field.fullParameterTypes.add(it.name)
+                property.type?.typeParameters?.forEach { typeParameter: TypeParameter ->
+                    field.fullParameterTypes.add(typeParameter.type.toString())
                 }
                 field.parameterizedType = property.type.toString()
-                field.fullyQualifiedType = source.file.resolve(property.type!!).fqcn
+                field.fullyQualifiedType = property.type!!.fqcn
+                field.annotations += property.annotations.map {
+                    val fqcn = it.type.fqcn
+                    CritterAnnotation(fqcn, it.arguments)}
             }
         }
                 .sortedBy(CritterField::name)
@@ -25,19 +31,17 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass) : Cri
     }
 
     private fun listProperties(type: KibbleClass?): List<KibbleProperty> {
-        return type?.let { current ->
-            val context = type.file.context
-
-            val list = mutableListOf<KibbleProperty>()
+        val list = mutableListOf<KibbleProperty>()
+        type?.let { current ->
             list.addAll(current.properties)
             current.superType?.let {
-                list.addAll(listProperties(context.findClass(it)))
+                list.addAll(listProperties(context.resolve(it)))
             }
-            list.addAll(current.superTypes
-                    .map { context.resolve(source.file, it) }
-                    .filterNotNull()
-                    .map { listProperties(context.findClass(it)) }
-                    .flatMap { it })
+
+            list += current.superTypes
+                    .mapNotNull { context.resolve(it) }
+                    .map { listProperties(it) }
+                    .flatMap { it }
 
 /*
             current.let {
@@ -45,8 +49,9 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass) : Cri
                 findClass?.properties
             }
 */
-            list
-        } ?: listOf<KibbleProperty>()
+        }
+        return             list
+
     }
 
     init {
@@ -57,13 +62,13 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass) : Cri
             com.antwerkz.kibble.model.Visibility.INTERNAL -> Visibility.INTERNAL
             else -> Visibility.PUBLIC
         }
-        annotations = source.annotations.map {
+        annotations += source.annotations.map {
             CritterAnnotation(it.type.fqcn, it.arguments)
         }
     }
 
     override fun lastModified() = (listOf(source.superType) + source.superTypes)
-            .mapNotNull { source.file.context.findClass(it!!)?.file?.sourceTimestamp ?: -1L }
+            .mapNotNull { source.file.context.resolve(it!!)?.file?.sourceTimestamp ?: -1L }
             .max()?.toLong() ?: 0L
 
     override fun toString(): String {

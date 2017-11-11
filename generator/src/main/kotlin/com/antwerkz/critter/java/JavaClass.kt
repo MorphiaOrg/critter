@@ -26,7 +26,7 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
         context.resolve(sourceClass.`package`, sourceClass.superType)
     }
 
-    override val annotations: List<CritterAnnotation>
+    override val annotations = mutableListOf<CritterAnnotation>()
 /*
     override val fields: List<CritterField> by lazy {
 
@@ -44,6 +44,8 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
                     field.shortParameterTypes.add(it.name)
                     field.fullParameterTypes.add(it.name)
                 }
+                field.annotations += javaField.annotations.map { ann ->
+                    CritterAnnotation(ann.name, ann.values.map { it.name to it.literalValue }.toMap())}
             }
         }
                 .sortedBy(CritterField::name)
@@ -57,7 +59,7 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
     }
 
     init {
-        annotations = sourceClass.annotations.map { ann ->
+        annotations += sourceClass.annotations.map { ann ->
             CritterAnnotation(ann.name, ann.values.map { Pair<String, Any>(it.name, it.stringValue)}
                     .toMap())
         }

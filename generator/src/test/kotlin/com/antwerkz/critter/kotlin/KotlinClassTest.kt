@@ -24,33 +24,25 @@ class KotlinClassTest {
         critterContext = CritterContext(force = true)
         files.forEach { file ->
             file.classes.forEach { klass ->
-                critterContext.add(KotlinClass(klass.pkgName, klass.name, klass))
+                critterContext.add(KotlinClass(file.context, file.pkgName, klass.name, klass))
             }
         }
 
-        val builder = KotlinBuilder(critterContext)
-
-        critterContext.classes.values.forEach {
-            builder.build(directory, it)
-        }
+        KotlinBuilder(critterContext).build(directory)
     }
 
     @Test
     fun build() {
-        var critterContext = CritterContext(force = true)
+        val critterContext = CritterContext(force = true)
         val files = Kibble.parse(listOf(File("../tests/kotlin/src/main/kotlin/")))
-               files.forEach { file ->
-                   file.classes.forEach { klass ->
-                       critterContext.add(KotlinClass(klass.pkgName, klass.name, klass))
-                   }
-               }
+        files.forEach { file ->
+            file.classes.forEach { klass ->
+                critterContext.add(KotlinClass(file.context, file.pkgName, klass.name, klass))
+            }
+        }
 
-               val builder = KotlinBuilder(critterContext)
-
-               critterContext.classes.values.forEach {
-                   builder.build(directory, it)
-               }
-            val directory = File("target/kotlinClassTest/")
+        KotlinBuilder(critterContext).build(directory)
+        val directory = File("target/kotlinClassTest/")
 
         val personClass = critterContext.resolve("com.antwerkz.critter.test", "Person")
         Assert.assertNotNull(personClass)
@@ -66,16 +58,36 @@ class KotlinClassTest {
 
     @Test
     fun parentProperties() {
-        val personClass = critterContext.resolve("com.antwerkz.critter.test", "Person")
-        Assert.assertNotNull(personClass)
-        personClass as KotlinClass
-        Assert.assertEquals(personClass.fields.size, 5, "Found: \n${personClass.fields.joinToString(",\n")}")
+        val file = Kibble.parseSource("""package properties
 
-        val criteriaFiles = Kibble.parse(listOf(directory))
-        val kibble = critterContext.resolve("com.antwerkz.critter.test", "Person")!! as KotlinClass
-        validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!.classes[0], kibble.source)
-        validateAddressCriteria(criteriaFiles.find { it.name == "AddressCriteria.kt" }!!.classes[0])
-        validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria.kt" }!!.classes[0])
+class Parent(val name: String)
+
+class Child(val age: Int, name: String, val nickNames: List<String>): Parent(name)
+""")
+
+        val context = CritterContext(force = true)
+        file.classes.forEach { klass ->
+            context.add(KotlinClass(file.context, file.pkgName, klass.name, klass))
+        }
+
+        val parent = context.resolve("properties", "Parent")!! as KotlinClass
+        val child = context.resolve("properties", "Child")!! as KotlinClass
+        Assert.assertEquals(parent.fields.size, 1, "Found: \n${parent.fields.joinToString(",\n")}")
+        Assert.assertEquals(child.fields.size, 3, "Found: \n${child.fields.joinToString(",\n")}")
+
+        val builder = KotlinBuilder(context)
+
+        val directory = File("target/properties/")
+        builder.build(directory)
+        val criteria = Kibble.parse(listOf(directory))
+                .flatMap { it.classes }
+                .associateBy { it.name }
+        println("criteriaFiles = ${criteria}")
+        val childCriteria = criteria["ChildCriteria"]!!
+        println("childCriteria = ${childCriteria}")
+        val updater = childCriteria.classes.first { it.name == "ChildUpdater" }
+        Assert.assertNotNull(updater.functions.firstOrNull { it.name == "incAge" })
+        Assert.assertNotNull(updater.functions.firstOrNull { it.name == "addToNickNames" })
     }
 
     private fun validateInvoiceCriteria(invoiceCriteria: KibbleClass) {
@@ -100,9 +112,8 @@ class KotlinClassTest {
         val properties = findAllProperties(personClass)
         Assert.assertEquals(companion.properties.size, properties.size)
         properties.forEach {
-            Assert.assertEquals(
-                    (companion.getProperty(it.name) as KibbleProperty).initializer?.replace("\"", ""),
-                    extractName(it))
+            val replace = (companion.getProperty(it.name) as KibbleProperty).initializer?.replace("\"", "")
+            Assert.assertEquals(extractName(it), replace)
         }
 
         properties.forEach {
@@ -119,23 +130,23 @@ class KotlinClassTest {
 
     private fun validatePersonUpdater(updater: KibbleClass) {
         var functions = updater.getFunctions("query")
-        check(functions[0], listOf<Pair<String, String>>(), "Query<Person>")
+        check(functions[0], listOf(), "Query<Person>")
 
         functions = updater.getFunctions("updateAll")
-        check(functions[0], listOf<Pair<String, String>>(), "org.mongodb.morphia.query.UpdateResults")
-        check(functions[1], listOf("wc" to "com.mongodb.WriteConcern"), "org.mongodb.morphia.query.UpdateResults")
+        check(functions[0], listOf(), "UpdateResults")
+        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
 
         functions = updater.getFunctions("updateFirst")
-        check(functions[0], listOf<Pair<String, String>>(), "org.mongodb.morphia.query.UpdateResults")
-        check(functions[1], listOf("wc" to "com.mongodb.WriteConcern"), "org.mongodb.morphia.query.UpdateResults")
+        check(functions[0], listOf(), "UpdateResults")
+        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
 
         functions = updater.getFunctions("upsert")
-        check(functions[0], listOf<Pair<String, String>>(), "org.mongodb.morphia.query.UpdateResults")
-        check(functions[1], listOf("wc" to "com.mongodb.WriteConcern"), "org.mongodb.morphia.query.UpdateResults")
+        check(functions[0], listOf(), "UpdateResults")
+        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
 
         functions = updater.getFunctions("remove")
-        check(functions[0], listOf<Pair<String, String>>(), "com.mongodb.WriteResult")
-        check(functions[1], listOf("wc" to "com.mongodb.WriteConcern"), "com.mongodb.WriteResult")
+        check(functions[0], listOf(), "WriteResult")
+        check(functions[1], listOf("wc" to "WriteConcern"), "WriteResult")
 
         functions = updater.getFunctions("age")
         Assert.assertEquals(1, functions.size)
@@ -143,16 +154,16 @@ class KotlinClassTest {
 
         functions = updater.getFunctions("unsetAge")
         Assert.assertEquals(1, functions.size)
-        check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
+        check(functions[0], listOf(), "PersonUpdater")
 
         functions = updater.getFunctions("incAge")
         Assert.assertEquals(2, functions.size)
-        check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
+        check(functions[0], listOf(), "PersonUpdater")
         check(functions[1], listOf("value" to "Long?"), "PersonUpdater")
 
         functions = updater.getFunctions("decAge")
         Assert.assertEquals(2, functions.size)
-        check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
+        check(functions[0], listOf(), "PersonUpdater")
         check(functions[1], listOf("value" to "Long?"), "PersonUpdater")
 
         listOf("first", "last").forEach {
@@ -162,17 +173,17 @@ class KotlinClassTest {
 
             functions = updater.getFunctions("unset${it.capitalize()}")
             Assert.assertEquals(1, functions.size, "Should have found unset${it.capitalize()}")
-            check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
+            check(functions[0], listOf(), "PersonUpdater")
         }
     }
 
     private fun findAllProperties(kotlinClass: KibbleClass): MutableList<KibbleProperty> {
         val list = kotlinClass.properties
         kotlinClass.superType?.let {
-            list += findAllProperties((critterContext.resolve(kotlinClass.pkgName, it.className) as KotlinClass).source)
+            list += findAllProperties((critterContext.resolve(kotlinClass.file.pkgName, it.className) as KotlinClass).source)
         }
         kotlinClass.superTypes.forEach {
-            critterContext.resolve(kotlinClass.pkgName, it.className)?.let {
+            critterContext.resolve(kotlinClass.file.pkgName, it.className)?.let {
                 list += findAllProperties((it as KotlinClass).source)
             }
         }
@@ -180,20 +191,18 @@ class KotlinClassTest {
     }
 
     private fun extractName(property: KibbleProperty): String {
-        return if (property.hasAnnotation(Id::class.java)) {
-            "_id"
-        } else if (property.hasAnnotation(Property::class.java)) {
-            val annotation = property.getAnnotation(Property::class.java)!!
-            annotation["value"]?.replace("\"", "") ?: property.name
-        } else {
-            property.name
+        return when {
+            property.hasAnnotation(Id::class.java) -> "_id"
+            property.hasAnnotation(Property::class.java) -> {
+                val annotation = property.getAnnotation(Property::class.java)!!
+                annotation["value"]?.replace("\"", "") ?: property.name
+            }
+            else -> property.name
         }
     }
 
     private fun shouldImport(kibble: KibbleClass, type: String?) {
-        println("type = ${type}")
         Assert.assertNotNull(kibble.file.imports.firstOrNull {
-            println("it = ${it}")
             it.type.fqcn == type
         }, "Should find an import for $type in ${kibble.file.name}")
     }
@@ -206,11 +215,10 @@ class KotlinClassTest {
     private fun check(function: KibbleFunction, parameters: List<Pair<String, String>>, type: String) {
         Assert.assertEquals(function.parameters.size, parameters.size)
         Assert.assertEquals(function.type, type)
-        println("function.toSource() = ${function.toSource()}")
         parameters.forEachIndexed { p, (first, second) ->
             val functionParam = function.parameters[p]
             Assert.assertEquals(functionParam.name, first)
-            Assert.assertEquals(functionParam.type?.name, second)
+            Assert.assertEquals(functionParam.type?.toString(), second)
         }
     }
 }

@@ -10,7 +10,7 @@ class CritterField(val name: String, val type: String) : AnnotationHolder,/* Com
         val NUMERIC_TYPES =
                 listOf("Float", "Double", "Long", "Integer", "Byte", "Short", "Number")
                 .map { listOf(it, "${it}?", "java.lang.${it}", "java.lang.${it}?", "kotlin.${it}", "kotlin.${it}?") }
-                .flatMap { it }
+                .flatMap { it } + "Int"
 
         val CONTAINER_TYPES =
                 listOf("List", "Set")
@@ -24,7 +24,7 @@ class CritterField(val name: String, val type: String) : AnnotationHolder,/* Com
 
     val parameterTypes = mutableListOf<String>()
 
-    override val annotations = listOf<CritterAnnotation>()
+    override val annotations = mutableListOf<CritterAnnotation>()
 
     var isStatic = false
 
@@ -36,7 +36,7 @@ class CritterField(val name: String, val type: String) : AnnotationHolder,/* Com
     lateinit var fullyQualifiedType: String
     override var visibility: Visibility = PUBLIC
 
-    fun isContainer() = type in CritterField.CONTAINER_TYPES
+    fun isContainer() = type.substringBefore("<") in CritterField.CONTAINER_TYPES
 
     fun isNumeric() = CritterField.NUMERIC_TYPES.contains(type)
 

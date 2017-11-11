@@ -3,7 +3,7 @@ package com.antwerkz.critter
 import com.antwerkz.critter.Visibility.PUBLIC
 import org.mongodb.morphia.annotations.Embedded
 
-abstract class CritterClass(var pkgName: String?, var name: String) : AnnotationHolder, Visible {
+abstract class CritterClass(var pkgName: String? = null, var name: String) : AnnotationHolder, Visible {
     val qualifiedName: String by lazy {
         pkgName?.let { "${pkgName}.${name}" } ?: name
     }
@@ -22,6 +22,13 @@ abstract class CritterClass(var pkgName: String?, var name: String) : Annotation
 class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf<String, Any>()) {
 
     var klass: Class<out Annotation>? = null
+
+    init {
+        if (name.contains(".")) {
+            @Suppress("UNCHECKED_CAST")
+            klass = Class.forName(name) as Class<out Annotation>?
+        }
+    }
 
     fun matches(aClass: Class<out Annotation>): Boolean {
         return aClass == klass || aClass.name == name
