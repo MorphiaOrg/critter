@@ -4,14 +4,16 @@ import com.antwerkz.critter.CritterAnnotation
 import com.antwerkz.critter.CritterClass
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.Visibility
-import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleProperty
 import com.antwerkz.kibble.model.TypeParameter
 
 @Suppress("UNCHECKED_CAST")
-class KotlinClass(val context: KibbleContext, pkgName: String?, name: String, val source: KibbleClass)
+class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
     : CritterClass(pkgName, name) {
+
+    constructor(source: KibbleClass): this(source.file.pkgName, source.name, source)
+
     override val annotations = mutableListOf<CritterAnnotation>()
     override val fields: List<CritterField> by lazy {
         listProperties(source).map { property: KibbleProperty ->
@@ -20,7 +22,6 @@ class KotlinClass(val context: KibbleContext, pkgName: String?, name: String, va
                     field.fullParameterTypes.add(typeParameter.type.toString())
                 }
                 field.parameterizedType = property.type.toString()
-                field.fullyQualifiedType = property.type!!.fqcn
                 field.annotations += property.annotations.map {
                     val fqcn = it.type.fqcn
                     CritterAnnotation(fqcn, it.arguments)}
@@ -35,11 +36,11 @@ class KotlinClass(val context: KibbleContext, pkgName: String?, name: String, va
         type?.let { current ->
             list.addAll(current.properties)
             current.superType?.let {
-                list.addAll(listProperties(context.resolve(it)))
+                list.addAll(listProperties(source.file.context.resolve(it)))
             }
 
             list += current.superTypes
-                    .mapNotNull { context.resolve(it) }
+                    .mapNotNull { source.file.context.resolve(it) }
                     .map { listProperties(it) }
                     .flatMap { it }
 
@@ -68,8 +69,10 @@ class KotlinClass(val context: KibbleContext, pkgName: String?, name: String, va
     }
 
     override fun lastModified() = (listOf(source.superType) + source.superTypes)
-            .mapNotNull { source.file.context.resolve(it!!)?.file?.sourceTimestamp ?: -1L }
-            .max()?.toLong() ?: 0L
+            .filterNotNull()
+            .map { source.file.context.resolve(it)?.file?.sourceTimestamp ?: -1L }
+            .max()
+            ?: 0L
 
     override fun toString(): String {
         return "KotlinClass(${source.name})"

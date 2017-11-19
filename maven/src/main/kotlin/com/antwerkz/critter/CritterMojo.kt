@@ -1,8 +1,6 @@
 package com.antwerkz.critter
 
-import com.antwerkz.critter.java.JavaBuilder
 import com.antwerkz.critter.java.JavaClass
-import com.antwerkz.critter.kotlin.KotlinBuilder
 import com.antwerkz.critter.kotlin.KotlinParser
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
@@ -73,10 +71,10 @@ class CritterMojo : AbstractMojo() {
         when (outputType) {
             "java" -> {
                 val builder = JavaBuilder(context)
-                context.classes.values.forEach { builder.build(outputDirectory, it) }
+                builder.build(outputDirectory)
             }
             "kotlin" -> {
-                val builder = KotlinBuilder(context)
+                val builder = com.antwerkz.critter.kotlin.KotlinBuilder(context)
                 builder.build(outputDirectory)
             }
         }

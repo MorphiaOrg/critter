@@ -32,9 +32,9 @@ class CritterField(val name: String, val type: String) : AnnotationHolder,/* Com
 
     var stringLiteralInitializer: String? = null
 
-    lateinit var parameterizedType: String
-    lateinit var fullyQualifiedType: String
     override var visibility: Visibility = PUBLIC
+
+    var parameterizedType = type
 
     fun isContainer() = type.substringBefore("<") in CritterField.CONTAINER_TYPES
 
@@ -49,7 +49,7 @@ class CritterField(val name: String, val type: String) : AnnotationHolder,/* Com
     }
 
     override fun toString(): String {
-        return "CritterField(name='$name', type='$type', parameterizedType='$parameterizedType', fullyQualifiedType='$fullyQualifiedType')"
+        return "CritterField(name='$name', type='$type', parameterizedType='$fullParameterTypes')"
     }
 
 }

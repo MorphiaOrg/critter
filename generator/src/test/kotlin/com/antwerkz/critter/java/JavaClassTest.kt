@@ -15,51 +15,69 @@ import org.testng.annotations.Test
 import java.io.File
 
 class JavaClassTest {
-    lateinit var critterContext: CritterContext
-    val files = File("../tests/java/src/main/java/").walkTopDown()
-            .filter { it.name.endsWith(".java") }
-
-    val directory = File("target/javaClassTest/")
-
     @BeforeTest
     fun scan() {
-        critterContext = CritterContext(force = true).also { context ->
-            files.forEach { context.add(JavaClass(context, it)) }
-        }
-        val builder = JavaBuilder(critterContext)
-        critterContext.classes.values.forEach {
-            builder.build(directory, it)
-        }
+    }
+
+    @Test
+    fun parents() {
+        val context = CritterContext(force = true)
+
+        context.add(JavaClass(context, File("../tests/java/src/main/java/com/antwerkz/critter/test/AbstractPerson.java")))
+        context.add(JavaClass(context, File("../tests/java/src/main/java/com/antwerkz/critter/test/Person.java")))
+        val personClass = context.resolve("com.antwerkz.critter.test", "Person") as JavaClass
+
+        val directory = File("target/parentTest/")
+
+        JavaBuilder(context).build(directory)
+
+        val criteriaFiles = list(directory)
+
+        validatePersonCriteria(personClass, criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource)
     }
 
     @Test
     fun build() {
-        val personClass = critterContext.resolve("com.antwerkz.critter.test", "Person")
-        Assert.assertNotNull(personClass)
-        personClass as JavaClass
+        val files = File("../tests/java/src/main/java/")
+                .walkTopDown()
+                .filter { it.name.endsWith(".java") }
+
+        val directory = File("target/javaClassTest/")
+        val context = CritterContext(force = true)
+
+        files.forEach { context.add(JavaClass(context, it)) }
+        JavaBuilder(context)
+                .build(directory)
+
+        val personClass = context.resolve("com.antwerkz.critter.test", "Person") as JavaClass
         Assert.assertEquals(personClass.fields.size, 4)
 
-        val criteriaFiles = directory.walkTopDown()
-                .filter { it.name.endsWith(".java") }
-                .map { Roaster.parse(it) }
-                .toList()
+        val criteriaFiles = list(directory)
 
-        validatePersonCriteria(criteriaFiles)
+        validatePersonCriteria(personClass, criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource)
         validateAddressCriteria(criteriaFiles)
         validateInvoiceCriteria(criteriaFiles)
 
     }
 
-    private fun validatePersonCriteria(criteriaFiles: List<JavaType<*>>) {
-        val personCriteria = criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource
-        val personClass = (critterContext.resolve("com.antwerkz.critter.test", "Person")!! as JavaClass)
+    private fun list(directory: File): List<JavaType<*>> {
+        return directory.walkTopDown()
+                .filter { it.name.endsWith(".java") }
+                .map { Roaster.parse(it) }
+                .toList()
+    }
+
+    private fun validatePersonCriteria(personClass: JavaClass, personCriteria: JavaClassSource) {
 
         shouldImport(personCriteria, ObjectId::class.java.name)
         shouldNotImport(personCriteria, "com.antwerkz.critter.test.AbstractPerson")
         shouldImport(personCriteria, "com.antwerkz.critter.test.Person")
 
         val fields = personClass.fields
-        Assert.assertEquals(personCriteria.fields.size, fields.size)
+        Assert.assertEquals(personCriteria.fields.size, fields.size,
+                "Criteria fields: ${personCriteria.fields}.\n person fields: ${fields.joinToString("\n")}")
+        val names = personCriteria.fields.map { it.name }.sortedBy { it }
+        Assert.assertEquals(names, listOf("age", "first", "last", "objectId"), "Found instead:  $names")
         fields.forEach {
             val field = personCriteria.getField(it.name)
             val stringInitializer = field.stringInitializer
@@ -70,7 +88,7 @@ class JavaClassTest {
 
         fields.forEach { field ->
             val functions = personCriteria.methods.filter { it.name == field.name }
-            Assert.assertEquals(functions.size, 2)
+            Assert.assertEquals(functions.size, 2, "Can't find methods named ${field.name}")
             Assert.assertEquals(functions[0].parameters.size, 0)
             Assert.assertEquals(functions[1].parameters.size, 1)
         }
@@ -80,20 +98,20 @@ class JavaClassTest {
 
     private fun validatePersonUpdater(updater: JavaClassSource) {
         var functions = updater.getMethods("updateAll")
-        check(functions[0], listOf<Pair<String, String>>(), "UpdateResults")
+        check(functions[0], listOf(), "UpdateResults")
         check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
 
         functions = updater.getMethods("updateFirst")
-        check(functions[0], listOf<Pair<String, String>>(), "UpdateResults")
-        check(functions[1], listOf("wc" to "com.mongodb.WriteConcern"), "UpdateResults")
+        check(functions[0], listOf(), "UpdateResults")
+        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
 
         functions = updater.getMethods("upsert")
-        check(functions[0], listOf<Pair<String, String>>(), "UpdateResults")
-        check(functions[1], listOf("wc" to "com.mongodb.WriteConcern"), "UpdateResults")
+        check(functions[0], listOf(), "UpdateResults")
+        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
 
         functions = updater.getMethods("remove")
-        check(functions[0], listOf<Pair<String, String>>(), "WriteResult")
-        check(functions[1], listOf("wc" to "com.mongodb.WriteConcern"), "WriteResult")
+        check(functions[0], listOf(), "WriteResult")
+        check(functions[1], listOf("wc" to "WriteConcern"), "WriteResult")
 
         functions = updater.getMethods("age")
         Assert.assertEquals(1, functions.size)
@@ -101,16 +119,16 @@ class JavaClassTest {
 
         functions = updater.getMethods("unsetAge")
         Assert.assertEquals(1, functions.size)
-        check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
+        check(functions[0], listOf(), "PersonUpdater")
 
         functions = updater.getMethods("incAge")
         Assert.assertEquals(2, functions.size)
-        check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
+        check(functions[0], listOf(), "PersonUpdater")
         check(functions[1], listOf("value" to "java.lang.Long"), "PersonUpdater")
 
         functions = updater.getMethods("decAge")
         Assert.assertEquals(2, functions.size)
-        check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
+        check(functions[0], listOf(), "PersonUpdater")
         check(functions[1], listOf("value" to "java.lang.Long"), "PersonUpdater")
 
         listOf("first", "last").forEach {
@@ -120,7 +138,7 @@ class JavaClassTest {
 
             functions = updater.getMethods("unset${it.capitalize()}")
             Assert.assertEquals(1, functions.size, "Should have found unset${it.capitalize()}")
-            check(functions[0], listOf<Pair<String, String>>(), "PersonUpdater")
+            check(functions[0], listOf(), "PersonUpdater")
         }
     }
 

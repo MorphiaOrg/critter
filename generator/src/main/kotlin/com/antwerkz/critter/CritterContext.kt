@@ -6,9 +6,28 @@ import java.util.HashMap
 class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false) {
     val classes = HashMap<String, CritterClass>()
 
+    fun shouldGenerate(source: Long?, output: Long?): Boolean {
+        return force || source == null || output == null || output < source
+    }
+
     fun add(critterClass: CritterClass) {
         classes.put("${critterClass.pkgName}.${critterClass.name}", critterClass)
     }
+
+/*
+    fun lookup(name: String): CritterClass? {
+        var className: String
+        var pkgName: String = null
+
+        if (name.contains(".")) {
+
+        } else {
+            className = name
+        }
+
+        return resolve(pkgName, className)
+    }
+*/
 
     fun resolve(currentPkg: String? = null, name: String): CritterClass? {
         return classes[name] ?: currentPkg?.let { classes["$currentPkg.$name"] }

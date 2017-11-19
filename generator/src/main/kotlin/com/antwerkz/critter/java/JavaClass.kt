@@ -20,47 +20,40 @@ import org.jboss.forge.roaster.model.Visibility.PUBLIC as rPUBLIC
 
 class JavaClass(val context: CritterContext, val sourceFile: File,
                 val sourceClass: JavaClassSource = Roaster.parse(sourceFile) as JavaClassSource)
-    : CritterClass(sourceClass.name, sourceClass.`package`), Visible {
+    : CritterClass(sourceClass.`package`, sourceClass.name), Visible {
 
     val superClass: CritterClass? by lazy {
         context.resolve(sourceClass.`package`, sourceClass.superType)
     }
 
     override val annotations = mutableListOf<CritterAnnotation>()
-/*
     override val fields: List<CritterField> by lazy {
 
-        sourceClass.fields
-                .filter { f -> !f.isStatic }
-                .map { f -> JavaField(context, f) }
-                .sortedBy { f -> f.name }
-                .toMutableList()
-    }
-*/
-    override val fields: List<CritterField> by lazy {
-        listFields(sourceClass).map { javaField ->
+        val parent = context.resolve(name = sourceClass.superType)
+        (parent?.fields ?: listOf()) + listFields(sourceClass).map { javaField ->
             CritterField(javaField.name, javaField.type.qualifiedName).also { field ->
                 javaField.type?.typeArguments?.forEach {
                     field.shortParameterTypes.add(it.name)
                     field.fullParameterTypes.add(it.name)
                 }
                 field.annotations += javaField.annotations.map { ann ->
-                    CritterAnnotation(ann.name, ann.values.map { it.name to it.literalValue }.toMap())}
+                    CritterAnnotation(ann.name, ann.values.map { it.name to it.literalValue }.toMap())
+                }
             }
         }
                 .sortedBy(CritterField::name)
                 .toMutableList()
     }
 
-    private fun listFields(type: JavaClassSource?): List<FieldSource<JavaClassSource>> {
-        return type?.let { current ->
-            mutableListOf<FieldSource<JavaClassSource>>() + current.fields
-        } ?: listOf<FieldSource<JavaClassSource>>()
+    fun listFields(type: JavaClassSource?): List<FieldSource<JavaClassSource>> {
+        return if (type != null && type.name != "java.lang.Object") {
+            mutableListOf<FieldSource<JavaClassSource>>() + type.fields
+        } else listOf()
     }
 
     init {
         annotations += sourceClass.annotations.map { ann ->
-            CritterAnnotation(ann.name, ann.values.map { Pair<String, Any>(it.name, it.stringValue)}
+            CritterAnnotation(ann.qualifiedName, ann.values.map { Pair<String, Any>(it.name, it.stringValue) }
                     .toMap())
         }
         visibility = when (sourceClass.visibility) {
@@ -74,7 +67,12 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
     }
 
     override fun lastModified(): Long {
-        return Math.min(sourceFile.lastModified(), superClass?.lastModified() ?: -1)
+        return Math.min(sourceFile.lastModified(), superClass?.lastModified() ?: Long.MAX_VALUE)
     }
+
+    override fun toString(): String {
+        return "JavaClass<$name>"
+    }
+
 }
 

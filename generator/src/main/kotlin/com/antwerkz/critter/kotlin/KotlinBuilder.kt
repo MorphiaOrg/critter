@@ -40,44 +40,33 @@ class KotlinBuilder(val context: CritterContext) {
         val kibbleFile = KibbleFile("${source.name}Criteria.kt", criteriaPkg)
         val outputFile = kibbleFile.outputFile(directory)
 
-        if (!context.force && source.lastModified() < outputFile.lastModified()) {
-            return
+        if (context.shouldGenerate(source.lastModified(), outputFile.lastModified())) {
+            val criteriaClass = kibbleFile.addClass("${source.name}Criteria")
+            val companion = criteriaClass.addCompanionObject()
+
+            source.fields.forEach { field ->
+                companion.addProperty(field.name, modality = FINAL, initializer = field.mappedName())
+                addField(source, criteriaClass, field)
+            }
+
+            val primary = criteriaClass.constructor
+            if (!source.hasAnnotation(Embedded::class.java)) {
+                criteriaClass.addSuperType("${BaseCriteria::class.java.name}<${source.qualifiedName}>")
+                criteriaClass.superCallArgs = listOf("ds", "${source.name}::class.java")
+                primary?.addParameter("ds", Datastore::class.java.name)
+            } else {
+                criteriaClass.addProperty("query", "org.mongodb.morphia.query.Query<*>", mutability = VAR, visibility = PRIVATE, constructorParam = true)
+                criteriaClass.addProperty("prefix", "String", mutability = VAR, visibility = PRIVATE, constructorParam = true)
+
+                kibbleFile.addImport(Query::class.java)
+                criteriaClass.initBlock = "this.prefix = prefix + \".\""
+            }
+
+            buildUpdater(source, criteriaClass)
+            outputFile.parentFile.mkdirs()
+            kibbleFile.toSource(SourceWriter())
+                    .toFile(outputFile)
         }
-
-        val criteriaClass = kibbleFile.addClass("${source.name}Criteria")
-
-//        kibbleFile.addImport(source.pkgName + "." + source.name)
-
-//        kibbleFile.addImport(Datastore::class.java)
-//        kibbleFile.addImport(BaseCriteria::class.java)
-//        kibbleFile.addImport(TypeSafeFieldEnd::class.java)
-//        kibbleFile.addImport("${source.pkgName}.${source.name}")
-
-        val companion = criteriaClass.addCompanionObject()
-
-        source.fields.forEach { field ->
-            //            kibbleFile.addImport(field.type)
-            companion.addProperty(field.name, modality = FINAL, initializer = field.mappedName())
-            addField(source, criteriaClass, field)
-        }
-
-        val primary = criteriaClass.constructor
-        if (!source.hasAnnotation(Embedded::class.java)) {
-            criteriaClass.addSuperType("${BaseCriteria::class.java.name}<${source.qualifiedName}>")
-            criteriaClass.superCallArgs = listOf("ds", "${source.name}::class.java")
-            primary?.addParameter("ds", Datastore::class.java.name)
-        } else {
-            criteriaClass.addProperty("query", "org.mongodb.morphia.query.Query<*>", mutability = VAR, visibility = PRIVATE, constructorParam = true)
-            criteriaClass.addProperty("prefix", "String", mutability = VAR, visibility = PRIVATE, constructorParam = true)
-
-            kibbleFile.addImport(Query::class.java)
-            criteriaClass.initBlock = "this.prefix = prefix + \".\""
-        }
-
-        buildUpdater(source, criteriaClass)
-        outputFile.parentFile.mkdirs()
-        kibbleFile.toSource(SourceWriter())
-                .toFile(outputFile)
     }
 
     private fun addField(source: CritterClass, criteriaClass: KibbleClass, field: CritterField) {
@@ -110,7 +99,7 @@ class KotlinBuilder(val context: CritterContext) {
         }
     }
 
-    fun buildUpdater(sourceClass: CritterClass, criteriaClass: KibbleClass) {
+    private fun buildUpdater(sourceClass: CritterClass, criteriaClass: KibbleClass) {
         val updaterType = "${sourceClass.name}Updater"
         criteriaClass.addFunction("updater", updaterType, "return $updaterType(this)")
 

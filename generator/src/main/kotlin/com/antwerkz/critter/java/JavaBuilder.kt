@@ -12,7 +12,6 @@ import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.mongodb.morphia.Datastore
 import org.mongodb.morphia.annotations.Embedded
-import org.mongodb.morphia.annotations.Entity
 import org.mongodb.morphia.annotations.Id
 import org.mongodb.morphia.annotations.Reference
 import org.mongodb.morphia.query.Criteria
@@ -22,26 +21,63 @@ import org.mongodb.morphia.query.QueryImpl
 import org.mongodb.morphia.query.UpdateOperations
 import org.mongodb.morphia.query.UpdateResults
 import java.io.File
+import java.io.PrintWriter
 import org.jboss.forge.roaster.model.Visibility.PACKAGE_PRIVATE as rPACKAGE_PRIVATE
 import org.jboss.forge.roaster.model.Visibility.PRIVATE as rPRIVATE
 import org.jboss.forge.roaster.model.Visibility.PROTECTED as rPROTECTED
 import org.jboss.forge.roaster.model.Visibility.PUBLIC as rPUBLIC
 
-class JavaBuilder(val context: CritterContext, val sourceClass: JavaClassSource = Roaster.create(JavaClassSource::class.java)) {
+class JavaBuilder(val context: CritterContext) {
 
-    fun build(directory: File, source: CritterClass) {
-        val criteriaClass = Roaster.create(JavaClassSource::class.java)
-                .setPackage(source.pkgName + ".criteria")
-                .setName(source.name + "Criteria")
+    fun build(directory: File) {
+        context.classes.values.forEach { source ->
+            val criteriaClass = Roaster.create(JavaClassSource::class.java)
+                    .setPackage(source.pkgName + ".criteria")
+                    .setName(source.name + "Criteria")
 
-        val outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
-        if (!source.hasAnnotation(Entity::class.java) && !source.hasAnnotation(Embedded::class.java) ||
-                !context.force && source.lastModified() < outputFile.lastModified()) {
-            return
+            val outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
+            if (context.shouldGenerate(source.lastModified(), outputFile.lastModified())) {
+                extractFields(source as JavaClass, criteriaClass)
+
+                if (!source.hasAnnotation(Embedded::class.java)) {
+                    criteriaClass.superType = """${BaseCriteria::class.java.name}<${source.qualifiedName}>"""
+                    criteriaClass.addMethod()
+                            .setConstructor(true)
+                            .setPublic()
+                            .setBody("super(ds, ${source.name}.class);")
+                            .addParameter(Datastore::class.java, "ds")
+                } else {
+                    criteriaClass.addField()
+                            .setType(Query::class.java)
+                            .setName("query")
+                            .setPrivate()
+                    criteriaClass.addField()
+                            .setType("String")
+                            .setName("prefix")
+                            .setPrivate()
+
+                    criteriaClass.addMethod().apply {
+                        isConstructor = true
+                        setPublic()
+                        body = """this.query = query;
+    this.prefix = prefix + ".";"""
+                        addParameter(Query::class.java, "query")
+                        addParameter(String::class.java, "prefix")
+                    }
+                }
+
+                buildUpdater(source, criteriaClass)
+
+                generate(outputFile, criteriaClass)
+            }
+
         }
+    }
 
+    private fun extractFields(source: JavaClass, criteriaClass: JavaClassSource) {
         source.fields.forEach { field ->
-            criteriaClass.addField(field.name)
+            criteriaClass.addField()
+                    .setName(field.name)
                     .setPublic()
                     .setStatic(true)
                     .setFinal(true)
@@ -50,35 +86,11 @@ class JavaBuilder(val context: CritterContext, val sourceClass: JavaClassSource 
 
             addField(source, criteriaClass, field)
         }
-
-        if (!source.hasAnnotation(Embedded::class.java)) {
-            criteriaClass.superType = """${BaseCriteria::class.java.name}<${source.qualifiedName}>"""
-            criteriaClass.addMethod()
-                    .setConstructor(true)
-                    .setPublic()
-                    .setBody("super(ds, ${source.name}.class);")
-                    .addParameter(Datastore::class.java, "ds")
-        } else {
-            criteriaClass.addField("query")
-                    .setType(Query::class.java)
-                    .setPrivate()
-            criteriaClass.addField("prefix")
-                    .setType("String")
-                    .setPrivate()
-
-            criteriaClass.addMethod().apply {
-                isConstructor = true
-                setPublic()
-                body = """this.query = query;
-this.prefix = prefix + ".";"""
-                addParameter(Query::class.java, "query")
-                addParameter(String::class.java, "prefix")
-            }
+/*
+        source.superClass?.let {
+            extractFields(it as JavaClass, criteriaClass)
         }
-
-        buildUpdater(source, criteriaClass)
-
-        generate()
+*/
     }
 
     private fun buildUpdater(source: CritterClass, criteriaClass: JavaClassSource) {
@@ -96,9 +108,11 @@ this.prefix = prefix + ".";"""
             body = "return new $type();"
         }
 
-        val updater: JavaClassSource = criteriaClass.addNestedType(type)
-        updater.addField("updateOperations").apply {
-            setType("UpdateOperations<${sourceClass.name}>")
+        val updater: JavaClassSource = criteriaClass.addNestedType(JavaClassSource::class.java)
+        updater.name = type
+        updater.addField().apply {
+            name = "updateOperations"
+            setType("UpdateOperations<${source.name}>")
             setLiteralInitializer("ds.createUpdateOperations(${source.name}.class);")
         }
 
@@ -117,7 +131,7 @@ this.prefix = prefix + ".";"""
         }
 
         updater.addMethod().apply {
-            addParameter(WriteConcern::class.java, "wc")
+            addParameter(WriteConcern::class.java.simpleName, "wc")
 
             setPublic()
             name = "updateAll"
@@ -126,7 +140,7 @@ this.prefix = prefix + ".";"""
         }
 
         updater.addMethod().apply {
-            addParameter(WriteConcern::class.java, "wc")
+            addParameter(WriteConcern::class.java.simpleName, "wc")
 
             setPublic()
             name = "updateFirst"
@@ -142,7 +156,7 @@ this.prefix = prefix + ".";"""
         }
 
         updater.addMethod().apply {
-            addParameter(WriteConcern::class.java, "wc")
+            addParameter(WriteConcern::class.java.simpleName, "wc")
 
             setPublic()
             name = "upsert"
@@ -153,12 +167,12 @@ this.prefix = prefix + ".";"""
         updater.addMethod().apply {
             setPublic()
             name = "remove"
-            setReturnType(WriteResult::class.java)
+            setReturnType(WriteResult::class.java.simpleName)
             body = "return ds.delete(query());"
         }
 
         updater.addMethod().apply {
-            addParameter(WriteConcern::class.java, "wc")
+            addParameter(WriteConcern::class.java.simpleName, "wc")
 
             setPublic()
             name = "remove"
@@ -172,7 +186,7 @@ this.prefix = prefix + ".";"""
                     field.parameterTypes
                             .forEach { criteriaClass.addImport(it) }
 
-                    criteriaClass.addImport(field.fullyQualifiedType)
+                    criteriaClass.addImport(field.type)
                     if (!field.hasAnnotation(Id::class.java)) {
                         updater.addMethod().apply {
                             addParameter(field.parameterizedType, "value")
@@ -194,8 +208,6 @@ this.prefix = prefix + ".";"""
                         containers(type, updater, field)
                     }
                 }
-
-        criteriaClass.addNestedType(updater)
     }
 
     private fun numerics(type: String, updater: JavaClassSource, field: CritterField) {
@@ -310,7 +322,7 @@ return this;"""
         return this;"""
                 setPublic()
                 setReturnType(criteriaClass.qualifiedName)
-                addParameter(field.fullyQualifiedType, "reference")
+                addParameter(field.type, "reference")
             }
         } else if (field.hasAnnotation(Embedded::class.java)) {
             criteriaClass.addImport(Criteria::class.java)
@@ -319,35 +331,35 @@ return this;"""
                 criteriaType = field.shortParameterTypes[0] + "Criteria"
                 criteriaClass.addImport("${criteriaClass.`package`}.$criteriaType")
             } else {
-                criteriaType = field.fullyQualifiedType + "Criteria"
-                criteriaClass.addImport(field.fullyQualifiedType)
+                criteriaType = field.type + "Criteria"
+                criteriaClass.addImport(field.type)
             }
             criteriaClass.addMethod().apply {
-                name = source.name
+                name = field.name
                 body = """return new $criteriaType(query, "${source.name}");"""
                 setPublic()
                 setReturnType(criteriaType)
             }
         } else if (!field.isStatic) {
-            val qualifiedName = sourceClass.qualifiedName
-            criteriaClass.addImport(qualifiedName)
-            criteriaClass.addImport(field.fullyQualifiedType)
+//            val qualifiedName = field.fullyQualifiedType
+//            criteriaClass.addImport(qualifiedName)
+            criteriaClass.addImport(field.type)
             criteriaClass.addImport(Criteria::class.java)
             criteriaClass.addImport(FieldEndImpl::class.java)
             criteriaClass.addImport(QueryImpl::class.java)
-            var fieldName = """"${source.name}""""
-            if (field.hasAnnotation(Embedded::class.java) || context.isEmbedded(name = field.fullyQualifiedType)) {
+            var fieldName = """"${field.name}""""
+            if (field.hasAnnotation(Embedded::class.java) || context.isEmbedded(name = field.type)) {
                 fieldName = "prefix + " + fieldName
             }
             criteriaClass.addMethod().apply {
-                name = source.name
-                body = """return new TypeSafeFieldEnd<${criteriaClass.name}, ${field.type}>(this, query, $fieldName);"""
+                name = field.name
+                body = """return new TypeSafeFieldEnd<>(this, query, $fieldName);"""
                 setPublic()
                 setReturnType("${TypeSafeFieldEnd::class.java.name}<${criteriaClass.qualifiedName}, ${field.type}>")
             }
             criteriaClass.addMethod().apply {
-                name = source.name
-                body = "return new TypeSafeFieldEnd<${criteriaClass.name}, ${field.type}>(this, query, $fieldName).equal(value);"
+                name = field.name
+                body = "return new TypeSafeFieldEnd<>(this, query, $fieldName).equal(value);"
                 setPublic()
                 setReturnType(Criteria::class.java)
                 addParameter(field.type, "value")
@@ -355,10 +367,8 @@ return this;"""
         }
     }
 
-    private fun generate() {
-//        outputFile.parentFile.mkdirs()
-//        PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toSource()) }
+    private fun generate(outputFile: File, criteriaClass: JavaClassSource) {
+        outputFile.parentFile.mkdirs()
+        PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toString()) }
     }
-
 }
-
