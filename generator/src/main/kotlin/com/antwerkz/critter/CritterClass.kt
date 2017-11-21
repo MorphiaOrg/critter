@@ -19,7 +19,7 @@ abstract class CritterClass(var pkgName: String? = null, var name: String) : Ann
     abstract fun lastModified(): Long
 }
 
-class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf<String, Any>()) {
+class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf()) {
 
     var klass: Class<out Annotation>? = null
 

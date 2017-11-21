@@ -34,7 +34,7 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
             CritterField(javaField.name, javaField.type.qualifiedName).also { field ->
                 javaField.type?.typeArguments?.forEach {
                     field.shortParameterTypes.add(it.name)
-                    field.fullParameterTypes.add(it.name)
+                    field.fullParameterTypes.add(it.qualifiedName)
                 }
                 field.annotations += javaField.annotations.map { ann ->
                     CritterAnnotation(ann.name, ann.values.map { it.name to it.literalValue }.toMap())

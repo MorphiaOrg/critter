@@ -84,16 +84,12 @@ class JavaBuilder(val context: CritterContext) {
                     .setStringInitializer(field.mappedName())
                     .setType(String::class.java)
 
-            addField(source, criteriaClass, field)
+            addFieldMethods(source, criteriaClass, field)
         }
-/*
-        source.superClass?.let {
-            extractFields(it as JavaClass, criteriaClass)
-        }
-*/
     }
 
     private fun buildUpdater(source: CritterClass, criteriaClass: JavaClassSource) {
+        criteriaClass.addImport(source.qualifiedName)
         criteriaClass.addImport(Query::class.java)
         criteriaClass.addImport(UpdateOperations::class.java)
         criteriaClass.addImport(UpdateResults::class.java)
@@ -314,7 +310,7 @@ return this;"""
         }
     }
 
-    private fun addField(source: CritterClass, criteriaClass: JavaClassSource, field: CritterField) {
+    private fun addFieldMethods(source: CritterClass, criteriaClass: JavaClassSource, field: CritterField) {
         if (source.hasAnnotation(Reference::class.java)) {
             criteriaClass.addMethod().apply {
                 name = source.name
@@ -341,9 +337,10 @@ return this;"""
                 setReturnType(criteriaType)
             }
         } else if (!field.isStatic) {
-//            val qualifiedName = field.fullyQualifiedType
-//            criteriaClass.addImport(qualifiedName)
             criteriaClass.addImport(field.type)
+            field.fullParameterTypes.forEach {
+                criteriaClass.addImport(it)
+            }
             criteriaClass.addImport(Criteria::class.java)
             criteriaClass.addImport(FieldEndImpl::class.java)
             criteriaClass.addImport(QueryImpl::class.java)

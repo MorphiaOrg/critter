@@ -23,7 +23,7 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
                 }
                 field.parameterizedType = property.type.toString()
                 field.annotations += property.annotations.map {
-                    val fqcn = it.type.fqcn
+                    val fqcn = source.file.resolve(it.type).fqcn
                     CritterAnnotation(fqcn, it.arguments)}
             }
         }
@@ -64,7 +64,7 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
             else -> Visibility.PUBLIC
         }
         annotations += source.annotations.map {
-            CritterAnnotation(it.type.fqcn, it.arguments)
+            CritterAnnotation(source.file.resolve(it.type).fqcn, it.arguments)
         }
     }
 

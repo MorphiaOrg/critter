@@ -6,6 +6,7 @@ import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFunction
 import com.antwerkz.kibble.model.KibbleObject
 import com.antwerkz.kibble.model.KibbleProperty
+import com.mongodb.WriteConcern
 import org.bson.types.ObjectId
 import org.mongodb.morphia.annotations.Id
 import org.mongodb.morphia.annotations.Property
@@ -134,37 +135,31 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
 
         functions = updater.getFunctions("updateAll")
         check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
+        check(functions[1], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
 
         functions = updater.getFunctions("updateFirst")
         check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
+        check(functions[1], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
 
         functions = updater.getFunctions("upsert")
         check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
+        check(functions[1], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
 
         functions = updater.getFunctions("remove")
         check(functions[0], listOf(), "WriteResult")
-        check(functions[1], listOf("wc" to "WriteConcern"), "WriteResult")
+        check(functions[1], listOf("wc" to WriteConcern::class.java.name), "WriteResult")
 
         functions = updater.getFunctions("age")
         Assert.assertEquals(1, functions.size)
-        check(functions[0], listOf("value" to "Long?"), "PersonUpdater")
+        check(functions[0], listOf("value" to "Long"), "PersonUpdater")
 
         functions = updater.getFunctions("unsetAge")
-        Assert.assertEquals(1, functions.size)
+        Assert.assertEquals(functions.size, 1)
         check(functions[0], listOf(), "PersonUpdater")
 
         functions = updater.getFunctions("incAge")
-        Assert.assertEquals(2, functions.size)
-        check(functions[0], listOf(), "PersonUpdater")
-        check(functions[1], listOf("value" to "Long?"), "PersonUpdater")
-
-        functions = updater.getFunctions("decAge")
-        Assert.assertEquals(2, functions.size)
-        check(functions[0], listOf(), "PersonUpdater")
-        check(functions[1], listOf("value" to "Long?"), "PersonUpdater")
+        Assert.assertEquals(functions.size, 1)
+        check(functions[0], listOf("value" to "Long"), "PersonUpdater")
 
         listOf("first", "last").forEach {
             functions = updater.getFunctions(it)
@@ -214,7 +209,8 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
 
     private fun check(function: KibbleFunction, parameters: List<Pair<String, String>>, type: String) {
         Assert.assertEquals(function.parameters.size, parameters.size)
-        Assert.assertEquals(function.type, type)
+        Assert.assertEquals(function.type.toString(), type)
+        
         parameters.forEachIndexed { p, (first, second) ->
             val functionParam = function.parameters[p]
             Assert.assertEquals(functionParam.name, first)

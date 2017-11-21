@@ -107,7 +107,7 @@ class KotlinBuilder(val context: CritterContext) {
         updater.addProperty("criteria", criteriaClass.name, visibility = PRIVATE, constructorParam = true)
         updater.addProperty("ds", visibility = PRIVATE, initializer = "criteria.datastore()")
         updater.addProperty("query", visibility = PRIVATE, initializer = "criteria.query")
-        updater.addProperty("updateOperations", visibility = PRIVATE,
+        updater.addProperty("updateOperations", visibility = PRIVATE, type = sourceClass.qualifiedName,
                 initializer = "ds.createUpdateOperations(${sourceClass.name}::class.java)")
 
         val queryFun = updater.addFunction("query", "org.mongodb.morphia.query.Query<${sourceClass.name}>",
