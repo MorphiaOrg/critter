@@ -29,6 +29,7 @@
                         </goals>
                         <configuration>
                             <force>true</force>
+                            <outputType>kotlin</outputType>
                         </configuration>
                     </execution>
                 </executions>

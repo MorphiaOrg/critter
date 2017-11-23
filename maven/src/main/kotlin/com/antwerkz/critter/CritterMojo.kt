@@ -1,5 +1,6 @@
 package com.antwerkz.critter
 
+import com.antwerkz.critter.java.JavaBuilder
 import com.antwerkz.critter.java.JavaClass
 import com.antwerkz.critter.kotlin.KotlinParser
 import org.apache.maven.plugin.AbstractMojo
@@ -28,8 +29,8 @@ class CritterMojo : AbstractMojo() {
     @Parameter(property = "critter.force", defaultValue = "false")
     private var force: Boolean = false
 
-    @Parameter(property = "critter.output.type", defaultValue = "kotlin")
-    private var outputType = "kotlin"
+    @Parameter(property = "critter.output.type", name="outputType", required = true)
+    lateinit var outputType: String
 
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
     private lateinit var project: MavenProject
