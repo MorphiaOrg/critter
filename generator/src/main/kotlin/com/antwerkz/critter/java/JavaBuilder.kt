@@ -37,8 +37,6 @@ class JavaBuilder(val context: CritterContext) {
 
             val outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
             if (context.shouldGenerate(source.lastModified(), outputFile.lastModified())) {
-                extractFields(source as JavaClass, criteriaClass)
-
                 if (!source.hasAnnotation(Embedded::class.java)) {
                     criteriaClass.superType = """${BaseCriteria::class.java.name}<${source.qualifiedName}>"""
                     criteriaClass.addMethod()
@@ -47,6 +45,10 @@ class JavaBuilder(val context: CritterContext) {
                             .setBody("super(ds, ${source.name}.class);")
                             .addParameter(Datastore::class.java, "ds")
                 } else {
+                    criteriaClass.addField()
+                            .setType(Datastore::class.java)
+                            .setName("ds")
+                            .setPrivate()
                     criteriaClass.addField()
                             .setType(Query::class.java)
                             .setName("query")
@@ -59,15 +61,18 @@ class JavaBuilder(val context: CritterContext) {
                     criteriaClass.addMethod().apply {
                         isConstructor = true
                         setPublic()
-                        body = """this.query = query;
-    this.prefix = prefix + ".";"""
+                        body = """
+                            this.ds = ds;
+                            this.query = query;
+                            this.prefix = prefix + ".";""".trimIndent()
+                        addParameter(Datastore::class.java, "ds")
                         addParameter(Query::class.java, "query")
                         addParameter(String::class.java, "prefix")
                     }
                 }
 
+                extractFields(source as JavaClass, criteriaClass)
                 buildUpdater(source, criteriaClass)
-
                 generate(outputFile, criteriaClass)
             }
 
@@ -104,7 +109,7 @@ class JavaBuilder(val context: CritterContext) {
             body = "return new $type();"
         }
 
-        val updater: JavaClassSource = criteriaClass.addNestedType(JavaClassSource::class.java)
+        val updater = criteriaClass.addNestedType(JavaClassSource::class.java)
         updater.name = type
         updater.addField().apply {
             name = "updateOperations"
@@ -116,14 +121,14 @@ class JavaBuilder(val context: CritterContext) {
             setPublic()
             name = "updateAll"
             setReturnType(UpdateResults::class.java)
-            body = "return ds.update(query(), updateOperations, false);"
+            body = "return ds.update(query, updateOperations, false);"
         }
 
         updater.addMethod().apply {
             setPublic()
             name = "updateFirst"
             setReturnType(UpdateResults::class.java)
-            body = "return ds.updateFirst(query(), updateOperations, false);"
+            body = "return ds.updateFirst(query, updateOperations, false);"
         }
 
         updater.addMethod().apply {
@@ -132,7 +137,7 @@ class JavaBuilder(val context: CritterContext) {
             setPublic()
             name = "updateAll"
             setReturnType(UpdateResults::class.java)
-            body = "return ds.update(query(), updateOperations, false, wc);"
+            body = "return ds.update(query, updateOperations, false, wc);"
         }
 
         updater.addMethod().apply {
@@ -141,14 +146,14 @@ class JavaBuilder(val context: CritterContext) {
             setPublic()
             name = "updateFirst"
             setReturnType(UpdateResults::class.java)
-            body = "return ds.updateFirst(query(), updateOperations, false, wc);"
+            body = "return ds.updateFirst(query, updateOperations, false, wc);"
         }
 
         updater.addMethod().apply {
             setPublic()
             name = "upsert"
             setReturnType(UpdateResults::class.java)
-            body = "return ds.update(query(), updateOperations, true);"
+            body = "return ds.update(query, updateOperations, true);"
         }
 
         updater.addMethod().apply {
@@ -157,14 +162,14 @@ class JavaBuilder(val context: CritterContext) {
             setPublic()
             name = "upsert"
             setReturnType(UpdateResults::class.java)
-            body = "return ds.update(query(), updateOperations, true, wc);"
+            body = "return ds.update(query, updateOperations, true, wc);"
         }
 
         updater.addMethod().apply {
             setPublic()
             name = "remove"
             setReturnType(WriteResult::class.java.simpleName)
-            body = "return ds.delete(query());"
+            body = "return ds.delete(query);"
         }
 
         updater.addMethod().apply {
@@ -173,7 +178,7 @@ class JavaBuilder(val context: CritterContext) {
             setPublic()
             name = "remove"
             setReturnType(WriteResult::class.java)
-            body = "return ds.delete(query(), wc);"
+            body = "return ds.delete(query, wc);"
         }
 
         source.fields

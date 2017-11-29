@@ -83,10 +83,7 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
         val criteria = Kibble.parse(listOf(directory))
                 .flatMap { it.classes }
                 .associateBy { it.name }
-        println("criteriaFiles = ${criteria}")
-        val childCriteria = criteria["ChildCriteria"]!!
-        println("childCriteria = ${childCriteria}")
-        val updater = childCriteria.classes.first { it.name == "ChildUpdater" }
+        val updater = criteria["ChildCriteria"]!!.classes.first { it.name == "ChildUpdater" }
         Assert.assertNotNull(updater.functions.firstOrNull { it.name == "incAge" })
         Assert.assertNotNull(updater.functions.firstOrNull { it.name == "addToNickNames" })
     }
@@ -130,24 +127,17 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
     }
 
     private fun validatePersonUpdater(updater: KibbleClass) {
-        var functions = updater.getFunctions("query")
-        check(functions[0], listOf(), "Query<Person>")
-
-        functions = updater.getFunctions("updateAll")
-        check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
+        var functions = updater.getFunctions("updateAll")
+        check(functions[0], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
 
         functions = updater.getFunctions("updateFirst")
-        check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
+        check(functions[0], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
 
         functions = updater.getFunctions("upsert")
-        check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
+        check(functions[0], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
 
         functions = updater.getFunctions("remove")
-        check(functions[0], listOf(), "WriteResult")
-        check(functions[1], listOf("wc" to WriteConcern::class.java.name), "WriteResult")
+        check(functions[0], listOf("wc" to WriteConcern::class.java.name), "WriteResult")
 
         functions = updater.getFunctions("age")
         Assert.assertEquals(1, functions.size)

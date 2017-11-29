@@ -16,6 +16,8 @@ abstract class CritterClass(var pkgName: String? = null, var name: String) : Ann
 
     override var visibility: Visibility = PUBLIC
 
+    abstract fun isAbstract(): Boolean
+
     abstract fun lastModified(): Long
 }
 

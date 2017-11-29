@@ -12,7 +12,7 @@ import com.antwerkz.kibble.model.TypeParameter
 class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
     : CritterClass(pkgName, name) {
 
-    constructor(source: KibbleClass): this(source.file.pkgName, source.name, source)
+    constructor(source: KibbleClass) : this(source.file.pkgName, source.name, source)
 
     override val annotations = mutableListOf<CritterAnnotation>()
     override val fields: List<CritterField> by lazy {
@@ -24,7 +24,8 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
                 field.parameterizedType = property.type.toString()
                 field.annotations += property.annotations.map {
                     val fqcn = source.file.resolve(it.type).fqcn
-                    CritterAnnotation(fqcn, it.arguments)}
+                    CritterAnnotation(fqcn, it.arguments)
+                }
             }
         }
                 .sortedBy(CritterField::name)
@@ -51,7 +52,7 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
             }
 */
         }
-        return             list
+        return list
 
     }
 
@@ -67,6 +68,8 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
             CritterAnnotation(source.file.resolve(it.type).fqcn, it.arguments)
         }
     }
+
+    override fun isAbstract() = source.isAbstract()
 
     override fun lastModified() = (listOf(source.superType) + source.superTypes)
             .filterNotNull()

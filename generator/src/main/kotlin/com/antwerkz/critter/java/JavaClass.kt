@@ -66,6 +66,8 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
 
     }
 
+    override fun isAbstract() = sourceClass.isAbstract
+
     override fun lastModified(): Long {
         return Math.min(sourceFile.lastModified(), superClass?.lastModified() ?: Long.MAX_VALUE)
     }
