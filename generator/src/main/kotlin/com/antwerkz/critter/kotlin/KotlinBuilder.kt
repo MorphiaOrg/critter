@@ -46,7 +46,7 @@ class KotlinBuilder(val context: CritterContext) {
             val companion = criteriaClass.addCompanionObject()
 
             criteriaClass.addProperty("datastore", Datastore::class.java.name, constructorParam = true)
-            criteriaClass.addProperty("query", "org.mongodb.morphia.query.Query<Any>", visibility = PRIVATE, constructorParam = true)
+            criteriaClass.addProperty("query", "org.mongodb.morphia.query.Query<*>", visibility = PRIVATE, constructorParam = true)
             val secondary = criteriaClass.addSecondaryConstructor()
             secondary.addParameter("ds", Datastore::class.java.name)
             secondary.addParameter("fieldName", "String?", "null")
@@ -119,7 +119,7 @@ class KotlinBuilder(val context: CritterContext) {
     }
 
     private fun buildUpdater(sourceClass: CritterClass, criteriaClass: KibbleClass) {
-        var updaterType = "${sourceClass.name}Updater"
+        val updaterType = "${sourceClass.name}Updater"
         criteriaClass.addFunction("updater", updaterType,
                 "return $updaterType(datastore.createUpdateOperations(${sourceClass.name}::class.java))")
 
