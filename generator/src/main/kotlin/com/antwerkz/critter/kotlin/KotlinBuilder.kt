@@ -5,9 +5,9 @@ import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.TypeSafeFieldEnd
 import com.antwerkz.critter.nameCase
-import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFile
+import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability.VAR
 import com.antwerkz.kibble.model.Visibility.PRIVATE
@@ -44,6 +44,7 @@ class KotlinBuilder(val context: CritterContext) {
             val criteriaClass = kibbleFile.addClass("${source.name}Criteria")
             criteriaClass.file.addImport(source.qualifiedName)
             val companion = criteriaClass.addCompanionObject()
+            criteriaClass.addAnnotation(Suppress::class.java, mapOf("value" to "\"UNCHECKED_CAST\""))
 
             criteriaClass.addProperty("datastore", Datastore::class.java.name, constructorParam = true)
             criteriaClass.addProperty("query", "org.mongodb.morphia.query.Query<*>", visibility = PRIVATE, constructorParam = true)
@@ -52,7 +53,7 @@ class KotlinBuilder(val context: CritterContext) {
             secondary.addParameter("fieldName", "String?", "null")
             secondary.addDelegationArguments("ds", "ds.find(${source.name}::class.java)", "fieldName")
 
-            addCriteriaMethods(criteriaClass)
+            addCriteriaMethods(source, criteriaClass)
             addPrefixProperty(criteriaClass)
 
             source.fields.forEach { field ->
@@ -62,16 +63,14 @@ class KotlinBuilder(val context: CritterContext) {
 
             buildUpdater(source, criteriaClass)
             outputFile.parentFile.mkdirs()
-            kibbleFile.toSource(SourceWriter())
+            kibbleFile.toSource()
                     .toFile(outputFile)
         }
     }
 
-    private fun addCriteriaMethods(criteriaClass: KibbleClass) {
-        val query = criteriaClass.addFunction("query", Query::class.java.name + "<T>", "return query as Query<T>")
-        query.addAnnotation(Suppress::class.java, mapOf("value" to "\"UNCHECKED_CAST\""))
-        query.addTypeParameter("T")
-
+    private fun addCriteriaMethods(source: CritterClass, criteriaClass: KibbleClass) {
+        criteriaClass.addFunction("query", Query::class.java.name + "<${source.name}>",
+                "return query as Query<${source.name}>")
         criteriaClass.addFunction("delete", WriteResult::class.java.name, """return datastore.delete(query, wc)""")
                 .addParameter("wc", WriteConcern::class.java.name, "datastore.defaultWriteConcern")
         criteriaClass.addFunction("or", CriteriaContainer::class.java.name, """return query.or(*criteria)""")
@@ -81,11 +80,9 @@ class KotlinBuilder(val context: CritterContext) {
     }
 
     private fun addPrefixProperty(criteriaClass: KibbleClass) {
-        criteriaClass.addProperty("prefix", mutability = VAR, visibility = PRIVATE, initializer = """
-                                    if (fieldName != null) fieldName + "." else ""
-                    """.trim())
-        criteriaClass.constructor
-                .addParameter("fieldName", "String?", "null")
+        criteriaClass.addProperty("prefix", mutability = VAR, visibility = PRIVATE,
+                initializer = """fieldName?.let { fieldName + "." } ?: "" """)
+        criteriaClass.constructor.addParameter("fieldName", "String?", "null")
     }
 
     private fun addField(source: CritterClass, criteriaClass: KibbleClass, field: CritterField) {
@@ -95,11 +92,17 @@ class KotlinBuilder(val context: CritterContext) {
                         """query.filter("${field.name} = ", reference)""")
                 function.addParameter("reference", field.type)
                 function.parameters.first().type
-                println("function = ${function}")
             }
             field.hasAnnotation(Embedded::class.java) -> {
-                criteriaClass.addFunction(field.name, criteriaClass.name,
-                        """return ${criteriaClass.name}(query, "${field.name}")""")
+                var type = KibbleType.from(field.type)
+                if(field.isContainer() && type.typeParameters.isNotEmpty()) {
+                    type = type.typeParameters.last().type
+                }
+
+                val pkg = context.criteriaPkg ?: type.pkgName + ".criteria"
+                val criteriaType = KibbleType.from("${pkg}.${type.className}Criteria")
+                criteriaClass.addFunction(field.name, criteriaType.fqcn,
+                        """return ${criteriaType.className}(datastore, query, "${field.name}")""")
             }
             else -> {
                 val name =
@@ -121,25 +124,24 @@ class KotlinBuilder(val context: CritterContext) {
     private fun buildUpdater(sourceClass: CritterClass, criteriaClass: KibbleClass) {
         val updaterType = "${sourceClass.name}Updater"
         criteriaClass.addFunction("updater", updaterType,
-                "return $updaterType(datastore.createUpdateOperations(${sourceClass.name}::class.java))")
+                """return $updaterType(datastore, query, datastore.createUpdateOperations(${sourceClass.name}::class.java),
+                    |if(prefix.isNotEmpty()) prefix else null)""".trimMargin())
 
         val updater = criteriaClass.addClass(name = updaterType)
-        if (!sourceClass.hasAnnotation(Embedded::class.java)) {
-            updater.addProperty("ds", visibility = PRIVATE, type = Datastore::class.java.name, constructorParam = true)
-            updater.addProperty("query", visibility = PRIVATE, type = Query::class.java.name + "<Any>", constructorParam = true)
-        }
-        updater.addProperty("updateOperations", visibility = PRIVATE, type = "org.mongodb.morphia.query.UpdateOperations<Any>",
+        updater.addProperty("ds", visibility = PRIVATE, type = Datastore::class.java.name, constructorParam = true)
+        updater.addProperty("query", visibility = PRIVATE, type = Query::class.java.name + "<*>", constructorParam = true)
+        updater.addProperty("updateOperations", visibility = PRIVATE, type = "org.mongodb.morphia.query.UpdateOperations<*>",
                 constructorParam = true)
         addPrefixProperty(updater)
 
         if (!sourceClass.hasAnnotation(Embedded::class.java)) {
-            updater.addFunction("updateAll", UPDATE_RESULTS, "return ds.update(query, updateOperations, false, wc)")
+            updater.addFunction("updateAll", UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)")
                     .addParameter("wc", WRITE_CONCERN, initializer = "ds.defaultWriteConcern")
 
-            updater.addFunction("updateFirst", UPDATE_RESULTS, "return ds.updateFirst(query, updateOperations, false, wc)")
+            updater.addFunction("updateFirst", UPDATE_RESULTS, "return ds.updateFirst(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)")
                     .addParameter("wc", WRITE_CONCERN, initializer = "ds.defaultWriteConcern")
 
-            updater.addFunction("upsert", UPDATE_RESULTS, "return ds.update(query, updateOperations, true, wc)")
+            updater.addFunction("upsert", UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, true, wc)")
                     .addParameter("wc", WRITE_CONCERN, initializer = "ds.defaultWriteConcern")
 
             updater.addFunction("remove", WriteResult::class.java.name, "return ds.delete(query, wc)")
@@ -169,43 +171,56 @@ class KotlinBuilder(val context: CritterContext) {
     private fun numerics(type: String, updater: KibbleClass, field: CritterField) {
         if (field.isNumeric()) {
             updater.addFunction("inc${field.name.nameCase()}", type, """
-                updateOperations.inc(prefix + "${field.name}")
+                updateOperations.inc(prefix + "${field.name}", value)
                 return this
                 """.trimIndent())
-                    .addParameter("value", field.type, "1")
+                    .addParameter("value", field.type, "1.to${field.type}()")
         }
     }
 
     private fun containers(type: String, updater: KibbleClass, field: CritterField) {
         if (field.isContainer()) {
 
-            updater.addFunction("addTo${field.name.nameCase()}", type, "updateOperations.add(prefix + \"${field.name}\", value)")
+            updater.addFunction("addTo${field.name.nameCase()}", type,
+                    """updateOperations.add(prefix + "${field.name}", value)
+                        |return this
+                    """.trimMargin())
                     .addParameter("value", field.parameterizedType)
 
             updater.addFunction("addTo${field.name.nameCase()}", type,
-                    "updateOperations.add(prefix + \"${field.name}\", value, addDups)").apply {
+                    """updateOperations.add(prefix + "${field.name}", value, addDups)
+                        |return this """.trimMargin()).apply {
                 addParameter("value", field.parameterizedType)
-                addParameter("addDups", "boolean")
+                addParameter("addDups", "Boolean")
             }
 
             updater.addFunction("addAllTo${field.name.nameCase()}", type,
-                    "updateOperations.addAll(prefix + \"${field.name}\", values, addDups)").apply {
+                    """updateOperations.addAll(prefix + "${field.name}", values, addDups)
+                        |return this """.trimMargin()).apply {
                 addParameter("values", field.parameterizedType)
-                addParameter("addDups", "boolean")
+                addParameter("addDups", "Boolean")
             }
 
             updater.addFunction("removeFirstFrom${field.name.nameCase()}", type,
-                    "updateOperations.removeFirst(prefix + \"${field.name}\")")
+                    """updateOperations.removeFirst(prefix + "${field.name}")
+                        |return this
+                    """.trimMargin())
 
             updater.addFunction("removeLastFrom${field.name.nameCase()}", type,
-                    "updateOperations.removeLast(prefix + \"${field.name}\")")
+                    """updateOperations.removeLast(prefix + "${field.name}")
+                        |return this
+                    """.trimMargin())
 
             updater.addFunction("removeFrom${field.name.nameCase()}", type,
-                    "updateOperations.removeAll(prefix + \"${field.name}\", value)")
+                    """updateOperations.removeAll(prefix + "${field.name}", value)
+                        |return this
+                    """.trimMargin())
                     .addParameter("value", field.parameterizedType)
 
             updater.addFunction("removeAllFrom${field.name.nameCase()}", type,
-                    "updateOperations.removeAll(prefix + \"${field.name}\", values)")
+                    """updateOperations.removeAll(prefix + "${field.name}", values)
+                        |return this
+                    """.trimMargin())
                     .addParameter("values", field.parameterizedType)
         }
     }
