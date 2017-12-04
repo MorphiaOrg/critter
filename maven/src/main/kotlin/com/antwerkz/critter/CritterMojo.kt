@@ -1,8 +1,8 @@
 package com.antwerkz.critter
 
+import com.antwerkz.critter.java.JavaBuilder
 import com.antwerkz.critter.java.JavaClass
-import com.antwerkz.critter.kotlin.KotlinClass
-import com.antwerkz.kibble.Kibble
+import com.antwerkz.critter.kotlin.KotlinParser
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
@@ -29,6 +29,9 @@ class CritterMojo : AbstractMojo() {
     @Parameter(property = "critter.force", defaultValue = "false")
     private var force: Boolean = false
 
+    @Parameter(property = "critter.output.type", name="outputType", required = true)
+    lateinit var outputType: String
+
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
     private lateinit var project: MavenProject
 
@@ -37,6 +40,7 @@ class CritterMojo : AbstractMojo() {
         project.addCompileSourceRoot(outputDirectory.path)
 
         val context = CritterContext(criteriaPackage, force)
+        val kotlinParser = KotlinParser()
         sourceDirectory
                 .map { File(project.basedir, it) }
                 .filter { it.exists() }
@@ -50,12 +54,10 @@ class CritterMojo : AbstractMojo() {
 
                         override fun directoryWalkStep(percentage: Int, file: File) {
                             if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
-                                JavaClass(context, file).apply {
-                                    context.add(this)
-                                }
+                                context.add(JavaClass(context, file))
                             } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
-                                Kibble.parseFile(file).classes.forEach {
-                                    context.add(KotlinClass(context, it))
+                                kotlinParser.parse(file).forEach {
+                                    context.add(it)
                                 }
                             }
                         }
@@ -67,6 +69,15 @@ class CritterMojo : AbstractMojo() {
                     walker.scan()
                 }
 
-        context.classes.values.forEach { it.build(outputDirectory) }
+        when (outputType) {
+            "java" -> {
+                val builder = JavaBuilder(context)
+                builder.build(outputDirectory)
+            }
+            "kotlin" -> {
+                val builder = com.antwerkz.critter.kotlin.KotlinBuilder(context)
+                builder.build(outputDirectory)
+            }
+        }
     }
 }

@@ -1,66 +1,53 @@
 package com.antwerkz.critter
 
+import com.antwerkz.critter.Visibility.PUBLIC
 import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Id
 import org.mongodb.morphia.annotations.Property
 
-interface CritterField : Comparable<CritterField>, Visible<CritterField> {
+class CritterField(val name: String, val type: String) : AnnotationHolder,/* Comparable<CritterField>,*/ Visible {
     companion object {
+        val NUMERIC_TYPES =
+                listOf("Float", "Double", "Long", "Integer", "Byte", "Short", "Number")
+                .map { listOf(it, "${it}?", "java.lang.${it}", "java.lang.${it}?", "kotlin.${it}", "kotlin.${it}?") }
+                .flatMap { it } + "Int"
 
-        val NUMERIC_TYPES = listOf("java.lang.Float",
-                "java.lang.Double",
-                "java.lang.Long",
-                "java.lang.Integer",
-                "java.lang.Byte",
-                "java.lang.Short",
-                "java.lang.Number")
+        val CONTAINER_TYPES =
+                listOf("List", "Set")
+                .map { listOf(it, "java.util.$it", "Mutable$it")}
+                .flatMap { it }
     }
 
-    val shortParameterTypes: MutableList<String>
+    val shortParameterTypes = mutableListOf<String>()
 
-    val fullParameterTypes: MutableList<String>
+    val fullParameterTypes = mutableListOf<String>()
 
-    val fullType: String
+    override val annotations = mutableListOf<CritterAnnotation>()
 
-    val name: String
+    var isStatic = false
 
-    val parameterTypes: List<String>
+    var isFinal = false
 
-    val parameterizedType: String
+    var stringLiteralInitializer: String? = null
 
-    val fullyQualifiedType: String
+    override var visibility: Visibility = PUBLIC
 
+    var parameterizedType = type
 
-    fun hasAnnotation(aClass: Class<out Annotation>): Boolean
+    fun isContainer() = type.substringBefore("<") in CritterField.CONTAINER_TYPES
 
-    fun isContainer(): Boolean = fullType == "java.util.List" || fullType == "java.util.Set"
-
-    fun isNumeric(): Boolean = CritterField.NUMERIC_TYPES.contains(fullType)
-
-    fun isStatic(): Boolean
-    fun setStatic(): CritterField
-
-    fun setFinal(): CritterField
-
-    fun build(sourceClass: CritterClass, targetClass: CritterClass)
-
-    fun buildReference(criteriaClass: CritterClass)
-
-    fun buildEmbed(criteriaClass: CritterClass)
-
-    fun buildField(critterClass: CritterClass, criteriaClass: CritterClass)
+    fun isNumeric() = CritterField.NUMERIC_TYPES.contains(type)
 
     fun mappedName(): String {
         return if (hasAnnotation(Id::class.java)) {
             "\"_id\""
         } else {
-            val fieldName = extract("\"$name\"", Property::class.java)
-            extract(fieldName, Embedded::class.java)
+            getValue(Embedded::class.java, getValue(Property::class.java, "\"${name}\""))
         }
     }
 
-    fun extract(name: String, ann: Class<out Annotation>): String
+    override fun toString(): String {
+        return "CritterField(name='$name', type='$type', parameterizedType='$fullParameterTypes')"
+    }
 
-    fun setStringLiteralInitializer(initializer: String): CritterField
-    fun setLiteralInitializer(initializer: String): CritterField
 }

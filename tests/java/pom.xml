@@ -25,11 +25,12 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <configuration>
-                            <force>true</force>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <force>true</force>
+                    <outputType>java</outputType>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

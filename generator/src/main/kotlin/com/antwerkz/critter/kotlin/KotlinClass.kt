@@ -1,190 +1,81 @@
 package com.antwerkz.critter.kotlin
 
+import com.antwerkz.critter.CritterAnnotation
 import com.antwerkz.critter.CritterClass
-import com.antwerkz.critter.CritterConstructor
-import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
-import com.antwerkz.critter.CritterMethod
-import com.antwerkz.critter.KotlinUpdaterBuilder
-import com.antwerkz.critter.TypeSafeFieldEnd
-import com.antwerkz.critter.Visible
-import com.antwerkz.critter.criteria.BaseCriteria
-import com.antwerkz.kibble.SourceWriter
+import com.antwerkz.critter.Visibility
 import com.antwerkz.kibble.model.KibbleClass
-import com.antwerkz.kibble.model.KibbleFile
-import com.antwerkz.kibble.model.KibbleType
-import com.antwerkz.kibble.model.Modality.FINAL
-import com.antwerkz.kibble.model.Mutability.VAR
-import com.antwerkz.kibble.model.Visibility.INTERNAL
-import com.antwerkz.kibble.model.Visibility.PRIVATE
-import com.antwerkz.kibble.model.Visibility.PROTECTED
-import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.mongodb.morphia.Datastore
-import org.mongodb.morphia.annotations.Embedded
-import org.mongodb.morphia.query.Query
-import java.io.File
+import com.antwerkz.kibble.model.KibbleProperty
+import com.antwerkz.kibble.model.TypeParameter
 
-class KotlinClass(context: CritterContext, val source: KibbleClass) : CritterClass(context) {
+@Suppress("UNCHECKED_CAST")
+class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
+    : CritterClass(pkgName, name) {
 
-    private var kibbleFile: KibbleFile
-    private lateinit var criteriaClass: KibbleClass
+    constructor(source: KibbleClass) : this(source.file.pkgName, source.name, source)
+
+    override val annotations = mutableListOf<CritterAnnotation>()
+    override val fields: List<CritterField> by lazy {
+        listProperties(source).map { property: KibbleProperty ->
+            CritterField(property.name, property.type.toString()).also { field ->
+                property.type?.typeParameters?.forEach { typeParameter: TypeParameter ->
+                    field.fullParameterTypes.add(typeParameter.type.toString())
+                }
+                field.parameterizedType = property.type.toString()
+                field.annotations += property.annotations.map {
+                    val fqcn = source.file.resolve(it.type).fqcn
+                    CritterAnnotation(fqcn, it.arguments)
+                }
+            }
+        }
+                .sortedBy(CritterField::name)
+                .toMutableList()
+    }
+
+    private fun listProperties(type: KibbleClass?): List<KibbleProperty> {
+        val list = mutableListOf<KibbleProperty>()
+        type?.let { current ->
+            list.addAll(current.properties)
+            current.superType?.let {
+                list.addAll(listProperties(source.file.context.resolve(it)))
+            }
+
+            list += current.superTypes
+                    .mapNotNull { source.file.context.resolve(it) }
+                    .map { listProperties(it) }
+                    .flatMap { it }
+
+/*
+            current.let {
+                val findClass = context.findClass(source.file.resolve(it.fqcn))
+                findClass?.properties
+            }
+*/
+        }
+        return list
+
+    }
 
     init {
-        val criteriaPkg = context.criteriaPkg ?: source.pkgName + ".criteria"
-        kibbleFile = KibbleFile(getName() + "Criteria.kt", criteriaPkg)
-        source.file.imports.forEach {
-            kibbleFile.addImport(it.type.name, it.alias)
+        visibility = when (source.visibility) {
+            com.antwerkz.kibble.model.Visibility.PUBLIC -> Visibility.PUBLIC
+            com.antwerkz.kibble.model.Visibility.PROTECTED -> Visibility.PROTECTED
+            com.antwerkz.kibble.model.Visibility.PRIVATE -> Visibility.PRIVATE
+            com.antwerkz.kibble.model.Visibility.INTERNAL -> Visibility.INTERNAL
+            else -> Visibility.PUBLIC
         }
-        kibbleFile.addImport(source.pkgName + "." + source.name)
-        lastModified = 0 //Math.min(
-//                sourceFile?.lastModified() ?: 0,
-//                context[source.superType?.qualifiedName]?.lastModified ?: 0)
-
-        isEmbedded = hasAnnotation(Embedded::class.java)
-        addFields(context, source)
-    }
-
-    private fun addFields(context: CritterContext, kibble: KibbleClass) {
-        fields.addAll(kibble.properties
-                .map { f -> KotlinField(context, kibble, f) }
-                .sortedBy { f -> f.name }
-                .toMutableList())
-        kibble.superType?.let {
-            (context.resolve(getPackage(), it.name) as KotlinClass?)?.let {
-                it.source.file.imports.forEach {
-                    kibbleFile.addImport(it.type.name, it.alias)
-                }
-                addFields(context, it.source)
-            }
-        }
-        kibble.superTypes.forEach {
-            (context.resolve(getPackage(), it.name) as KotlinClass?)?.let {
-                it.source.file.imports.forEach {
-                    kibbleFile.addImport(it.type.name, it.alias)
-                }
-                addFields(context, it.source)
-            }
+        annotations += source.annotations.map {
+            CritterAnnotation(source.file.resolve(it.type).fqcn, it.arguments)
         }
     }
 
-    override fun hasAnnotation(aClass: Class<out Annotation>) = source.hasAnnotation(aClass)
+    override fun isAbstract() = source.isAbstract()
 
-    override fun getName() = source.name
-    override fun setName(name: String): CritterClass {
-        source.name = name
-        return this
-    }
-
-    override fun getPackage() = source.pkgName!!
-    override fun setPackage(name: String?): CritterClass {
-        source.pkgName = name
-        return this
-    }
-
-    override fun getSuperType() = source.superType?.toString()
-    override fun setSuperType(name: String): CritterClass {
-        source.superType = KibbleType.from(name)
-        return this
-    }
-
-    override fun isPublic() = source.isPublic()
-    override fun setPublic(): CritterClass {
-        source.visibility = PUBLIC
-        return this
-    }
-
-    override fun isPrivate() = source.isPrivate()
-    override fun setPrivate(): CritterClass {
-        source.visibility = PRIVATE
-        return this
-    }
-
-    override fun isProtected() = source.isProtected()
-    override fun setProtected(): CritterClass {
-        source.visibility = PROTECTED
-        return this
-    }
-
-    override fun isInternal() = source.isInternal()
-    override fun setInternal(): CritterClass {
-        source.visibility = INTERNAL
-        return this
-    }
-
-    override fun isPackagePrivate() = false
-    override fun setPackagePrivate() = throw Visible.invalid("package private", "kotlin")
-
-    override fun addImport(klass: Class<*>) {
-        source.file.addImport(klass.name)
-    }
-
-    override fun addImport(name: String) {
-        if (name.contains(".")) {
-            source.file.addImport(name)
-        }
-    }
-
-    override fun addConstructor(): CritterConstructor {
-        return SecondaryConstructor(source.addSecondaryConstructor())
-    }
-
-    override fun addField(name: String, type: String): CritterField {
-        return KotlinField(context, source, source.addProperty(name, type))
-    }
-
-    override fun addMethod(): CritterMethod {
-        return KotlinMethod(source.addFunction())
-    }
-
-    override fun createClass(pkgName: String?, name: String): KotlinClass {
-        return KotlinClass(context, source.addClass(name))
-    }
-
-    override fun build(directory: File) {
-        outputFile = kibbleFile.outputFile(directory)
-
-        super.build(directory)
-    }
-
-    override fun buildCriteria(directory: File) {
-        criteriaClass = kibbleFile.addClass(getName() + "Criteria")
-
-        kibbleFile.addImport(Datastore::class.java)
-        kibbleFile.addImport(BaseCriteria::class.java)
-        kibbleFile.addImport(TypeSafeFieldEnd::class.java)
-        kibbleFile.addImport(source.pkgName + "." + source.name)
-        val primary = criteriaClass.constructor
-        if (!hasAnnotation(Embedded::class.java)) {
-            criteriaClass.superType = KibbleType.from("${BaseCriteria::class.java.simpleName}<${getName()}>")
-            criteriaClass.superCallArgs = listOf("ds", "${getName()}::class.java")
-            primary.addParameter("ds", Datastore::class.java.simpleName)
-        } else {
-            criteriaClass.addProperty("query", "Query<*>", mutability = VAR, visibility = PRIVATE, constructorParam = true)
-            criteriaClass.addProperty("prefix", "String", mutability = VAR, visibility = PRIVATE, constructorParam = true)
-
-            kibbleFile.addImport(Query::class.java)
-            criteriaClass.initBlock = "this.prefix = prefix + \".\""
-        }
-
-        val targetClass = KotlinClass(context, criteriaClass)
-        fields.forEach { it.build(this, targetClass) }
-        if (!hasAnnotation(Embedded::class.java)) {
-            KotlinUpdaterBuilder(this, targetClass)
-        }
-        val companion = criteriaClass.addCompanionObject()
-
-        fields.forEach { field ->
-            companion.addProperty(field.name, modality = FINAL, initializer = field.mappedName())
-        }
-
-        outputFile.parentFile.mkdirs()
-        kibbleFile.toSource(SourceWriter())
-                .toFile(outputFile)
-    }
-
-    override fun toSource(): String {
-        return source.toSource().toString()
-    }
+    override fun lastModified() = (listOf(source.superType) + source.superTypes)
+            .filterNotNull()
+            .map { source.file.context.resolve(it)?.file?.sourceTimestamp ?: -1L }
+            .max()
+            ?: 0L
 
     override fun toString(): String {
         return "KotlinClass(${source.name})"

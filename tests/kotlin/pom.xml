@@ -27,11 +27,12 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <configuration>
-                            <force>true</force>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <force>true</force>
+                    <outputType>kotlin</outputType>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>kotlin-maven-plugin</artifactId>

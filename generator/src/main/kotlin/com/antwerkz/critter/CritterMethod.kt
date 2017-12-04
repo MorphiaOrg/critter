@@ -6,9 +6,9 @@ interface CritterFunction {
     fun addParameter(type: Class<*>, name: String): CritterFunction
 }
 
-interface CritterConstructor: CritterFunction, Visible<CritterConstructor>
+interface CritterConstructor: CritterFunction, Visible
 
-interface CritterMethod: CritterFunction, Visible<CritterMethod> {
+interface CritterMethod: CritterFunction, Visible {
     fun setName(name: String): CritterMethod
     fun getReturnType(): String
     fun setReturnType(type: String): CritterMethod

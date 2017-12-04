@@ -77,20 +77,20 @@ class KotlinCriteriaTest {
 
         val query = personCriteria.query()
 
-        org.testng.Assert.assertEquals(personCriteria.getUpdater()
+        org.testng.Assert.assertEquals(personCriteria.updater()
                 .age(30L)
                 .updateAll().updatedCount, 0)
 
-        org.testng.Assert.assertEquals(personCriteria.getUpdater()
+        org.testng.Assert.assertEquals(personCriteria.updater()
                 .age(30L)
                 .upsert().insertedCount, 1)
 
-        val update = personCriteria.getUpdater().incAge().updateAll()
+        val update = personCriteria.updater().incAge().updateAll()
         org.testng.Assert.assertEquals(update.updatedCount, 1)
-        val get: Person = personCriteria.query().get()
-        org.testng.Assert.assertEquals(get.age!!.toLong(), 31L)
+        val get: Person = personCriteria.query().get() as Person
+        org.testng.Assert.assertEquals(get.age, 31L)
 
-        org.testng.Assert.assertNotNull(PersonCriteria(datastore).query().get().first)
+        org.testng.Assert.assertNotNull(PersonCriteria(datastore).query().get())
 
         val delete = datastore.delete(query)
         org.testng.Assert.assertEquals(delete.n, 1)
@@ -103,7 +103,7 @@ class KotlinCriteriaTest {
         }
         var criteria = PersonCriteria(datastore)
         criteria.last().contains("Last2")
-        criteria.getUpdater()
+        criteria.updater()
                 .age(1000L)
                 .updateFirst()
 
@@ -120,7 +120,7 @@ class KotlinCriteriaTest {
         }
         var criteria = PersonCriteria(datastore)
         criteria.last().contains("Last2")
-        var result = criteria.getUpdater()
+        var result = criteria.updater()
                 .remove()
         org.testng.Assert.assertEquals(result.n, 11)
         org.testng.Assert.assertEquals(criteria.query().count(), 0)
@@ -130,7 +130,7 @@ class KotlinCriteriaTest {
 
         criteria = PersonCriteria(datastore)
         criteria.last().contains("Last3")
-        result = criteria.getUpdater().remove(com.mongodb.WriteConcern.MAJORITY)
+        result = criteria.updater().remove(com.mongodb.WriteConcern.MAJORITY)
         org.testng.Assert.assertEquals(result.n, 11)
         org.testng.Assert.assertEquals(criteria.query().count(), 0)
     }
@@ -155,7 +155,8 @@ class KotlinCriteriaTest {
 
         val criteria1 = InvoiceCriteria(datastore)
         criteria1.addresses().city().order()
-        org.testng.Assert.assertEquals(criteria1.query().asList()[0].addresses!![0].city, "NYC")
+        val asList = criteria1.query().asList()
+        org.testng.Assert.assertEquals(asList[0].addresses!![0].city, "NYC")
 
         val criteria2 = InvoiceCriteria(datastore)
         criteria2.addresses().city().order(false)

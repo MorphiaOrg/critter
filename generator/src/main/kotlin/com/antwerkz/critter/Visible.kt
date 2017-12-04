@@ -1,20 +1,31 @@
 package com.antwerkz.critter
 
-interface Visible<out T> {
+import com.antwerkz.critter.Visibility.INTERNAL
+import com.antwerkz.critter.Visibility.PACKAGE
+import com.antwerkz.critter.Visibility.PRIVATE
+import com.antwerkz.critter.Visibility.PROTECTED
+import com.antwerkz.critter.Visibility.PUBLIC
+
+interface Visible {
     companion object {
         fun invalid(name: String, type: String): IllegalStateException {
             return IllegalStateException("'$name' is not supported for $type")
         }
     }
 
-    fun isInternal(): Boolean
-    fun setInternal(): T
-    fun isPublic(): Boolean
-    fun setPublic(): T
-    fun isPackagePrivate(): Boolean
-    fun setPackagePrivate(): T
-    fun isPrivate(): Boolean
-    fun setPrivate(): T
-    fun isProtected(): Boolean
-    fun setProtected(): T
+    var visibility: Visibility
+
+    fun isInternal() = visibility == INTERNAL
+    fun isPublic() = visibility == PUBLIC
+    fun isPackagePrivate() = visibility == PACKAGE
+    fun isPrivate() = visibility == PRIVATE
+    fun isProtected() = visibility == PROTECTED
+}
+
+enum class Visibility {
+    PRIVATE,
+    PACKAGE,
+    INTERNAL,
+    PROTECTED,
+    PUBLIC
 }

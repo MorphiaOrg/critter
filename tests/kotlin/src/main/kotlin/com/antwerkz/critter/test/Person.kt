@@ -30,6 +30,8 @@ open class Person : AbstractPerson {
 
     var last: String? = null
 
+    var ssn: SSN? = null
+
     @Suppress("unused")
     constructor()
 
@@ -59,4 +61,8 @@ open class Person : AbstractPerson {
     }
 
 
+}
+
+class SSN(var value: String) {
+    private constructor() : this("")
 }

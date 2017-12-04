@@ -1,6 +1,8 @@
 package com.antwerkz.critter.test
 
-@org.mongodb.morphia.annotations.Entity
-class User : Person() {
+import org.mongodb.morphia.annotations.Entity
+
+@Entity
+class User : AbstractPerson() {
     var email: String? = null
 }
