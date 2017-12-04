@@ -73,12 +73,14 @@ class JavaClassTest {
         shouldNotImport(personCriteria, "com.antwerkz.critter.test.AbstractPerson")
         shouldImport(personCriteria, "com.antwerkz.critter.test.Person")
 
-        val fields = personClass.fields
-        Assert.assertEquals(personCriteria.fields.size, fields.size,
-                "Criteria fields: ${personCriteria.fields}.\n person fields: ${fields.joinToString("\n")}")
-        val names = personCriteria.fields.map { it.name }.sortedBy { it }
+        val origFields = personClass.fields
+        val criteriaFields = personCriteria.fields
+                .filter { it.isStatic }
+        Assert.assertEquals(criteriaFields.size, origFields.size,
+                "Criteria fields: $criteriaFields.\n person fields: ${origFields.joinToString("\n")}")
+        val names = criteriaFields.map { it.name }.sortedBy { it }
         Assert.assertEquals(names, listOf("age", "first", "last", "objectId"), "Found instead:  $names")
-        fields.forEach {
+        origFields.forEach {
             val field = personCriteria.getField(it.name)
             val stringInitializer = field.stringInitializer
             Assert.assertEquals(
@@ -86,7 +88,7 @@ class JavaClassTest {
                     extractName(it))
         }
 
-        fields.forEach { field ->
+        origFields.forEach { field ->
             val functions = personCriteria.methods.filter { it.name == field.name }
             Assert.assertEquals(functions.size, 2, "Can't find methods named ${field.name}")
             Assert.assertEquals(functions[0].parameters.size, 0)
@@ -150,6 +152,10 @@ class JavaClassTest {
 
     private fun validateInvoiceCriteria(criteriaFiles: List<JavaType<*>>) {
         val invoiceCriteria = criteriaFiles.find { it.getName() == "InvoiceCriteria" } as JavaClassSource
+
+        val addresses = invoiceCriteria.getMethod("addresses")
+        Assert.assertEquals(addresses.returnType.toString(), "AddressCriteria")
+
         shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Address")
         shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Invoice")
         shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Item")

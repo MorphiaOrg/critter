@@ -31,13 +31,21 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
 
         val parent = context.resolve(name = sourceClass.superType)
         (parent?.fields ?: listOf()) + listFields(sourceClass).map { javaField ->
-            CritterField(javaField.name, javaField.type.qualifiedName).also { field ->
-                javaField.type?.typeArguments?.forEach {
-                    field.shortParameterTypes.add(it.name)
-                    field.fullParameterTypes.add(it.qualifiedName)
+            CritterField(javaField.name, javaField.type.qualifiedName).apply {
+                javaField.type?.typeArguments?.let {
+                    if(it.isNotEmpty()) {
+                        parameterizedType = it.joinToString(", ", prefix = "${javaField.type.qualifiedName}<", postfix = ">") {
+                            it.qualifiedName
+                        }
+                    }
+
+                    it.forEach {
+                        shortParameterTypes.add(it.name)
+                        fullParameterTypes.add(it.qualifiedName)
+                    }
                 }
-                field.annotations += javaField.annotations.map { ann ->
-                    CritterAnnotation(ann.name, ann.values.map { it.name to it.literalValue }.toMap())
+                annotations += javaField.annotations.map { ann ->
+                    CritterAnnotation(ann.qualifiedName, ann.values.map { it.name to it.literalValue }.toMap())
                 }
             }
         }

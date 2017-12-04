@@ -4,7 +4,6 @@ import com.antwerkz.critter.CritterClass
 import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.TypeSafeFieldEnd
-import com.antwerkz.critter.criteria.BaseCriteria
 import com.antwerkz.critter.nameCase
 import com.mongodb.WriteConcern
 import com.mongodb.WriteResult
@@ -15,6 +14,7 @@ import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Id
 import org.mongodb.morphia.annotations.Reference
 import org.mongodb.morphia.query.Criteria
+import org.mongodb.morphia.query.CriteriaContainer
 import org.mongodb.morphia.query.FieldEndImpl
 import org.mongodb.morphia.query.Query
 import org.mongodb.morphia.query.QueryImpl
@@ -27,7 +27,7 @@ import org.jboss.forge.roaster.model.Visibility.PRIVATE as rPRIVATE
 import org.jboss.forge.roaster.model.Visibility.PROTECTED as rPROTECTED
 import org.jboss.forge.roaster.model.Visibility.PUBLIC as rPUBLIC
 
-class JavaBuilder(val context: CritterContext) {
+class JavaBuilder(private val context: CritterContext) {
 
     fun build(directory: File) {
         context.classes.values.forEach { source ->
@@ -36,58 +36,69 @@ class JavaBuilder(val context: CritterContext) {
                     .setName(source.name + "Criteria")
 
             val outputFile = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
-            if (context.shouldGenerate(source.lastModified(), outputFile.lastModified())) {
-                if (!source.hasAnnotation(Embedded::class.java)) {
-                    criteriaClass.superType = """${BaseCriteria::class.java.name}<${source.qualifiedName}>"""
-                    criteriaClass.addMethod()
-                            .setConstructor(true)
-                            .setPublic()
-                            .setBody("super(ds, ${source.name}.class);")
-                            .addParameter(Datastore::class.java, "ds")
-                } else {
-                    criteriaClass.addField()
-                            .setType(Datastore::class.java)
-                            .setName("ds")
-                            .setPrivate()
-                    criteriaClass.addField()
-                            .setType(Query::class.java)
-                            .setName("query")
-                            .setPrivate()
-                    criteriaClass.addField()
-                            .setType("String")
-                            .setName("prefix")
-                            .setPrivate()
+            if (!source.isAbstract() && context.shouldGenerate(source.lastModified(), outputFile.lastModified())) {
+                criteriaClass.addImport(Datastore::class.java)
+                criteriaClass.addImport(Query::class.java)
+                criteriaClass.addImport(String::class.java)
 
-                    criteriaClass.addMethod().apply {
-                        isConstructor = true
-                        setPublic()
-                        body = """
-                            this.ds = ds;
-                            this.query = query;
-                            this.prefix = prefix + ".";""".trimIndent()
-                        addParameter(Datastore::class.java, "ds")
-                        addParameter(Query::class.java, "query")
-                        addParameter(String::class.java, "prefix")
-                    }
-                }
+                criteriaClass.addField("private Datastore ds")
+                criteriaClass.addField("private Query<?> query")
+                criteriaClass.addField("private String prefix")
 
+                criteriaClass.addMethod("""
+                    public ${criteriaClass.name}(Datastore ds) {
+                        this(ds, ds.createQuery(${source.name}.class), null);
+                    }""")
+                        .isConstructor = true
+
+                criteriaClass.addMethod("""
+                    protected ${criteriaClass.name}(Datastore ds, String fieldName) {
+                        this(ds, ds.createQuery(${source.name}.class), fieldName);
+                    }""")
+                        .isConstructor = true
+
+                criteriaClass.addMethod("""
+                    protected ${criteriaClass.name}(Datastore ds, Query<?> query, String fieldName) {
+                        this.ds = ds;
+                        this.query = query;
+                        this.prefix = fieldName != null ? fieldName + "." : "";
+                    }""")
+                        .isConstructor = true
+
+                addCriteriaMethods(source, criteriaClass)
                 extractFields(source as JavaClass, criteriaClass)
                 buildUpdater(source, criteriaClass)
                 generate(outputFile, criteriaClass)
             }
-
         }
+    }
+
+    private fun addCriteriaMethods(source: CritterClass, criteriaClass: JavaClassSource) {
+        criteriaClass.addImport(CriteriaContainer::class.java)
+
+        criteriaClass.addMethod("""public Query<${source.name}> query() {
+            return (Query<${source.name}>) query;
+        }""")
+        criteriaClass.addMethod("""public Datastore datastore() {
+            return ds;
+        }""")
+        criteriaClass.addMethod("""public WriteResult delete() {
+            return ds.delete(query());
+        }""")
+        criteriaClass.addMethod("""public WriteResult delete(WriteConcern wc) {
+            return ds.delete(query(), wc);
+        }""")
+        criteriaClass.addMethod("""public CriteriaContainer or(Criteria... criteria) {
+            return query.or(criteria);
+        }""")
+        criteriaClass.addMethod("""public CriteriaContainer and(Criteria... criteria) {
+            return query.and(criteria);
+        }""")
     }
 
     private fun extractFields(source: JavaClass, criteriaClass: JavaClassSource) {
         source.fields.forEach { field ->
-            criteriaClass.addField()
-                    .setName(field.name)
-                    .setPublic()
-                    .setStatic(true)
-                    .setFinal(true)
-                    .setStringInitializer(field.mappedName())
-                    .setType(String::class.java)
+            criteriaClass.addField("public static final String ${field.name} = ${field.mappedName()}; ")
 
             addFieldMethods(source, criteriaClass, field)
         }
@@ -100,110 +111,61 @@ class JavaBuilder(val context: CritterContext) {
         criteriaClass.addImport(UpdateResults::class.java)
         criteriaClass.addImport(WriteConcern::class.java)
         criteriaClass.addImport(WriteResult::class.java)
+        criteriaClass.addImport(TypeSafeFieldEnd::class.java)
 
         val type = source.name + "Updater"
-        criteriaClass.addMethod().apply {
-            setPublic()
-            name = "getUpdater"
-            setReturnType(type)
-            body = "return new $type();"
-        }
+        //language=JAVA
+        criteriaClass.addMethod("""public ${type} getUpdater() {
+           return new $type(ds,query,ds.createUpdateOperations(${source.name}.class),!prefix.equals("")?prefix:null);
+        }""")
 
         val updater = criteriaClass.addNestedType(JavaClassSource::class.java)
         updater.name = type
-        updater.addField().apply {
-            name = "updateOperations"
-            setType("UpdateOperations<${source.name}>")
-            setLiteralInitializer("ds.createUpdateOperations(${source.name}.class);")
-        }
+        updater.addField("private final Datastore ds;")
+        updater.addField("private final Query<?> query;")
+        updater.addField("private final String prefix;")
+        updater.addField("private final UpdateOperations updateOperations;")
 
-        updater.addMethod().apply {
-            setPublic()
-            name = "updateAll"
-            setReturnType(UpdateResults::class.java)
-            body = "return ds.update(query, updateOperations, false);"
-        }
+        updater.addMethod("""public AddressUpdater(Datastore ds, Query<?> query, UpdateOperations updateOperations, String fieldName) {
+            this.ds = ds;
+            this.query = query;
+            this.prefix = fieldName != null ? fieldName + "." : "";
+            this.updateOperations = ds.createUpdateOperations(${source.name}.class);
+        }""")
+                .isConstructor = true
 
-        updater.addMethod().apply {
-            setPublic()
-            name = "updateFirst"
-            setReturnType(UpdateResults::class.java)
-            body = "return ds.updateFirst(query, updateOperations, false);"
-        }
-
-        updater.addMethod().apply {
-            addParameter(WriteConcern::class.java.simpleName, "wc")
-
-            setPublic()
-            name = "updateAll"
-            setReturnType(UpdateResults::class.java)
-            body = "return ds.update(query, updateOperations, false, wc);"
-        }
-
-        updater.addMethod().apply {
-            addParameter(WriteConcern::class.java.simpleName, "wc")
-
-            setPublic()
-            name = "updateFirst"
-            setReturnType(UpdateResults::class.java)
-            body = "return ds.updateFirst(query, updateOperations, false, wc);"
-        }
-
-        updater.addMethod().apply {
-            setPublic()
-            name = "upsert"
-            setReturnType(UpdateResults::class.java)
-            body = "return ds.update(query, updateOperations, true);"
-        }
-
-        updater.addMethod().apply {
-            addParameter(WriteConcern::class.java.simpleName, "wc")
-
-            setPublic()
-            name = "upsert"
-            setReturnType(UpdateResults::class.java)
-            body = "return ds.update(query, updateOperations, true, wc);"
-        }
-
-        updater.addMethod().apply {
-            setPublic()
-            name = "remove"
-            setReturnType(WriteResult::class.java.simpleName)
-            body = "return ds.delete(query);"
-        }
-
-        updater.addMethod().apply {
-            addParameter(WriteConcern::class.java.simpleName, "wc")
-
-            setPublic()
-            name = "remove"
-            setReturnType(WriteResult::class.java)
-            body = "return ds.delete(query, wc);"
-        }
+        updaterMethod(updater, "updateAll", "update", "UpdateResults", false)
+        updaterMethod(updater, "updateFirst", "updateFirst", "UpdateResults", false)
+        updaterMethod(updater, "upsert", "update", "UpdateResults", true)
+        updater.addMethod("""public WriteResult remove() {
+                return ds.delete(query);
+            }""")
+        updater.addMethod("""public WriteResult remove(WriteConcern wc) {
+                return ds.delete(query, wc);
+            }""")
 
         source.fields
                 .filter({ field -> !field.isStatic })
                 .forEach { field ->
-                    field.parameterTypes
+                    var fieldType = field.type
+                    if(field.isContainer() && field.fullParameterTypes.isNotEmpty()) {
+                        fieldType = field.fullParameterTypes.joinToString(", ", prefix = "$type<", postfix = ">")
+                    }
+
+                    field.fullParameterTypes
                             .forEach { criteriaClass.addImport(it) }
 
                     criteriaClass.addImport(field.type)
                     if (!field.hasAnnotation(Id::class.java)) {
-                        updater.addMethod().apply {
-                            addParameter(field.parameterizedType, "value")
+                        updater.addMethod("""public $type ${field.name}(${field.parameterizedType} value) {
+                            updateOperations.set(prefix + "${field.name}", value);
+                            return this;
+                        }""")
 
-                            name = field.name
-                            body = "updateOperations.set(\"${field.name}\", value);\nreturn this;"
-                            setPublic()
-                            setReturnType(type)
-                        }
-
-                        updater.addMethod().apply {
-                            name = "unset${field.name.nameCase()}"
-                            body = "updateOperations.unset(\"${field.name}\");\nreturn this;"
-                            setPublic()
-                            setReturnType(type)
-                        }
+                        updater.addMethod("""public $type unset${field.name.nameCase()}() {
+                            updateOperations.unset(prefix + "${field.name}");
+                            return this;
+                        }""")
 
                         numerics(type, updater, field)
                         containers(type, updater, field)
@@ -211,136 +173,94 @@ class JavaBuilder(val context: CritterContext) {
                 }
     }
 
+    private fun updaterMethod(updater: JavaClassSource, name: String, dsMethod: String, type: String, createIfMissing: Boolean) {
+        updater.addMethod("""public $type $name() {
+                return ds.$dsMethod(query, updateOperations, $createIfMissing);
+            }""")
+
+        updater.addMethod("""public $type $name(${WriteConcern::class.java.simpleName} wc) {
+               return ds.$dsMethod(query, updateOperations, $createIfMissing, wc);
+            }""")
+    }
+
     private fun numerics(type: String, updater: JavaClassSource, field: CritterField) {
         if (field.isNumeric()) {
-            updater.addMethod().apply {
-                name = "dec${field.name.nameCase()}"
-                body = """updateOperations.dec("${field.name}");
-return this;"""
-                setPublic()
-                setReturnType(type)
-            }
+            updater.addMethod("""public $type dec${field.name.nameCase()}() {
+                updateOperations.dec("${field.name}");
+                return this;
+            }""")
 
-            updater.addMethod().apply {
-                name = "dec${field.name.nameCase()}"
-                body = """updateOperations.dec("${field.name}", value);
-return this;"""
-                setPublic()
-                setReturnType(type)
-                addParameter(field.type, "value")
-            }
+            updater.addMethod("""public $type dec${field.name.nameCase()}(${field.type} value) {
+                updateOperations.dec("${field.name}", value);
+                return this;
+            }""")
 
-            updater.addMethod().apply {
-                name = "inc${field.name.nameCase()}"
-                body = """updateOperations.inc("${field.name}");
-return this;"""
-                setPublic()
-                setReturnType(type)
-            }
+            updater.addMethod("""public $type inc${field.name.nameCase()}() {
+                updateOperations.inc("${field.name}");
+                return this;
+            }""")
 
-            updater.addMethod().apply {
-                name = "inc${field.name.nameCase()}"
-                body = "updateOperations.inc(\"${field.name}\", value);\nreturn this;"
-                setPublic()
-                setReturnType(type)
-                addParameter(field.type, "value")
-            }
+            updater.addMethod("""public $type inc${field.name.nameCase()}(${field.type} value) {
+                updateOperations.inc("${field.name}", value);
+                return this;
+            }""")
         }
     }
 
     private fun containers(type: String, updater: JavaClassSource, field: CritterField) {
         if (field.isContainer()) {
 
-            updater.addMethod().apply {
-                name = "addTo${field.name.nameCase()}"
-                body = "updateOperations.add(\"${field.name}\", value);\nreturn this;"
+            val nameCase = field.name.nameCase()
+            val fieldType = field.parameterizedType
+            updater.addMethod("""public $type addTo$nameCase($fieldType value) {
+                updateOperations.add("${field.name}", value);
+                return this;
+            }""")
 
-                setPublic()
-                addParameter(field.parameterizedType, "value")
-                setReturnType(type)
-            }
+            updater.addMethod("""public $type addTo$nameCase($fieldType value, boolean addDups) {
+                updateOperations.add("${field.name}", value, addDups);
+                return this;
+            }""")
 
-            updater.addMethod().apply {
-                name = "addTo${field.name.nameCase()}"
-                body = """updateOperations.add("${field.name}", value, addDups);
-return this;"""
+            updater.addMethod("""public $type addAllTo$nameCase($fieldType value, boolean addDups) {
+                updateOperations.addAll("${field.name}", value, addDups);
+                return this;
+            }""")
 
-                setPublic()
-                setReturnType(type)
-                addParameter(field.parameterizedType, "value")
-                addParameter("boolean", "addDups")
-            }
+            updater.addMethod("""public $type removeFirstFrom$nameCase() {
+                updateOperations.removeFirst("${field.name}");
+                return this;
+            }""")
 
-            updater.addMethod().apply {
-                name = "addAllTo${field.name.nameCase()}"
-                body = """updateOperations.addAll("${field.name}", values, addDups);
-return this;"""
-                setPublic()
-                setReturnType(type)
-                addParameter(field.parameterizedType, "values")
-                addParameter("boolean", "addDups")
-            }
+            updater.addMethod("""public $type removeLastFrom$nameCase() {
+                updateOperations.removeLast("${field.name}");
+                return this;
+            }""")
 
-            updater.addMethod().apply {
-                name = "removeFirstFrom${field.name.nameCase()}"
-                body = "updateOperations.removeFirst(\"${field.name}\");\nreturn this;"
-                setPublic()
-                setReturnType(type)
-            }
+            updater.addMethod("""public $type removeFrom$nameCase($fieldType value) {
+                updateOperations.removeAll("${field.name}", value);
+                return this;
+            }""")
 
-            updater.addMethod().apply {
-                name = "removeLastFrom${field.name.nameCase()}"
-                body = "updateOperations.removeLast(\"${field.name}\");\nreturn this;"
-                setPublic()
-                setReturnType(type)
-            }
-
-            updater.addMethod().apply {
-                name = "removeFrom${field.name.nameCase()}"
-                body = "updateOperations.removeAll(\"${field.name}\", value);\nreturn this;"
-
-                setPublic()
-                setReturnType(type)
-                addParameter(field.parameterizedType, "value")
-            }
-
-            updater.addMethod().apply {
-                name = "removeAllFrom${field.name.nameCase()}"
-                body = "updateOperations.removeAll(\"${field.name}\", values);\nreturn this;"
-
-                setPublic()
-                setReturnType(type)
-                addParameter(field.parameterizedType, "values")
-            }
+            updater.addMethod("""public $type removeAllFrom$nameCase($fieldType values) {
+                updateOperations.removeAll("${field.name}", values);
+                return this;
+            }""")
         }
     }
 
     private fun addFieldMethods(source: CritterClass, criteriaClass: JavaClassSource, field: CritterField) {
         if (source.hasAnnotation(Reference::class.java)) {
-            criteriaClass.addMethod().apply {
-                name = source.name
-                body = """query.filter("${source.name} = ", reference);
-        return this;"""
-                setPublic()
-                setReturnType(criteriaClass.qualifiedName)
-                addParameter(field.type, "reference")
-            }
+            criteriaClass.addMethod("""public ${criteriaClass.qualifiedName}(${field.type} reference) {
+                query.filter("${source.name} = ", reference);
+                return this;
+            }""")
         } else if (field.hasAnnotation(Embedded::class.java)) {
             criteriaClass.addImport(Criteria::class.java)
-            val criteriaType: String
-            if (!field.shortParameterTypes.isEmpty()) {
-                criteriaType = field.shortParameterTypes[0] + "Criteria"
-                criteriaClass.addImport("${criteriaClass.`package`}.$criteriaType")
-            } else {
-                criteriaType = field.type + "Criteria"
-                criteriaClass.addImport(field.type)
-            }
-            criteriaClass.addMethod().apply {
-                name = field.name
-                body = """return new $criteriaType(query, "${source.name}");"""
-                setPublic()
-                setReturnType(criteriaType)
-            }
+            val criteriaType: String = extractType(field, criteriaClass)
+            criteriaClass.addMethod("""public ${criteriaType} ${field.name}() {
+                return new $criteriaType(ds, query, "${field.name}");
+            }""")
         } else if (!field.isStatic) {
             criteriaClass.addImport(field.type)
             field.fullParameterTypes.forEach {
@@ -349,24 +269,25 @@ return this;"""
             criteriaClass.addImport(Criteria::class.java)
             criteriaClass.addImport(FieldEndImpl::class.java)
             criteriaClass.addImport(QueryImpl::class.java)
-            var fieldName = """"${field.name}""""
-            if (field.hasAnnotation(Embedded::class.java) || context.isEmbedded(name = field.type)) {
-                fieldName = "prefix + " + fieldName
-            }
-            criteriaClass.addMethod().apply {
-                name = field.name
-                body = """return new TypeSafeFieldEnd<>(this, query, $fieldName);"""
-                setPublic()
-                setReturnType("${TypeSafeFieldEnd::class.java.name}<${criteriaClass.qualifiedName}, ${field.type}>")
-            }
-            criteriaClass.addMethod().apply {
-                name = field.name
-                body = "return new TypeSafeFieldEnd<>(this, query, $fieldName).equal(value);"
-                setPublic()
-                setReturnType(Criteria::class.java)
-                addParameter(field.type, "value")
-            }
+            criteriaClass.addMethod("""public ${TypeSafeFieldEnd::class.java.name}<${criteriaClass.qualifiedName}, ${field.type}> ${field.name}() {
+                return new TypeSafeFieldEnd<>(this, query, prefix + "${field.name}");
+            }""")
+            criteriaClass.addMethod("""public ${Criteria::class.java.name} ${field.name}(${field.type} value) {
+                return new TypeSafeFieldEnd<>(this, query, prefix + "${field.name}").equal(value);
+            }""")
         }
+    }
+
+    private fun extractType(field: CritterField, criteriaClass: JavaClassSource): String {
+        val criteriaType: String
+        if (!field.shortParameterTypes.isEmpty()) {
+            criteriaType = field.shortParameterTypes[0] + "Criteria"
+            criteriaClass.addImport("${criteriaClass.`package`}.$criteriaType")
+        } else {
+            criteriaType = field.type + "Criteria"
+            criteriaClass.addImport(field.type)
+        }
+        return criteriaType
     }
 
     private fun generate(outputFile: File, criteriaClass: JavaClassSource) {

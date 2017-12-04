@@ -22,8 +22,6 @@ class CritterField(val name: String, val type: String) : AnnotationHolder,/* Com
 
     val fullParameterTypes = mutableListOf<String>()
 
-    val parameterTypes = mutableListOf<String>()
-
     override val annotations = mutableListOf<CritterAnnotation>()
 
     var isStatic = false
