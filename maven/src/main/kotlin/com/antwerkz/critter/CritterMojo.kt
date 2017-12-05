@@ -2,6 +2,7 @@ package com.antwerkz.critter
 
 import com.antwerkz.critter.java.JavaBuilder
 import com.antwerkz.critter.java.JavaClass
+import com.antwerkz.critter.kotlin.KotlinBuilder
 import com.antwerkz.critter.kotlin.KotlinParser
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
@@ -49,35 +50,35 @@ class CritterMojo : AbstractMojo() {
                     walker.baseDir = it
                     walker.includes = listOf("**/*.java", "**/*.kt")
 
-                    walker.addDirectoryWalkListener(object : DirectoryWalkListener {
-                        override fun directoryWalkStarting(basedir: File) {}
-
-                        override fun directoryWalkStep(percentage: Int, file: File) {
-                            if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
-                                context.add(JavaClass(context, file))
-                            } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
-                                kotlinParser.parse(file).forEach {
-                                    context.add(it)
-                                }
-                            }
-                        }
-
-                        override fun directoryWalkFinished() {}
-
-                        override fun debug(message: String) {}
-                    })
+                    walker.addDirectoryWalkListener(Walker(context, kotlinParser))
                     walker.scan()
                 }
 
         when (outputType) {
             "java" -> {
-                val builder = JavaBuilder(context)
-                builder.build(outputDirectory)
+                JavaBuilder(context).build(outputDirectory)
             }
             "kotlin" -> {
-                val builder = com.antwerkz.critter.kotlin.KotlinBuilder(context)
-                builder.build(outputDirectory)
+                KotlinBuilder(context).build(outputDirectory)
             }
         }
     }
+}
+
+class Walker(private val context: CritterContext, private val kotlinParser: KotlinParser) : DirectoryWalkListener {
+    override fun directoryWalkStarting(basedir: File) {}
+
+    override fun directoryWalkStep(percentage: Int, file: File) {
+        if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
+            context.add(JavaClass(context, file))
+        } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
+            kotlinParser.parse(file).forEach {
+                context.add(it)
+            }
+        }
+    }
+
+    override fun directoryWalkFinished() {}
+
+    override fun debug(message: String) {}
 }
