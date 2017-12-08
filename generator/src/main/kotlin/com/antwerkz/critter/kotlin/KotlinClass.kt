@@ -14,6 +14,7 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
 
     constructor(source: KibbleClass) : this(source.file.pkgName, source.name, source)
 
+    val list = listOf(1, 2, 3)
     override val annotations = mutableListOf<CritterAnnotation>()
     override val fields: List<CritterField> by lazy {
         listProperties(source).map { property: KibbleProperty ->
@@ -44,13 +45,6 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
                     .mapNotNull { source.file.context.resolve(it) }
                     .map { listProperties(it) }
                     .flatMap { it }
-
-/*
-            current.let {
-                val findClass = context.findClass(source.file.resolve(it.fqcn))
-                findClass?.properties
-            }
-*/
         }
         return list
 
@@ -70,6 +64,8 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
     }
 
     override fun isAbstract() = source.isAbstract()
+
+    override fun isEnum() = source.isEnum()
 
     override fun lastModified() = (listOf(source.superType) + source.superTypes)
             .filterNotNull()

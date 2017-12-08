@@ -13,11 +13,15 @@ import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.project.MavenProject
 import org.codehaus.plexus.util.DirectoryWalkListener
 import org.codehaus.plexus.util.DirectoryWalker
+import org.slf4j.LoggerFactory
 import java.io.File
 
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 class CritterMojo : AbstractMojo() {
+    companion object {
+        val LOG = LoggerFactory.getLogger(CritterMojo::class.java)
+    }
     @Parameter
     private var sourceDirectory = setOf("src/main/java", "src/main/kotlin")
 
@@ -50,17 +54,14 @@ class CritterMojo : AbstractMojo() {
                     walker.baseDir = it
                     walker.includes = listOf("**/*.java", "**/*.kt")
 
+                    LOG.info("Scanning $it for classes")
                     walker.addDirectoryWalkListener(Walker(context, kotlinParser))
                     walker.scan()
                 }
 
         when (outputType) {
-            "java" -> {
-                JavaBuilder(context).build(outputDirectory)
-            }
-            "kotlin" -> {
-                KotlinBuilder(context).build(outputDirectory)
-            }
+            "java" -> JavaBuilder(context).build(outputDirectory)
+            "kotlin" -> KotlinBuilder(context).build(outputDirectory)
         }
     }
 }

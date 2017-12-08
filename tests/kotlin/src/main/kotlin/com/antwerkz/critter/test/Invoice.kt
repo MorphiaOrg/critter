@@ -52,7 +52,7 @@ class Invoice {
 
     fun add(item: Item) {
         if (items == null) {
-            items = mutableListOf<Item>()
+            items = mutableListOf()
         }
         items!!.add(item)
         total += item.price
@@ -60,7 +60,7 @@ class Invoice {
 
     fun add(address: Address) {
         if (addresses == null) {
-            addresses = mutableListOf<Address>()
+            addresses = mutableListOf()
         }
         addresses!!.add(address)
     }

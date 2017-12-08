@@ -18,6 +18,8 @@ abstract class CritterClass(var pkgName: String? = null, var name: String) : Ann
 
     abstract fun isAbstract(): Boolean
 
+    open fun isEnum() = false
+
     abstract fun lastModified(): Long
 }
 
@@ -28,7 +30,11 @@ class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf()
     init {
         if (name.contains(".")) {
             @Suppress("UNCHECKED_CAST")
-            klass = Class.forName(name) as Class<out Annotation>?
+            try {
+                klass = Class.forName(name) as Class<out Annotation>?
+            } catch(ignored: ClassNotFoundException) {
+
+            }
         }
     }
 

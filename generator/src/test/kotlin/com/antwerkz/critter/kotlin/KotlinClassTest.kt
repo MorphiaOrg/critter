@@ -146,30 +146,6 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
         }
     }
 
-    private fun findAllProperties(kotlinClass: KibbleClass): MutableList<KibbleProperty> {
-        val list = kotlinClass.properties
-        kotlinClass.superType?.let {
-            list += findAllProperties((critterContext.resolve(kotlinClass.file.pkgName, it.className) as KotlinClass).source)
-        }
-        kotlinClass.superTypes.forEach {
-            critterContext.resolve(kotlinClass.file.pkgName, it.className)?.let {
-                list += findAllProperties((it as KotlinClass).source)
-            }
-        }
-        return list
-    }
-
-    private fun extractName(property: KibbleProperty): String {
-        return when {
-            property.hasAnnotation(Id::class.java) -> "_id"
-            property.hasAnnotation(Property::class.java) -> {
-                val annotation = property.getAnnotation(Property::class.java)!!
-                annotation["value"]?.replace("\"", "") ?: property.name
-            }
-            else -> property.name
-        }
-    }
-
     private fun shouldImport(kibble: KibbleClass, type: String?) {
         Assert.assertNotNull(kibble.file.imports.firstOrNull {
             it.type.fqcn == type

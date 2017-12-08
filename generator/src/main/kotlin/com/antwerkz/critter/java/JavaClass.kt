@@ -85,4 +85,3 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
     }
 
 }
-

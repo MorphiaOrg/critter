@@ -7,7 +7,7 @@ class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false
     val classes = HashMap<String, CritterClass>()
 
     fun shouldGenerate(source: Long?, output: Long?): Boolean {
-        return force || source == null || output == null || output < source
+        return force || source == null || output == null || output <= source
     }
 
     fun add(critterClass: CritterClass) {

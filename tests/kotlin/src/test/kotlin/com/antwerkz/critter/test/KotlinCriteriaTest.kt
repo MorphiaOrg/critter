@@ -29,14 +29,14 @@ class KotlinCriteriaTest {
     @AfterMethod
     fun clean() {
         val mongo = com.mongodb.MongoClient()
-        val critter = mongo.getDB("critter")
-        critter.dropDatabase()
+        val critter = mongo.getDatabase("critter")
+        critter.drop()
     }
 
     val datastore: org.mongodb.morphia.Datastore by lazy {
         val mongo = com.mongodb.MongoClient()
-        val critter = mongo.getDB("critter")
-        critter.dropDatabase()
+        val critter = mongo.getDatabase("critter")
+        critter.drop()
         val morphia = org.mongodb.morphia.Morphia()
         morphia.mapPackage("com.antwerkz")
         morphia.createDatastore(mongo, "critter")
@@ -99,7 +99,7 @@ class KotlinCriteriaTest {
         Assert.assertEquals(delete.n, 1)
     }
 
-    @Test(enabled = false) // waiting morphia issue #711
+    @Test//(enabled = false) // waiting morphia issue #711
     fun updateFirst() {
         for (i in 0..99) {
             datastore.save(Person("First" + i, "Last" + i))
