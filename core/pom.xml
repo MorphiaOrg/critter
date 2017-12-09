@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>critter-core</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1-SNAPSHOT</version>
 
     <build>
         <plugins>
