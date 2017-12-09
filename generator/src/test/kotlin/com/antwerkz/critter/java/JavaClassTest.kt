@@ -117,7 +117,7 @@ class JavaClassTest {
 
         functions = updater.getMethods("age")
         Assert.assertEquals(1, functions.size)
-        check(functions[0], listOf("value" to "java.lang.Long"), "PersonUpdater")
+        check(functions[0], listOf("__newValue" to "java.lang.Long"), "PersonUpdater")
 
         functions = updater.getMethods("unsetAge")
         Assert.assertEquals(1, functions.size)
@@ -126,17 +126,17 @@ class JavaClassTest {
         functions = updater.getMethods("incAge")
         Assert.assertEquals(2, functions.size)
         check(functions[0], listOf(), "PersonUpdater")
-        check(functions[1], listOf("value" to "java.lang.Long"), "PersonUpdater")
+        check(functions[1], listOf("__newValue" to "java.lang.Long"), "PersonUpdater")
 
         functions = updater.getMethods("decAge")
         Assert.assertEquals(2, functions.size)
         check(functions[0], listOf(), "PersonUpdater")
-        check(functions[1], listOf("value" to "java.lang.Long"), "PersonUpdater")
+        check(functions[1], listOf("__newValue" to "java.lang.Long"), "PersonUpdater")
 
         listOf("first", "last").forEach {
             functions = updater.getMethods(it)
             Assert.assertEquals(1, functions.size, "Should have found $it")
-            check(functions[0], listOf("value" to "java.lang.String"), "PersonUpdater")
+            check(functions[0], listOf("__newValue" to "java.lang.String"), "PersonUpdater")
 
             functions = updater.getMethods("unset${it.capitalize()}")
             Assert.assertEquals(1, functions.size, "Should have found unset${it.capitalize()}")

@@ -23,7 +23,7 @@ class CritterContextTest {
                 arrayOf(null, null, false, true),    // both virtual
                 arrayOf(100L, null, false, true),     // new output
                 arrayOf(null, 100L, false, true),     // virtual in, existing out
-                arrayOf(100L, 100L, false, false),      // same ages
+                arrayOf(100L, 100L, false, true),      // same ages
                 arrayOf(100L, 1000L, false, false),    // output is newer
                 arrayOf(1000L, 100L, false, true),     // input is newer
 

@@ -157,8 +157,8 @@ class JavaBuilder(private val context: CritterContext) {
 
                     criteriaClass.addImport(field.type)
                     if (!field.hasAnnotation(Id::class.java)) {
-                        updater.addMethod("""public $type ${field.name}(${field.parameterizedType} value) {
-                            updateOperations.set(prefix + "${field.name}", value);
+                        updater.addMethod("""public $type ${field.name}(${field.parameterizedType} __newValue) {
+                            updateOperations.set(prefix + "${field.name}", __newValue);
                             return this;
                         }""")
 
@@ -190,8 +190,8 @@ class JavaBuilder(private val context: CritterContext) {
                 return this;
             }""")
 
-            updater.addMethod("""public $type dec${field.name.nameCase()}(${field.type} value) {
-                updateOperations.dec("${field.name}", value);
+            updater.addMethod("""public $type dec${field.name.nameCase()}(${field.type} __newValue) {
+                updateOperations.dec("${field.name}", __newValue);
                 return this;
             }""")
 
@@ -200,8 +200,8 @@ class JavaBuilder(private val context: CritterContext) {
                 return this;
             }""")
 
-            updater.addMethod("""public $type inc${field.name.nameCase()}(${field.type} value) {
-                updateOperations.inc("${field.name}", value);
+            updater.addMethod("""public $type inc${field.name.nameCase()}(${field.type} __newValue) {
+                updateOperations.inc("${field.name}", __newValue);
                 return this;
             }""")
         }
@@ -212,18 +212,18 @@ class JavaBuilder(private val context: CritterContext) {
 
             val nameCase = field.name.nameCase()
             val fieldType = field.parameterizedType
-            updater.addMethod("""public $type addTo$nameCase($fieldType value) {
-                updateOperations.add("${field.name}", value);
+            updater.addMethod("""public $type addTo$nameCase($fieldType __newValue) {
+                updateOperations.add("${field.name}", __newValue);
                 return this;
             }""")
 
-            updater.addMethod("""public $type addTo$nameCase($fieldType value, boolean addDups) {
-                updateOperations.add("${field.name}", value, addDups);
+            updater.addMethod("""public $type addTo$nameCase($fieldType __newValue, boolean addDups) {
+                updateOperations.add("${field.name}", __newValue, addDups);
                 return this;
             }""")
 
-            updater.addMethod("""public $type addAllTo$nameCase($fieldType value, boolean addDups) {
-                updateOperations.addAll("${field.name}", value, addDups);
+            updater.addMethod("""public $type addAllTo$nameCase($fieldType __newValue, boolean addDups) {
+                updateOperations.addAll("${field.name}", __newValue, addDups);
                 return this;
             }""")
 
@@ -237,8 +237,8 @@ class JavaBuilder(private val context: CritterContext) {
                 return this;
             }""")
 
-            updater.addMethod("""public $type removeFrom$nameCase($fieldType value) {
-                updateOperations.removeAll("${field.name}", value);
+            updater.addMethod("""public $type removeFrom$nameCase($fieldType __newValue) {
+                updateOperations.removeAll("${field.name}", __newValue);
                 return this;
             }""")
 
@@ -272,8 +272,8 @@ class JavaBuilder(private val context: CritterContext) {
             criteriaClass.addMethod("""public ${TypeSafeFieldEnd::class.java.name}<${criteriaClass.qualifiedName}, ${field.type}> ${field.name}() {
                 return new TypeSafeFieldEnd<>(this, query, prefix + "${field.name}");
             }""")
-            criteriaClass.addMethod("""public ${Criteria::class.java.name} ${field.name}(${field.type} value) {
-                return new TypeSafeFieldEnd<>(this, query, prefix + "${field.name}").equal(value);
+            criteriaClass.addMethod("""public ${Criteria::class.java.name} ${field.name}(${field.type} __newValue) {
+                return new TypeSafeFieldEnd<>(this, query, prefix + "${field.name}").equal(__newValue);
             }""")
         }
     }

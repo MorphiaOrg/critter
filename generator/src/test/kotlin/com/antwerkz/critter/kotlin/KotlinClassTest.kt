@@ -125,7 +125,7 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
 
         functions = updater.getFunctions("age")
         Assert.assertEquals(1, functions.size)
-        check(functions[0], listOf("value" to "Long"), "PersonUpdater")
+        check(functions[0], listOf("__newValue" to "Long"), "PersonUpdater")
 
         functions = updater.getFunctions("unsetAge")
         Assert.assertEquals(functions.size, 1)
@@ -133,12 +133,12 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
 
         functions = updater.getFunctions("incAge")
         Assert.assertEquals(functions.size, 1)
-        check(functions[0], listOf("value" to "Long"), "PersonUpdater")
+        check(functions[0], listOf("__newValue" to "Long"), "PersonUpdater")
 
         listOf("first", "last").forEach {
             functions = updater.getFunctions(it)
             Assert.assertEquals(1, functions.size, "Should have found $it")
-            check(functions[0], listOf("value" to "String?"), "PersonUpdater")
+            check(functions[0], listOf("__newValue" to "String?"), "PersonUpdater")
 
             functions = updater.getFunctions("unset${it.capitalize()}")
             Assert.assertEquals(1, functions.size, "Should have found unset${it.capitalize()}")
