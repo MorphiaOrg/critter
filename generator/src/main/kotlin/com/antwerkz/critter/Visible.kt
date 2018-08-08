@@ -19,7 +19,12 @@ interface Visible {
     fun isPublic() = visibility == PUBLIC
     fun isPackagePrivate() = visibility == PACKAGE
     fun isPrivate() = visibility == PRIVATE
+
     fun isProtected() = visibility == PROTECTED
+
+    fun test() {
+        Visible.invalid("asdflkj", "alsdkjf")
+    }
 }
 
 enum class Visibility {

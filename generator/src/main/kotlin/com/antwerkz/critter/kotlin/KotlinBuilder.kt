@@ -5,6 +5,7 @@ import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.TypeSafeFieldEnd
 import com.antwerkz.critter.nameCase
+import com.antwerkz.kibble.model.KibbleArgument
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFile
 import com.antwerkz.kibble.model.KibbleType
@@ -26,6 +27,7 @@ import java.io.File
 
 class KotlinBuilder(val context: CritterContext) {
     companion object {
+        private val STRING = "String"
         private val UPDATE_RESULTS: String = UpdateResults::class.java.name
         private val WRITE_CONCERN: String = WriteConcern::class.java.name
         val LOG = LoggerFactory.getLogger(KotlinBuilder::class.java)
@@ -38,7 +40,7 @@ class KotlinBuilder(val context: CritterContext) {
     }
 
     private fun build(directory: File, source: CritterClass) {
-        val criteriaPkg = context.criteriaPkg ?: source.pkgName + ".criteria"
+        val criteriaPkg = context.criteriaPkg ?: source.pkgName+".criteria"
         val kibbleFile = KibbleFile("${source.name}Criteria.kt", criteriaPkg)
         val outputFile = kibbleFile.outputFile(directory)
 
@@ -48,16 +50,21 @@ class KotlinBuilder(val context: CritterContext) {
                     && context.shouldGenerate(source.lastModified(), outputFile.lastModified())) {
 
                 val criteriaClass = kibbleFile.addClass("${source.name}Criteria")
-                criteriaClass.file.addImport(source.qualifiedName)
-                val arguments = mapOf("value" to "\"UNCHECKED_CAST\"")
-                criteriaClass.addAnnotation(Suppress::class.java, arguments)
+                val arguments = listOf(KibbleArgument("value", "\"UNCHECKED_CAST\""))
+                criteriaClass.addAnnotation(Suppress::class.java.name, arguments)
 
-                criteriaClass.addProperty("datastore", Datastore::class.java.name, constructorParam = true)
-                criteriaClass.addProperty("query", "org.mongodb.morphia.query.Query<*>", visibility = PRIVATE, constructorParam = true)
-                val secondary = criteriaClass.addSecondaryConstructor()
-                secondary.addParameter("ds", Datastore::class.java.name)
-                secondary.addParameter("fieldName", "String?", "null")
-                secondary.addDelegationArguments("ds", "ds.find(${source.name}::class.java)", "fieldName")
+                criteriaClass.addProperty("datastore", Datastore::class.java) {
+                    constructorParam = true
+                }
+                criteriaClass.addProperty("query", "org.mongodb.morphia.query.Query<*>") {
+                    visibility = PRIVATE
+                    constructorParam = true
+                }
+
+                criteriaClass.addSecondaryConstructor("ds", "ds.find(${source.name}::class.java)", "fieldName").apply {
+                    addParameter("ds", Datastore::class.java.name)
+                    addParameter("fieldName", "String?", "null")
+                }
 
                 addCriteriaMethods(source, criteriaClass)
                 addPrefixProperty(criteriaClass)
@@ -65,7 +72,10 @@ class KotlinBuilder(val context: CritterContext) {
                 if (source.fields.isNotEmpty()) {
                     val companion = criteriaClass.addCompanionObject()
                     source.fields.forEach { field ->
-                        companion.addProperty(field.name, modality = FINAL, initializer = field.mappedName())
+                        companion.addProperty(field.name, STRING) {
+                            modality = FINAL
+                            initializer = field.mappedName()
+                        }
                         addField(source, criteriaClass, field)
                     }
                 }
@@ -93,8 +103,11 @@ class KotlinBuilder(val context: CritterContext) {
     }
 
     private fun addPrefixProperty(criteriaClass: KibbleClass) {
-        criteriaClass.addProperty("prefix", mutability = VAR, visibility = PRIVATE,
-                initializer = """fieldName?.let { fieldName + "." } ?: "" """)
+        criteriaClass.addProperty("prefix", STRING).also {
+            it.mutability = VAR
+            it.visibility = PRIVATE
+            it.initializer = """fieldName?.let { fieldName + "." } ?: "" """
+        }
         criteriaClass.constructor.addParameter("fieldName", "String?", "null")
     }
 
@@ -108,13 +121,14 @@ class KotlinBuilder(val context: CritterContext) {
             }
             field.hasAnnotation(Embedded::class.java) -> {
                 var type = KibbleType.from(field.type)
-                if(field.isContainer() && type.typeParameters.isNotEmpty()) {
-                    type = type.typeParameters.last().type
+                if (field.isContainer() && type.typeParameters.isNotEmpty()) {
+                    val last = type.typeParameters.last()
+                    type = last.type!!
                 }
 
-                val pkg = context.criteriaPkg ?: type.pkgName + ".criteria"
+                val pkg = context.criteriaPkg ?: type.pkgName+".criteria"
                 val criteriaType = KibbleType.from("${pkg}.${type.className}Criteria")
-                criteriaClass.addFunction(field.name, criteriaType.fqcn,
+                criteriaClass.addFunction(field.name, criteriaType.fqcn(),
                         """return ${criteriaType.className}(datastore, query, "${field.name}")""")
             }
             else -> {
@@ -141,10 +155,19 @@ class KotlinBuilder(val context: CritterContext) {
                     |if(prefix.isNotEmpty()) prefix else null)""".trimMargin())
 
         val updater = criteriaClass.addClass(name = updaterType)
-        updater.addProperty("ds", visibility = PRIVATE, type = Datastore::class.java.name, constructorParam = true)
-        updater.addProperty("query", visibility = PRIVATE, type = Query::class.java.name + "<*>", constructorParam = true)
-        updater.addProperty("updateOperations", visibility = PRIVATE, type = "org.mongodb.morphia.query.UpdateOperations<*>",
-                constructorParam = true)
+        updater.addProperty("ds", Datastore::class.java) {
+            visibility = PRIVATE
+            constructorParam = true
+        }
+        updater.addProperty("query", Query::class.java.name + "<*>") {
+            visibility = PRIVATE
+            constructorParam = true
+        }
+
+        updater.addProperty("updateOperations", type = "org.mongodb.morphia.query.UpdateOperations<*>") {
+            visibility = PRIVATE
+            constructorParam = true
+        }
         addPrefixProperty(updater)
 
         if (!sourceClass.hasAnnotation(Embedded::class.java)) {

@@ -147,13 +147,7 @@ class JavaBuilder(private val context: CritterContext) {
         source.fields
                 .filter({ field -> !field.isStatic })
                 .forEach { field ->
-                    var fieldType = field.type
-                    if(field.isContainer() && field.fullParameterTypes.isNotEmpty()) {
-                        fieldType = field.fullParameterTypes.joinToString(", ", prefix = "$type<", postfix = ">")
-                    }
-
-                    field.fullParameterTypes
-                            .forEach { criteriaClass.addImport(it) }
+                    field.fullParameterTypes.forEach { criteriaClass.addImport(it) }
 
                     criteriaClass.addImport(field.type)
                     if (!field.hasAnnotation(Id::class.java)) {

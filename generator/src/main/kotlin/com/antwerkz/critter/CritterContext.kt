@@ -1,17 +1,20 @@
 package com.antwerkz.critter
 
+import com.antwerkz.kibble.model.KibbleClass
+import java.io.File
 import java.util.HashMap
 
 @Suppress("UNCHECKED_CAST")
-class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false) {
-    val classes = HashMap<String, CritterClass>()
+class CritterContext(val criteriaPkg: String? = "criteria", var force: Boolean = false) {
+    val classes = mutableMapOf<String, CritterClass>()
 
     fun shouldGenerate(source: Long?, output: Long?): Boolean {
         return force || source == null || output == null || output <= source
     }
 
     fun add(critterClass: CritterClass) {
-        classes.put("${critterClass.pkgName}.${critterClass.name}", critterClass)
+        critterClass.context = this
+        classes["${critterClass.pkgName}.${critterClass.name}"] = critterClass
     }
 
 /*
@@ -35,5 +38,9 @@ class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false
 
     fun isEmbedded(currentPkg: String? = null, name: String): Boolean {
         return resolve(currentPkg, name)?.isEmbedded ?: false
+    }
+
+    fun resolveFile(resolve: KibbleClass?): File? {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

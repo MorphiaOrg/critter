@@ -51,3 +51,7 @@ class CritterField(val name: String, val type: String) : AnnotationHolder,/* Com
     }
 
 }
+
+fun String.nameCase(): String {
+    return substring(0, 1).toUpperCase() + substring(1)
+}

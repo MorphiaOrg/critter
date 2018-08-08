@@ -3,13 +3,11 @@ package com.antwerkz.critter.kotlin
 import com.antwerkz.critter.CritterContext
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.model.KibbleClass
+import com.antwerkz.kibble.model.KibbleFile
 import com.antwerkz.kibble.model.KibbleFunction
 import com.antwerkz.kibble.model.KibbleObject
-import com.antwerkz.kibble.model.KibbleProperty
 import com.mongodb.WriteConcern
 import org.bson.types.ObjectId
-import org.mongodb.morphia.annotations.Id
-import org.mongodb.morphia.annotations.Property
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
@@ -35,9 +33,9 @@ class KotlinClassTest {
         Assert.assertEquals(personClass.fields.size, 5, "Found: \n${personClass.fields.joinToString(",\n")}")
 
         val criteriaFiles = Kibble.parse(listOf(directory))
-        validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!.classes[0])
-        validateAddressCriteria(criteriaFiles.find { it.name == "AddressCriteria.kt" }!!.classes[0])
-        validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria.kt" }!!.classes[0])
+        validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!)
+        validateAddressCriteria(criteriaFiles.find { it.name == "AddressCriteria.kt" }!!)
+        validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria.kt" }!!)
     }
 
     @Test
@@ -71,27 +69,28 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
         Assert.assertNotNull(updater.functions.firstOrNull { it.name == "addToNickNames" })
     }
 
-    private fun validateInvoiceCriteria(invoiceCriteria: KibbleClass) {
-        invoiceCriteria.file.toSource()
+    private fun validateInvoiceCriteria(file: KibbleFile) {
+        val invoiceCriteria = file.classes[0]
         val addresses = invoiceCriteria.getFunctions("addresses")[0]
         Assert.assertEquals(addresses.type?.toString(), "AddressCriteria")
-        shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Address")
-        shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Invoice")
-        shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Item")
-        shouldImport(invoiceCriteria, "com.antwerkz.critter.test.Person")
+        shouldImport(file, "com.antwerkz.critter.test.Address")
+        shouldImport(file, "com.antwerkz.critter.test.Invoice")
+        shouldImport(file, "com.antwerkz.critter.test.Item")
+        shouldImport(file, "com.antwerkz.critter.test.Person")
     }
 
-    private fun validateAddressCriteria(addressCriteria: KibbleClass) {
-        shouldNotImport(addressCriteria, "com.antwerkz.critter.test.AbstractPerson")
-        shouldImport(addressCriteria, "com.antwerkz.critter.test.Address")
+    private fun validateAddressCriteria(file: KibbleFile) {
+        shouldNotImport(file, "com.antwerkz.critter.test.AbstractPerson")
+        shouldImport(file, "com.antwerkz.critter.test.Address")
     }
 
-    private fun validatePersonCriteria(personCriteria: KibbleClass) {
-        shouldImport(personCriteria, ObjectId::class.java.name)
-        shouldNotImport(personCriteria, "com.antwerkz.critter.test.AbstractPerson")
-        shouldImport(personCriteria, "com.antwerkz.critter.test.Person")
-        shouldImport(personCriteria, "com.antwerkz.critter.test.SSN")
+    private fun validatePersonCriteria(file: KibbleFile) {
+        shouldImport(file, ObjectId::class.java.name)
+        shouldNotImport(file, "com.antwerkz.critter.test.AbstractPerson")
+        shouldImport(file, "com.antwerkz.critter.test.Person")
+        shouldImport(file, "com.antwerkz.critter.test.SSN")
 
+        val personCriteria = file.classes[0]
         val companion = personCriteria.companion() as KibbleObject
         Assert.assertEquals(companion.properties.size, 5)
         val sorted = companion.properties
@@ -105,7 +104,7 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
             Assert.assertEquals(functions[1].parameters.size, 1)
         }
 
-        val updater = personCriteria.getClass("PersonUpdater") as KibbleClass
+        val updater = personCriteria.getClass("PersonUpdater")
 
         validatePersonUpdater(updater)
     }
@@ -146,15 +145,15 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
         }
     }
 
-    private fun shouldImport(kibble: KibbleClass, type: String?) {
-        Assert.assertNotNull(kibble.file.imports.firstOrNull {
-            it.type.fqcn == type
-        }, "Should find an import for $type in ${kibble.file.name}: ${kibble.file.imports}")
+    private fun shouldImport(kibble: KibbleFile, type: String?) {
+        Assert.assertNotNull(kibble.imports.firstOrNull {
+            it.type.fqcn() == type
+        }, "Should find an import for $type in ${kibble.name}: ${kibble.imports}")
     }
 
-    private fun shouldNotImport(kibble: KibbleClass, type: String?) {
-        Assert.assertNull(kibble.file.imports.firstOrNull { it.type.fqcn == type }, "Should not find an import for $type " +
-                "in ${kibble.file.name}")
+    private fun shouldNotImport(kibble: KibbleFile, type: String?) {
+        Assert.assertNull(kibble.imports.firstOrNull { it.type.fqcn() == type }, "Should not find an import for $type " +
+                "in ${kibble.name}")
     }
 
     private fun check(function: KibbleFunction, parameters: List<Pair<String, String>>, type: String) {

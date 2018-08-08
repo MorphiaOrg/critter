@@ -12,3 +12,28 @@ interface AnnotationHolder {
         return annotations.any { it.matches(aClass) }
     }
 }
+
+class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf()) {
+
+    var klass: Class<out Annotation>? = null
+
+    init {
+        if (name.contains(".")) {
+            @Suppress("UNCHECKED_CAST")
+            try {
+                klass = Class.forName(name) as Class<out Annotation>?
+            } catch(ignored: ClassNotFoundException) {
+
+            }
+        }
+    }
+
+    fun matches(aClass: Class<out Annotation>): Boolean {
+        return aClass == klass || aClass.name == name
+    }
+
+    fun getValue(): String? {
+        return values["value"] as String?
+    }
+
+}

@@ -35,7 +35,7 @@ Include the dependency in your pom.xml like this:
         <version>${critter.version}</version>
     </dependency>
 
-*Critter also requires morphia 0.110 and 2.13.0 of the mongo-java-driver and is built for Java 8.*
+*Critter also requires morphia 1.3.2 and 3.6.0 of the mongo-java-driver and is built for Java 8.*
 
 Gradle users can look [here](gradle/README.md) for details on using critter with gradle.
 

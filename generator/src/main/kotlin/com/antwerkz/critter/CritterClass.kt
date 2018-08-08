@@ -4,6 +4,7 @@ import com.antwerkz.critter.Visibility.PUBLIC
 import org.mongodb.morphia.annotations.Embedded
 
 abstract class CritterClass(var pkgName: String? = null, var name: String) : AnnotationHolder, Visible {
+    lateinit var context: CritterContext
     val qualifiedName: String by lazy {
         pkgName?.let { "${pkgName}.${name}" } ?: name
     }
@@ -21,33 +22,4 @@ abstract class CritterClass(var pkgName: String? = null, var name: String) : Ann
     open fun isEnum() = false
 
     abstract fun lastModified(): Long
-}
-
-class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf()) {
-
-    var klass: Class<out Annotation>? = null
-
-    init {
-        if (name.contains(".")) {
-            @Suppress("UNCHECKED_CAST")
-            try {
-                klass = Class.forName(name) as Class<out Annotation>?
-            } catch(ignored: ClassNotFoundException) {
-
-            }
-        }
-    }
-
-    fun matches(aClass: Class<out Annotation>): Boolean {
-        return aClass == klass || aClass.name == name
-    }
-
-    fun getValue(): String? {
-        return values["value"] as String?
-    }
-
-}
-
-fun String.nameCase(): String {
-    return substring(0, 1).toUpperCase() + substring(1)
 }

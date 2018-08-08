@@ -18,9 +18,13 @@ import org.jboss.forge.roaster.model.Visibility.PRIVATE as rPRIVATE
 import org.jboss.forge.roaster.model.Visibility.PROTECTED as rPROTECTED
 import org.jboss.forge.roaster.model.Visibility.PUBLIC as rPUBLIC
 
-class JavaClass(val context: CritterContext, val sourceFile: File,
+class JavaClass(context: CritterContext, val sourceFile: File,
                 val sourceClass: JavaClassSource = Roaster.parse(sourceFile) as JavaClassSource)
     : CritterClass(sourceClass.`package`, sourceClass.name), Visible {
+
+    init {
+        this.context = context
+    }
 
     val superClass: CritterClass? by lazy {
         context.resolve(sourceClass.`package`, sourceClass.superType)
@@ -28,7 +32,6 @@ class JavaClass(val context: CritterContext, val sourceFile: File,
 
     override val annotations = mutableListOf<CritterAnnotation>()
     override val fields: List<CritterField> by lazy {
-
         val parent = context.resolve(name = sourceClass.superType)
         (parent?.fields ?: listOf()) + listFields(sourceClass).map { javaField ->
             CritterField(javaField.name, javaField.type.qualifiedName).apply {

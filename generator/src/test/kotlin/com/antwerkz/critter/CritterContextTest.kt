@@ -77,11 +77,12 @@ class CritterContextTest {
         val directory = File("target/kotlinClassTest/")
 
         val critterContext = CritterContext(force = true)
-        Kibble.parse(files)
-                .flatMap { it.classes }
-                .forEach {
-                    critterContext.add(KotlinClass(it))
-                }
+        Kibble.parse(files).forEach { file ->
+                file.classes
+                    .forEach {
+                        critterContext.add(KotlinClass(file.pkgName!!, it))
+                    }
+        }
 
         val kotlinBuilder = KotlinBuilder(critterContext)
         kotlinBuilder.build(directory)
