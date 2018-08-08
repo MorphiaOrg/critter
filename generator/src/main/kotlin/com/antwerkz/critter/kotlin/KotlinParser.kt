@@ -18,6 +18,6 @@ class KotlinParser {
     }
 
     private fun parse(kibbleFile: KibbleFile, kibble: KibbleClass): CritterClass {
-        return KotlinClass(kibbleFile.pkgName, kibble.name, kibble)
+        return KotlinClass(kibbleFile.pkgName, kibble.name, kibble, kibbleFile.file)
     }
 }

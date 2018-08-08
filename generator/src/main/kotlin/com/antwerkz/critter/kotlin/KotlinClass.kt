@@ -7,17 +7,18 @@ import com.antwerkz.critter.Visibility
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleProperty
 import com.antwerkz.kibble.model.TypeParameter
+import java.io.File
 
 @Suppress("UNCHECKED_CAST")
-class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
-    : CritterClass(pkgName, name) {
+class KotlinClass(pkgName: String?, name: String, val source: KibbleClass, file: File)
+    : CritterClass(file, pkgName, name) {
 
-    constructor(pkgName: String, source: KibbleClass) : this(pkgName, source.name, source)
+    constructor(pkgName: String, source: KibbleClass, file: File) : this(pkgName, source.name, source, file)
 
     override val annotations = mutableListOf<CritterAnnotation>()
     override val fields: List<CritterField> by lazy {
         listProperties(source).map { property: KibbleProperty ->
-            CritterField(property.name, property.type.toString()).also { field ->
+            CritterField(property.name, property.type?.externalize() ?: "").also { field ->
                 property.type?.typeParameters?.forEach { typeParameter: TypeParameter ->
                     field.fullParameterTypes.add(typeParameter.type.toString())
                 }
@@ -72,7 +73,7 @@ class KotlinClass(pkgName: String?, name: String, val source: KibbleClass)
         val list = listOf(source.extends) + source.implements
         return list
                 .filterNotNull()
-                .map { it -> context.resolveFile(source.context.resolve(it))
+                .map { it -> context.resolveFile(it.fqcn())
                         ?.lastModified() ?: -1L }
                 .max()
                 ?: 0L

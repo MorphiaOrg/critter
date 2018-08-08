@@ -20,7 +20,7 @@ import org.jboss.forge.roaster.model.Visibility.PUBLIC as rPUBLIC
 
 class JavaClass(context: CritterContext, val sourceFile: File,
                 val sourceClass: JavaClassSource = Roaster.parse(sourceFile) as JavaClassSource)
-    : CritterClass(sourceClass.`package`, sourceClass.name), Visible {
+    : CritterClass(sourceFile, sourceClass.`package`, sourceClass.name), Visible {
 
     init {
         this.context = context

@@ -5,7 +5,7 @@ import java.io.File
 import java.util.HashMap
 
 @Suppress("UNCHECKED_CAST")
-class CritterContext(val criteriaPkg: String? = "criteria", var force: Boolean = false) {
+class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false) {
     val classes = mutableMapOf<String, CritterClass>()
 
     fun shouldGenerate(source: Long?, output: Long?): Boolean {
@@ -40,7 +40,7 @@ class CritterContext(val criteriaPkg: String? = "criteria", var force: Boolean =
         return resolve(currentPkg, name)?.isEmbedded ?: false
     }
 
-    fun resolveFile(resolve: KibbleClass?): File? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    fun resolveFile(name: String): File? {
+        return classes[name]?.file
     }
 }

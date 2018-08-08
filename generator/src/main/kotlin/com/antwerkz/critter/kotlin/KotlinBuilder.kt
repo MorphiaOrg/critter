@@ -41,7 +41,7 @@ class KotlinBuilder(val context: CritterContext) {
 
     private fun build(directory: File, source: CritterClass) {
         val criteriaPkg = context.criteriaPkg ?: source.pkgName+".criteria"
-        val kibbleFile = KibbleFile("${source.name}Criteria.kt", criteriaPkg)
+        val kibbleFile = KibbleFile(File("${directory.absolutePath}/${source.name}Criteria.kt"), pkgName = criteriaPkg)
         val outputFile = kibbleFile.outputFile(directory)
 
         try {

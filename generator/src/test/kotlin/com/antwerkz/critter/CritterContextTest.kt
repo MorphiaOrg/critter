@@ -80,7 +80,7 @@ class CritterContextTest {
         Kibble.parse(files).forEach { file ->
                 file.classes
                     .forEach {
-                        critterContext.add(KotlinClass(file.pkgName!!, it))
+                        critterContext.add(KotlinClass(file.pkgName!!, it, file.file))
                     }
         }
 

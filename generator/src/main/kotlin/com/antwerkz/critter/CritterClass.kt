@@ -2,8 +2,9 @@ package com.antwerkz.critter
 
 import com.antwerkz.critter.Visibility.PUBLIC
 import org.mongodb.morphia.annotations.Embedded
+import java.io.File
 
-abstract class CritterClass(var pkgName: String? = null, var name: String) : AnnotationHolder, Visible {
+abstract class CritterClass(var file: File?, var pkgName: String? = null, var name: String) : AnnotationHolder, Visible {
     lateinit var context: CritterContext
     val qualifiedName: String by lazy {
         pkgName?.let { "${pkgName}.${name}" } ?: name

@@ -21,7 +21,7 @@ class KotlinClassTest {
         val files = Kibble.parse(listOf(File("../tests/kotlin/src/main/kotlin/")))
         files.forEach { file ->
             file.classes.forEach { klass ->
-                critterContext.add(KotlinClass(file.pkgName, klass.name, klass))
+                critterContext.add(KotlinClass(file.pkgName, klass.name, klass, file.file))
             }
         }
 
@@ -49,7 +49,7 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
 
         val context = CritterContext(force = true)
         file.classes.forEach { klass ->
-            context.add(KotlinClass(file.pkgName, klass.name, klass))
+            context.add(KotlinClass(file.pkgName, klass.name, klass, file.file))
         }
 
         val parent = context.resolve("properties", "Parent")!! as KotlinClass
