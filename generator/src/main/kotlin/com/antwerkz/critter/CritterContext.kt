@@ -1,8 +1,6 @@
 package com.antwerkz.critter
 
-import com.antwerkz.kibble.model.KibbleClass
 import java.io.File
-import java.util.HashMap
 
 @Suppress("UNCHECKED_CAST")
 class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false) {
@@ -34,10 +32,6 @@ class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false
 
     fun resolve(currentPkg: String? = null, name: String): CritterClass? {
         return classes[name] ?: currentPkg?.let { classes["$currentPkg.$name"] }
-    }
-
-    fun isEmbedded(currentPkg: String? = null, name: String): Boolean {
-        return resolve(currentPkg, name)?.isEmbedded ?: false
     }
 
     fun resolveFile(name: String): File? {

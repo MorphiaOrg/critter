@@ -1,36 +1,55 @@
 package com.antwerkz.critter.kotlin
 
-import com.antwerkz.critter.CritterClass
-import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.TypeSafeFieldEnd
 import com.antwerkz.critter.nameCase
-import com.antwerkz.kibble.model.KibbleArgument
-import com.antwerkz.kibble.model.KibbleClass
-import com.antwerkz.kibble.model.KibbleFile
-import com.antwerkz.kibble.model.KibbleType
-import com.antwerkz.kibble.model.Modality.FINAL
-import com.antwerkz.kibble.model.Mutability.VAR
-import com.antwerkz.kibble.model.Visibility.PRIVATE
 import com.mongodb.WriteConcern
 import com.mongodb.WriteResult
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.FunSpec.Builder
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.KModifier.FINAL
+import com.squareup.kotlinpoet.KModifier.PRIVATE
+import com.squareup.kotlinpoet.KModifier.VARARG
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
 import org.mongodb.morphia.Datastore
 import org.mongodb.morphia.annotations.Embedded
 import org.mongodb.morphia.annotations.Id
+import org.mongodb.morphia.annotations.Property
 import org.mongodb.morphia.annotations.Reference
 import org.mongodb.morphia.query.Criteria
 import org.mongodb.morphia.query.CriteriaContainer
 import org.mongodb.morphia.query.Query
+import org.mongodb.morphia.query.UpdateOperations
 import org.mongodb.morphia.query.UpdateResults
 import org.slf4j.LoggerFactory
 import java.io.File
 
-class KotlinBuilder(val context: CritterContext) {
+class KotlinBuilder(val context: KotlinContext) {
     companion object {
-        private val STRING = "String"
-        private val UPDATE_RESULTS: String = UpdateResults::class.java.name
-        private val WRITE_CONCERN: String = WriteConcern::class.java.name
-        val LOG = LoggerFactory.getLogger(KotlinBuilder::class.java)
+        private val STRING = String::class.asClassName()
+        private val BOOLEAN = Boolean::class.asClassName()
+        private val CRITERIA = Criteria::class.asClassName()
+        private val CRITERIA_CONTAINER = CriteriaContainer::class.asClassName()
+        private val QUERY = Query::class.asClassName()
+        private val TYPESAFE_FIELD_END = TypeSafeFieldEnd::class.asClassName()
+        private val UPDATE_OPERATIONS = UpdateOperations::class.asClassName()
+        private val UPDATE_RESULTS = UpdateResults::class.asClassName()
+        private val WRITE_CONCERN = WriteConcern::class.asClassName()
+        private val WRITE_RESULT = WriteResult::class.asClassName()
+        private val LOG = LoggerFactory.getLogger(KotlinBuilder::class.java)
     }
 
     fun build(directory: File) {
@@ -39,226 +58,321 @@ class KotlinBuilder(val context: CritterContext) {
         }
     }
 
-    private fun build(directory: File, source: CritterClass) {
-        val criteriaPkg = context.criteriaPkg ?: source.pkgName+".criteria"
-        val kibbleFile = KibbleFile(File("${directory.absolutePath}/${source.name}Criteria.kt"), pkgName = criteriaPkg)
-        val outputFile = kibbleFile.outputFile(directory)
+
+    private fun build(directory: File, source: KotlinClass) {
+        val criteriaPkg = context.criteriaPkg ?: source.fileSpec.packageName+".criteria"
+
+        val fileBuilder = FileSpec.builder(criteriaPkg, "${source.name}Criteria")
+        val replace = criteriaPkg.replace('.', '/')
+        val outputFile = File(directory, "$replace/${fileBuilder.name}.kt")
 
         try {
+            val srcMod = source.lastModified()
+            val outMod = outputFile.lastModified()
             if (!source.isAbstract()
                     && !source.isEnum()
-                    && context.shouldGenerate(source.lastModified(), outputFile.lastModified())) {
+                    && context.shouldGenerate(srcMod, outMod)) {
 
-                val criteriaClass = kibbleFile.addClass("${source.name}Criteria")
-                val arguments = listOf(KibbleArgument("value", "\"UNCHECKED_CAST\""))
-                criteriaClass.addAnnotation(Suppress::class.java.name, arguments)
+                val criteriaClass = com.squareup.kotlinpoet.TypeSpec.classBuilder("${source.name}Criteria")
+                criteriaClass.addAnnotation(AnnotationSpec.builder(Suppress::class.java)
+                        .addMember(CodeBlock.of("\"UNCHECKED_CAST\""))
+                        .build())
 
-                criteriaClass.addProperty("datastore", Datastore::class.java) {
-                    constructorParam = true
-                }
-                criteriaClass.addProperty("query", "org.mongodb.morphia.query.Query<*>") {
-                    visibility = PRIVATE
-                    constructorParam = true
-                }
+                val constructorBuilder = FunSpec.constructorBuilder()
 
-                criteriaClass.addSecondaryConstructor("ds", "ds.find(${source.name}::class.java)", "fieldName").apply {
-                    addParameter("ds", Datastore::class.java.name)
-                    addParameter("fieldName", "String?", "null")
-                }
+                addConstructorProperty(constructorBuilder, criteriaClass, "ds", Datastore::class.java.asTypeName(), PRIVATE)
+                addConstructorProperty(constructorBuilder, criteriaClass, "query",
+                        QUERY.parameterizedBy(TypeVariableName("*")), PRIVATE)
+
+                criteriaClass.addFunction(FunSpec.constructorBuilder()
+                        .addParameter(ParameterSpec.builder("ds", Datastore::class).build())
+                        .addParameter(ParameterSpec.builder("fieldName", ClassName("kotlin", "String").asNullable())
+                                .defaultValue("null")
+                                .build())
+                        .callThisConstructor("ds", "ds.find(${source.name}::class.java)", "fieldName")
+                        .build())
 
                 addCriteriaMethods(source, criteriaClass)
-                addPrefixProperty(criteriaClass)
+                addPrefixProperty(criteriaClass, constructorBuilder)
 
                 if (source.fields.isNotEmpty()) {
-                    val companion = criteriaClass.addCompanionObject()
+                    val companion = TypeSpec.companionObjectBuilder()
                     source.fields.forEach { field ->
-                        companion.addProperty(field.name, STRING) {
-                            modality = FINAL
-                            initializer = field.mappedName()
-                        }
+                        companion.addProperty(PropertySpec.builder(field.name, STRING)
+                                .initializer(""""${field.mappedName()}"""")
+                                .build())
                         addField(source, criteriaClass, field)
                     }
+                    criteriaClass.addType(companion.build())
                 }
 
                 buildUpdater(source, criteriaClass)
-                outputFile.parentFile.mkdirs()
-                kibbleFile.toSource()
-                        .toFile(outputFile)
+
+                criteriaClass.primaryConstructor(constructorBuilder.build())
+                fileBuilder.addType(criteriaClass.build())
+
+                fileBuilder.build().writeTo(directory)
             }
         } catch (e: Exception) {
-            LOG.error("Failed to process ${source.pkgName}.${source.name}")
+            LOG.error("Failed to process ${source.fileSpec.packageName}.${source.name}")
             throw e
         }
     }
 
-    private fun addCriteriaMethods(source: CritterClass, criteriaClass: KibbleClass) {
-        criteriaClass.addFunction("query", Query::class.java.name + "<${source.name}>",
-                "return query as Query<${source.name}>")
-        criteriaClass.addFunction("delete", WriteResult::class.java.name, """return datastore.delete(query, wc)""")
-                .addParameter("wc", WriteConcern::class.java.name, "datastore.defaultWriteConcern")
-        criteriaClass.addFunction("or", CriteriaContainer::class.java.name, """return query.or(*criteria)""")
-                .addParameter("criteria", Criteria::class.java.name, varargs = true)
-        criteriaClass.addFunction("and", CriteriaContainer::class.java.name, """return query.and(*criteria)""")
-                .addParameter("criteria", Criteria::class.java.name, varargs = true)
-    }
-
-    private fun addPrefixProperty(criteriaClass: KibbleClass) {
-        criteriaClass.addProperty("prefix", STRING).also {
-            it.mutability = VAR
-            it.visibility = PRIVATE
-            it.initializer = """fieldName?.let { fieldName + "." } ?: "" """
+    private fun KotlinClass.asTypeName(): TypeName {
+        val className = ClassName(fileSpec.packageName, name)
+        if (source.typeVariables.isNotEmpty()) {
+            className.parameterizedBy(*source.typeVariables.toTypedArray())
         }
-        criteriaClass.constructor.addParameter("fieldName", "String?", "null")
+        return  className
     }
 
-    private fun addField(source: CritterClass, criteriaClass: KibbleClass, field: CritterField) {
+    private fun addCriteriaMethods(source: KotlinClass, criteriaClass: TypeSpec.Builder) {
+        criteriaClass.addFunction(FunSpec.builder("query")
+                .returns(QUERY.parameterizedBy(source.asTypeName()))
+                .addCode("return query as Query<${source.name}>")
+                .build())
+
+        criteriaClass.addFunction(FunSpec.builder("delete")
+                .addParameter(ParameterSpec.builder("wc", WRITE_CONCERN)
+                        .defaultValue("ds.defaultWriteConcern")
+                        .build())
+                .returns(WRITE_RESULT)
+                .addCode("""return ds.delete(query, wc)""")
+                .build())
+
+        criteriaClass.addFunction(FunSpec.builder("or")
+                .returns(CRITERIA_CONTAINER)
+                .addParameter(ParameterSpec.builder("criteria", CRITERIA)
+                        .addModifiers(VARARG)
+                        .build())
+                .addCode("""return query.or(*criteria)""")
+                .build())
+
+        criteriaClass.addFunction(FunSpec.builder("and")
+                .returns(CRITERIA_CONTAINER)
+                .addParameter(ParameterSpec.builder("criteria", CRITERIA)
+                        .addModifiers(VARARG)
+                        .build())
+                .addCode("""return query.and(*criteria)""")
+                .build())
+    }
+
+    private fun addPrefixProperty(criteriaClass: TypeSpec.Builder, constructorBuilder: FunSpec.Builder) {
+        criteriaClass.addProperty(PropertySpec.varBuilder("prefix", STRING)
+                .addModifiers(PRIVATE)
+                .initializer("""fieldName?.let { fieldName + "." } ?: "" """)
+                .build())
+        constructorBuilder.addParameter(ParameterSpec.builder("fieldName", STRING.asNullable()).build())
+    }
+
+    private fun addField(source: KotlinClass, criteriaClass: TypeSpec.Builder, field: PropertySpec) {
         when {
-            source.hasAnnotation(Reference::class.java) -> {
-                val function = criteriaClass.addFunction(field.name, criteriaClass.name,
-                        """query.filter("${field.name} = ", reference)""")
-                function.addParameter("reference", field.type)
-                function.parameters.first().type
+            source.source.hasAnnotation(Reference::class.java) -> {
+                criteriaClass.addFunction(FunSpec.builder(field.name)
+                        .addCode("""query.filter("${field.name} = ", reference)""")
+                        .addParameter(ParameterSpec.builder("reference", field.type)
+                                .build())
+                        .returns(ClassName("${source.name}Criteria", ""))
+                        .build())
             }
             field.hasAnnotation(Embedded::class.java) -> {
-                var type = KibbleType.from(field.type)
-                if (field.isContainer() && type.typeParameters.isNotEmpty()) {
-                    val last = type.typeParameters.last()
-                    type = last.type!!
+                var type = field.type
+                if (field.isContainer()) {
+                    if (type is ParameterizedTypeName && type.typeArguments.isNotEmpty()) {
+                        type = type.typeArguments.last()
+                    }
                 }
 
-                val pkg = context.criteriaPkg ?: type.pkgName+".criteria"
-                val criteriaType = KibbleType.from("${pkg}.${type.className}Criteria")
-                criteriaClass.addFunction(field.name, criteriaType.fqcn(),
-                        """return ${criteriaType.className}(datastore, query, "${field.name}")""")
+                val pkg = context.criteriaPkg ?: source.fileSpec.packageName+".criteria"
+                val criteriaType = ClassName(pkg, "${(type as ClassName).simpleName}Criteria")
+                criteriaClass.addFunction(FunSpec.builder(field.name)
+                        .returns(criteriaType)
+                        .addCode("""return %T(ds, query, "${field.name}")""", criteriaType)
+                        .build())
             }
             else -> {
                 val name =
-                        if (field.hasAnnotation(Embedded::class.java) || source.hasAnnotation(Embedded::class.java)) {
+                        if (field.hasAnnotation(Embedded::class.java) || source.source.hasAnnotation(Embedded::class.java)) {
                             "prefix + ${field.name}"
                         } else {
                             field.name
                         }
-                criteriaClass.addFunction(field.name,
-                        "${TypeSafeFieldEnd::class.java.name}<${criteriaClass.name}, ${field.type}>",
-                        "return TypeSafeFieldEnd(this, query, $name)")
-                criteriaClass.addFunction(field.name, Criteria::class.java.name,
-                        "return ${TypeSafeFieldEnd::class.java.name}<${criteriaClass.name}, ${field.type}>(this, query, $name).equal(__newValue)")
-                        .addParameter("__newValue", field.parameterizedType)
+                val criteria = source.name + "Criteria"
+                criteriaClass.addFunction(FunSpec.builder(field.name)
+                        .returns(TYPESAFE_FIELD_END.parameterizedBy(TypeVariableName(criteria), field.type))
+                        .addCode(CodeBlock.of("return TypeSafeFieldEnd(this, query, $name)"))
+                        .build())
+
+                criteriaClass.addFunction(FunSpec.builder(field.name)
+                        .addParameter(ParameterSpec.builder("__newValue", field.type).build())
+                        .returns(CRITERIA)
+                        .addCode(CodeBlock.of("return TypeSafeFieldEnd<$criteria, %T>(this, query, $name).equal(__newValue)", field.type))
+                        .build())
             }
         }
     }
 
-    private fun buildUpdater(sourceClass: CritterClass, criteriaClass: KibbleClass) {
-        val updaterType = "${sourceClass.name}Updater"
-        criteriaClass.addFunction("updater", updaterType,
-                """return $updaterType(datastore, query, datastore.createUpdateOperations(${sourceClass.name}::class.java),
-                    |if(prefix.isNotEmpty()) prefix else null)""".trimMargin())
+    private fun TypeSpec.Builder.addFunction(name: String, returns: TypeName, body: String, vararg parameters: ParameterSpec) {
+        addFunction(FunSpec.builder(name)
+                .returns(returns)
+                .addCode(CodeBlock.of(body))
+                .addParameters(parameters.toList())
+                .build())
+    }
 
-        val updater = criteriaClass.addClass(name = updaterType)
-        updater.addProperty("ds", Datastore::class.java) {
-            visibility = PRIVATE
-            constructorParam = true
+    private fun parameter(name: String, type: TypeName, defaultValue: String? = null): ParameterSpec {
+        val builder = ParameterSpec.builder(name, type)
+        defaultValue?.let {
+            builder.defaultValue(defaultValue)
         }
-        updater.addProperty("query", Query::class.java.name + "<*>") {
-            visibility = PRIVATE
-            constructorParam = true
+        return builder.build()
+    }
+
+    private fun buildUpdater(sourceClass: KotlinClass, criteriaClass: TypeSpec.Builder) {
+        val updaterType = ClassName("", "${sourceClass.name}Updater")
+        criteriaClass.addFunction(FunSpec.builder("updater")
+                .returns(updaterType)
+                .addCode(CodeBlock.of("""return $updaterType(ds, query, ds.createUpdateOperations(${sourceClass.name}::class.java),
+                    |if(prefix.isNotEmpty()) prefix else null)""".trimMargin()))
+                .build())
+
+        val updater = TypeSpec.classBuilder(updaterType)
+        val updaterCtor = FunSpec.constructorBuilder()
+
+        addConstructorProperty(updaterCtor, updater, "ds", Datastore::class.java.asTypeName(), PRIVATE)
+        addConstructorProperty(updaterCtor, updater, "query", QUERY.parameterizedBy(TypeVariableName("*")), PRIVATE)
+        addConstructorProperty(updaterCtor, updater, "updateOperations", UPDATE_OPERATIONS.parameterizedBy(TypeVariableName("*")), PRIVATE)
+
+        addPrefixProperty(updater, updaterCtor)
+
+        updater.primaryConstructor(updaterCtor.build())
+        if (!sourceClass.source.hasAnnotation(Embedded::class.java)) {
+            updater.addFunction("updateAll", UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)",
+                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern"))
+
+            updater.addFunction("updateFirst", UPDATE_RESULTS, "return ds.updateFirst(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)",
+                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern"))
+
+            updater.addFunction("upsert", UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, true, wc)",
+                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern"))
+
+            updater.addFunction("remove", WRITE_RESULT, "return ds.delete(query, wc)",
+                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern"))
         }
-
-        updater.addProperty("updateOperations", type = "org.mongodb.morphia.query.UpdateOperations<*>") {
-            visibility = PRIVATE
-            constructorParam = true
-        }
-        addPrefixProperty(updater)
-
-        if (!sourceClass.hasAnnotation(Embedded::class.java)) {
-            updater.addFunction("updateAll", UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)")
-                    .addParameter("wc", WRITE_CONCERN, initializer = "ds.defaultWriteConcern")
-
-            updater.addFunction("updateFirst", UPDATE_RESULTS, "return ds.updateFirst(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)")
-                    .addParameter("wc", WRITE_CONCERN, initializer = "ds.defaultWriteConcern")
-
-            updater.addFunction("upsert", UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, true, wc)")
-                    .addParameter("wc", WRITE_CONCERN, initializer = "ds.defaultWriteConcern")
-
-            updater.addFunction("remove", WriteResult::class.java.name, "return ds.delete(query, wc)")
-                    .addParameter("wc", WRITE_CONCERN, initializer = "ds.defaultWriteConcern")
-        }
-        sourceClass.fields
-                .filter({ field -> !field.isStatic })
+        sourceClass.listProperties()
                 .forEach { field ->
                     if (!field.hasAnnotation(Id::class.java)) {
                         updater.addFunction(field.name, updaterType, """
-                            updateOperations.set(prefix + "${field.name}", __newValue)
-                            return this
-                            """.trimMargin())
-                                .addParameter("__newValue", field.parameterizedType)
+                            updateOperations.set(prefix + ${field.name}, __newValue)
+                            return this""".trimMargin(),
+                                parameter("__newValue", field.type))
 
                         updater.addFunction("unset${field.name.nameCase()}", updaterType, """
-                            updateOperations.unset(prefix + "${field.name}")
+                            updateOperations.unset(prefix + ${field.name})
                             return this
                             """)
 
-                        numerics(updaterType, updater, field)
+                        numbers(updaterType, updater, field)
                         containers(updaterType, updater, field)
                     }
                 }
+        criteriaClass.addType(updater.build())
     }
 
-    private fun numerics(type: String, updater: KibbleClass, field: CritterField) {
+    private fun addConstructorProperty(ctorBuilder: Builder, classBuilder: TypeSpec.Builder, name: String, type: TypeName,
+                                       vararg modifiers: KModifier) {
+        ctorBuilder.addParameter(ParameterSpec.builder(name, type).build())
+        classBuilder.addProperty(PropertySpec.builder(name, type)
+                .initializer(name)
+                .addModifiers(*modifiers)
+                .build())
+    }
+
+    private fun numbers(type: ClassName, updater: TypeSpec.Builder, field: PropertySpec) {
         if (field.isNumeric()) {
             updater.addFunction("inc${field.name.nameCase()}", type, """
-                updateOperations.inc(prefix + "${field.name}", __newValue)
-                return this
-                """.trimIndent())
-                    .addParameter("__newValue", field.type, "1.to${field.type}()")
+                updateOperations.inc(prefix + ${field.name}, __newValue)
+                return this""".trimIndent(),
+                    parameter("__newValue", field.type, "1.to${field.type}()"))
         }
     }
 
-    private fun containers(type: String, updater: KibbleClass, field: CritterField) {
+    private fun containers(type: ClassName, updater: TypeSpec.Builder, field: PropertySpec) {
         if (field.isContainer()) {
 
             updater.addFunction("addTo${field.name.nameCase()}", type,
-                    """updateOperations.add(prefix + "${field.name}", __newValue)
-                        |return this
-                    """.trimMargin())
-                    .addParameter("__newValue", field.parameterizedType)
+                    """updateOperations.add(prefix + ${field.name}, __newValue)
+                        |return this""".trimMargin(),
+                    parameter("__newValue", field.type))
 
             updater.addFunction("addTo${field.name.nameCase()}", type,
-                    """updateOperations.add(prefix + "${field.name}", __newValue, addDups)
-                        |return this """.trimMargin()).apply {
-                addParameter("__newValue", field.parameterizedType)
-                addParameter("addDups", "Boolean")
-            }
+                    """updateOperations.add(prefix + ${field.name}, __newValue, addDups)
+                        |return this """.trimMargin(),
+                    parameter("__newValue", field.type),
+                    parameter("addDups", BOOLEAN))
 
             updater.addFunction("addAllTo${field.name.nameCase()}", type,
-                    """updateOperations.addAll(prefix + "${field.name}", values, addDups)
-                        |return this """.trimMargin()).apply {
-                addParameter("values", field.parameterizedType)
-                addParameter("addDups", "Boolean")
-            }
-
-            updater.addFunction("removeFirstFrom${field.name.nameCase()}", type,
-                    """updateOperations.removeFirst(prefix + "${field.name}")
-                        |return this
-                    """.trimMargin())
-
-            updater.addFunction("removeLastFrom${field.name.nameCase()}", type,
-                    """updateOperations.removeLast(prefix + "${field.name}")
-                        |return this
-                    """.trimMargin())
-
-            updater.addFunction("removeFrom${field.name.nameCase()}", type,
-                    """updateOperations.removeAll(prefix + "${field.name}", __newValue)
-                        |return this
-                    """.trimMargin())
-                    .addParameter("__newValue", field.parameterizedType)
-
-            updater.addFunction("removeAllFrom${field.name.nameCase()}", type,
-                    """updateOperations.removeAll(prefix + "${field.name}", values)
-                        |return this
-                    """.trimMargin())
-                    .addParameter("values", field.parameterizedType)
+                    """updateOperations.addAll(prefix + ${field.name}, values, addDups)
+                        |return this """.trimMargin(),
+                    parameter("values", field.type),
+                    parameter("addDups", BOOLEAN))
         }
-    }
 
+        updater.addFunction("removeFirstFrom${field.name.nameCase()}", type,
+                """updateOperations.removeFirst(prefix + ${field.name})
+                        |return this """.trimMargin())
+
+        updater.addFunction("removeLastFrom${field.name.nameCase()}", type,
+                """updateOperations.removeLast(prefix + ${field.name})
+                        |return this """.trimMargin())
+
+        updater.addFunction("removeFrom${field.name.nameCase()}", type,
+                """updateOperations.removeAll(prefix + ${field.name}, __newValue)
+                        |return this """.trimMargin(),
+                parameter("__newValue", field.type))
+
+        updater.addFunction("removeAllFrom${field.name.nameCase()}", type,
+                """updateOperations.removeAll(prefix + ${field.name}, values)
+                        |return this """.trimMargin(),
+                parameter("values", field.type))
+    }
+}
+
+private fun PropertySpec.isContainer() = type.toString().substringBefore("<") in CritterField.CONTAINER_TYPES
+
+private fun PropertySpec.isNumeric() = CritterField.NUMERIC_TYPES.contains(type.toString())
+
+fun <T: Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
+    return annotations.firstOrNull { it.type == annotation.asTypeName() }
+}
+
+fun <T: Annotation> PropertySpec.hasAnnotation(annotation: Class<T>): Boolean {
+    return getAnnotation(annotation) != null
+}
+
+fun <T: Annotation> TypeSpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
+    return annotations.firstOrNull { it.type == annotation.asTypeName() }
+}
+
+fun <T: Annotation> TypeSpec.hasAnnotation(annotation: Class<T>): Boolean {
+    return getAnnotation(annotation) != null
+}
+
+fun AnnotationSpec.getValue(name: String = "value"): String? {
+    return members
+            .map { it.toPair() }
+            .firstOrNull { it.first == name }
+            ?.second
+}
+
+fun PropertySpec.mappedName(): String {
+    val annotation = getAnnotation(Id::class.java)
+    return if (annotation != null) {
+        "_id"
+    } else {
+        getAnnotation(Embedded::class.java)?.getValue()
+                ?: getAnnotation(Property::class.java)?.getValue()
+                ?: name
+    }
 }

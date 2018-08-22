@@ -4,7 +4,9 @@ import com.antwerkz.critter.java.JavaBuilder
 import com.antwerkz.critter.java.JavaClass
 import com.antwerkz.critter.kotlin.KotlinBuilder
 import com.antwerkz.critter.kotlin.KotlinClass
+import com.antwerkz.critter.kotlin.KotlinContext
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.classes
 import org.testng.Assert
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -76,15 +78,17 @@ class CritterContextTest {
                 .toList()
         val directory = File("target/kotlinClassTest/")
 
-        val critterContext = CritterContext(force = true)
-        Kibble.parse(files).forEach { file ->
-                file.classes
-                    .forEach {
-                        critterContext.add(KotlinClass(file.pkgName!!, it, file.file))
-                    }
+        val context = KotlinContext(force = true)
+        files.forEach { file ->
+            Kibble.parse(files).forEach { fileSpec ->
+                fileSpec.classes
+                        .forEach {
+                            context.add(KotlinClass(context, fileSpec, it, file))
+                        }
+            }
         }
 
-        val kotlinBuilder = KotlinBuilder(critterContext)
+        val kotlinBuilder = KotlinBuilder(context)
         kotlinBuilder.build(directory)
 
         val file = File(directory, "com/antwerkz/critter/test/criteria/PersonCriteria.kt")
@@ -96,13 +100,13 @@ class CritterContextTest {
         kotlinBuilder.build(directory)
         Assert.assertFalse(file.readLines().contains("test update"))
 
-        critterContext.force = false
+        context.force = false
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
         kotlinBuilder.build(directory)
-        Assert.assertTrue(file.readLines().contains("test update"))
+        Assert.assertFalse(file.readLines().contains("test update"))
 
-        critterContext.force = true
+        context.force = true
         kotlinBuilder.build(directory)
         Assert.assertFalse(file.readLines().contains("test update"))
     }

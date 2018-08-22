@@ -1,23 +1,18 @@
 package com.antwerkz.critter.kotlin
 
-import com.antwerkz.critter.CritterClass
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.KibbleContext
-import com.antwerkz.kibble.model.KibbleClass
-import com.antwerkz.kibble.model.KibbleFile
+import com.antwerkz.kibble.classes
 import java.io.File
 
-class KotlinParser {
+class KotlinParser(val context: KotlinContext) {
     private val kibbleContext = KibbleContext()
 
-    fun parse(file: File) : List<CritterClass> {
-        val kibbleFile = Kibble.parse(file.absolutePath, kibbleContext)
-        return kibbleFile.classes.map {
-            parse(kibbleFile, it)
+    fun parse(file: File) {
+        val fileSpec = Kibble.parse(file.absolutePath)
+        return fileSpec.classes.forEach {
+            context.add(KotlinClass(context, fileSpec, it, file))
         }
     }
 
-    private fun parse(kibbleFile: KibbleFile, kibble: KibbleClass): CritterClass {
-        return KotlinClass(kibbleFile.pkgName, kibble.name, kibble, kibbleFile.file)
-    }
 }

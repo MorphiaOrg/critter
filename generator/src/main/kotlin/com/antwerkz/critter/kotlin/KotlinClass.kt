@@ -1,86 +1,68 @@
 package com.antwerkz.critter.kotlin
 
-import com.antwerkz.critter.CritterAnnotation
-import com.antwerkz.critter.CritterClass
-import com.antwerkz.critter.CritterField
-import com.antwerkz.critter.Visibility
-import com.antwerkz.kibble.model.KibbleClass
-import com.antwerkz.kibble.model.KibbleProperty
-import com.antwerkz.kibble.model.TypeParameter
+import com.antwerkz.kibble.isAbstract
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
+import kotlin.Long.Companion
 
 @Suppress("UNCHECKED_CAST")
-class KotlinClass(pkgName: String?, name: String, val source: KibbleClass, file: File)
-    : CritterClass(file, pkgName, name) {
+class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, val file: File) {
 
-    constructor(pkgName: String, source: KibbleClass, file: File) : this(pkgName, source.name, source, file)
+//    constructor(pkgName: String, source: TypeSpec, file: File) : this(pkgName, source.name ?: "", source, file)
 
-    override val annotations = mutableListOf<CritterAnnotation>()
-    override val fields: List<CritterField> by lazy {
-        listProperties(source).map { property: KibbleProperty ->
-            CritterField(property.name, property.type?.externalize() ?: "").also { field ->
-                property.type?.typeParameters?.forEach { typeParameter: TypeParameter ->
-                    field.fullParameterTypes.add(typeParameter.type.toString())
-                }
-                field.parameterizedType = property.type.toString()
-                field.annotations += property.annotations.map {
-                    CritterAnnotation(it.type.fqcn(), it.arguments
-                            .map { (it.name ?: "value") to it.value }
-                            .toMap())
-                }
-            }
-        }
-                .sortedBy(CritterField::name)
-                .toMutableList()
-    }
+    val name = source.name ?: ""
+    val annotations = source.annotations
+    val fields /*= source.propertySpecs
+            .sortedBy(PropertySpec::name)
+            .toMutableList()*/
+     by lazy {
+         listProperties()
+     }
 
-    private fun listProperties(type: KibbleClass?): List<KibbleProperty> {
-        val list = mutableListOf<KibbleProperty>()
+    internal fun listProperties(type: KotlinClass? = this): List<PropertySpec> {
+        val list = mutableListOf<PropertySpec>()
         type?.let { current ->
-            list.addAll(current.properties)
-            current.extends?.let {
-                list.addAll(listProperties(current.context.resolve(it)))
+            val typeSpec = current.source
+            list += typeSpec.propertySpecs
+            if (typeSpec.superclass != ANY) {
+                list += listProperties(context.resolve(current.fileSpec.packageName, typeSpec.superclass.toString()))
             }
 
-            list += current.implements
-                    .map { listProperties(current.context.resolve(it)) }
+            list += current.source.superinterfaces
+                    .map { listProperties(context.resolve(name, it.key.toString())) }
                     .flatMap { it }
         }
         return list
 
     }
 
-    init {
-        visibility = when (source.visibility) {
-            com.antwerkz.kibble.model.Visibility.PUBLIC -> Visibility.PUBLIC
-            com.antwerkz.kibble.model.Visibility.PROTECTED -> Visibility.PROTECTED
-            com.antwerkz.kibble.model.Visibility.PRIVATE -> Visibility.PRIVATE
-            com.antwerkz.kibble.model.Visibility.INTERNAL -> Visibility.INTERNAL
-            else -> Visibility.PUBLIC
-        }
-        annotations += source.annotations.map {
-            CritterAnnotation(it.type.fqcn(), it.arguments
-                    .map { (it.name ?: "value") to it.value }
-                    .toMap())
-        }
-    }
+    fun isAbstract() = source.isAbstract()
 
-    override fun isAbstract() = source.isAbstract()
+    fun isEnum() = source.isEnum
 
-    override fun isEnum() = source.isEnum()
-
-    override fun lastModified(): Long {
-        val list = listOf(source.extends) + source.implements
-        return list
-                .filterNotNull()
-                .map { it -> context.resolveFile(it.fqcn())
-                        ?.lastModified() ?: -1L }
+    fun lastModified(): Long? {
+        val sourceMod = fileSpec.toJavaFileObject().lastModified
+        val list = listOf(source.superclass) + source.superinterfaces.keys
+                .filter { it != ANY }
+        val max = list
+                .mapNotNull { context.resolveFile(it.toString())?.lastModified() }
                 .max()
-                ?: 0L
+        return Math.max(sourceMod, max ?: Long.MIN_VALUE)
     }
 
     override fun toString(): String {
         return "KotlinClass(${source.name})"
     }
+
+}
+
+
+internal fun CodeBlock.toPair(): Pair<String, String> {
+    val split = toString().split("=")
+    return split.take(1)[0] to split.drop(1).joinToString("=")
 }
 

@@ -3,6 +3,7 @@ package com.antwerkz.critter
 import com.antwerkz.critter.java.JavaBuilder
 import com.antwerkz.critter.java.JavaClass
 import com.antwerkz.critter.kotlin.KotlinBuilder
+import com.antwerkz.critter.kotlin.KotlinContext
 import com.antwerkz.critter.kotlin.KotlinParser
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
@@ -45,7 +46,8 @@ class CritterMojo : AbstractMojo() {
         project.addCompileSourceRoot(outputDirectory.path)
 
         val context = CritterContext(criteriaPackage, force)
-        val kotlinParser = KotlinParser()
+        val kotlinContext = KotlinContext(criteriaPackage, force)
+        val kotlinParser = KotlinParser(kotlinContext)
         sourceDirectory
                 .map { File(project.basedir, it) }
                 .filter { it.exists() }
@@ -61,7 +63,7 @@ class CritterMojo : AbstractMojo() {
 
         when (outputType) {
             "java" -> JavaBuilder(context).build(outputDirectory)
-            "kotlin" -> KotlinBuilder(context).build(outputDirectory)
+            "kotlin" -> KotlinBuilder(kotlinContext).build(outputDirectory)
         }
     }
 }
@@ -73,9 +75,7 @@ class Walker(private val context: CritterContext, private val kotlinParser: Kotl
         if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
             context.add(JavaClass(context, file))
         } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
-            kotlinParser.parse(file).forEach {
-                context.add(it)
-            }
+            kotlinParser.parse(file)
         }
     }
 
