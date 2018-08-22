@@ -11,7 +11,7 @@
 
     <groupId>com.antwerkz.critter</groupId>
     <artifactId>critter</artifactId>
-    <version>3.0.2-SNAPSHOT</version>
+    <version>3.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>critter</name>
@@ -21,8 +21,7 @@
         <connection>scm:git:git@github.com:evanchooly/critter.git</connection>
         <developerConnection>scm:git:git@github.com:evanchooly/critter.git</developerConnection>
         <url>git@github.com:evanchooly/critter.git</url>
-      <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <pluginRepositories>
         <pluginRepository>
