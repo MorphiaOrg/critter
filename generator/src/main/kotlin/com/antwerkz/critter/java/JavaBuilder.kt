@@ -1,6 +1,5 @@
 package com.antwerkz.critter.java
 
-import com.antwerkz.critter.CritterClass
 import com.antwerkz.critter.CritterContext
 import com.antwerkz.critter.CritterField
 import com.antwerkz.critter.TypeSafeFieldEnd
@@ -22,10 +21,6 @@ import org.mongodb.morphia.query.UpdateOperations
 import org.mongodb.morphia.query.UpdateResults
 import java.io.File
 import java.io.PrintWriter
-import org.jboss.forge.roaster.model.Visibility.PACKAGE_PRIVATE as rPACKAGE_PRIVATE
-import org.jboss.forge.roaster.model.Visibility.PRIVATE as rPRIVATE
-import org.jboss.forge.roaster.model.Visibility.PROTECTED as rPROTECTED
-import org.jboss.forge.roaster.model.Visibility.PUBLIC as rPUBLIC
 
 class JavaBuilder(private val context: CritterContext) {
 
@@ -66,14 +61,14 @@ class JavaBuilder(private val context: CritterContext) {
                         .isConstructor = true
 
                 addCriteriaMethods(source, criteriaClass)
-                extractFields(source as JavaClass, criteriaClass)
+                extractFields(source, criteriaClass)
                 buildUpdater(source, criteriaClass)
                 generate(outputFile, criteriaClass)
             }
         }
     }
 
-    private fun addCriteriaMethods(source: CritterClass, criteriaClass: JavaClassSource) {
+    private fun addCriteriaMethods(source: JavaClass, criteriaClass: JavaClassSource) {
         criteriaClass.addImport(CriteriaContainer::class.java)
 
         criteriaClass.addMethod("""public Query<${source.name}> query() {
@@ -104,7 +99,7 @@ class JavaBuilder(private val context: CritterContext) {
         }
     }
 
-    private fun buildUpdater(source: CritterClass, criteriaClass: JavaClassSource) {
+    private fun buildUpdater(source: JavaClass, criteriaClass: JavaClassSource) {
         criteriaClass.addImport(source.qualifiedName)
         criteriaClass.addImport(Query::class.java)
         criteriaClass.addImport(UpdateOperations::class.java)
@@ -114,8 +109,8 @@ class JavaBuilder(private val context: CritterContext) {
         criteriaClass.addImport(TypeSafeFieldEnd::class.java)
 
         val type = source.name + "Updater"
-        //language=JAVA
-        criteriaClass.addMethod("""public ${type} getUpdater() {
+        // language=JAVA
+        criteriaClass.addMethod("""public $type getUpdater() {
            return new $type(ds,query,ds.createUpdateOperations(${source.name}.class),!prefix.equals("")?prefix:null);
         }""")
 
@@ -145,7 +140,7 @@ class JavaBuilder(private val context: CritterContext) {
             }""")
 
         source.fields
-                .filter({ field -> !field.isStatic })
+                .filter { field -> !field.isStatic }
                 .forEach { field ->
                     field.fullParameterTypes.forEach { criteriaClass.addImport(it) }
 
@@ -161,7 +156,7 @@ class JavaBuilder(private val context: CritterContext) {
                             return this;
                         }""")
 
-                        numerics(type, updater, field)
+                        numbers(type, updater, field)
                         containers(type, updater, field)
                     }
                 }
@@ -177,7 +172,7 @@ class JavaBuilder(private val context: CritterContext) {
             }""")
     }
 
-    private fun numerics(type: String, updater: JavaClassSource, field: CritterField) {
+    private fun numbers(type: String, updater: JavaClassSource, field: CritterField) {
         if (field.isNumeric()) {
             updater.addMethod("""public $type dec${field.name.nameCase()}() {
                 updateOperations.dec("${field.name}");
@@ -243,7 +238,7 @@ class JavaBuilder(private val context: CritterContext) {
         }
     }
 
-    private fun addFieldMethods(source: CritterClass, criteriaClass: JavaClassSource, field: CritterField) {
+    private fun addFieldMethods(source: JavaClass, criteriaClass: JavaClassSource, field: CritterField) {
         if (source.hasAnnotation(Reference::class.java)) {
             criteriaClass.addMethod("""public ${criteriaClass.qualifiedName}(${field.type} reference) {
                 query.filter("${source.name} = ", reference);
@@ -252,7 +247,7 @@ class JavaBuilder(private val context: CritterContext) {
         } else if (field.hasAnnotation(Embedded::class.java)) {
             criteriaClass.addImport(Criteria::class.java)
             val criteriaType: String = extractType(field, criteriaClass)
-            criteriaClass.addMethod("""public ${criteriaType} ${field.name}() {
+            criteriaClass.addMethod("""public $criteriaType ${field.name}() {
                 return new $criteriaType(ds, query, "${field.name}");
             }""")
         } else if (!field.isStatic) {

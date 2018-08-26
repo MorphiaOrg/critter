@@ -27,6 +27,14 @@
             <name>JCenter</name>
             <url>https://jcenter.bintray.com/</url>
         </pluginRepository>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-gantsign-maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/gantsign/maven</url>
+        </pluginRepository>
     </pluginRepositories>
 
     <properties>
@@ -38,7 +46,9 @@
         <morphia.version>1.3.2</morphia.version>
         <dokka.version>0.9.17</dokka.version>
         <testng.version>6.14.3</testng.version>
-        <slf4j.version>1.8.0-beta2</slf4j.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <jacoco.version>0.8.1</jacoco.version>
+        <ktlint.version>0.27.0</ktlint.version>
     </properties>
 
     <build>
@@ -93,7 +103,7 @@
                         <useDefaultExcludes>true</useDefaultExcludes>
                         <useDefaultMapping>true</useDefaultMapping>
                         <properties>
-                            <year>2012-2017</year>
+                            <year>2012-2018</year>
                             <full.name>Justin Lee</full.name>
                             <email>jlee@antwerkz.com</email>
                         </properties>
@@ -130,33 +140,50 @@
                             </goals>
                         </execution>
                     </executions>
+                    <configuration>
+                        <jvmTarget>1.8</jvmTarget>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
+
+
         <plugins>
             <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
                 <executions>
                     <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
+                        <id>default-prepare-agent</id>
                         <goals>
-                            <goal>compile</goal>
+                            <goal>prepare-agent</goal>
                         </goals>
                     </execution>
                     <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
+                        <id>default-report</id>
+                        <phase>prepare-package</phase>
                         <goals>
-                            <goal>test-compile</goal>
+                            <goal>report</goal>
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <jvmTarget>1.8</jvmTarget>
-                </configuration>
+                <inherited>true</inherited>
+            </plugin>
+            <plugin>
+                <groupId>com.github.gantsign.maven</groupId>
+                <artifactId>ktlint-maven-plugin</artifactId>
+                <version>0.9.4</version>
+                <executions>
+                    <execution>
+                        <id>format-and-check</id>
+                        <goals>
+                            <!--<goal>format</goal>-->
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <inherited>true</inherited>
             </plugin>
         </plugins>
     </build>
@@ -203,6 +230,17 @@
                 <version>${kibble.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.github.shyiko</groupId>
+                <artifactId>ktlint</artifactId>
+                <version>${ktlint.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-nop</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
@@ -213,6 +251,16 @@
                 <artifactId>kotlin-test</artifactId>
                 <version>${kotlin.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>2.11.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -230,6 +278,23 @@
         </dependency>
     </dependencies>
 
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <!-- select non-aggregate reports -->
+                            <report>report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <modules>
         <module>core</module>

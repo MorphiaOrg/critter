@@ -22,27 +22,26 @@ class CritterContextTest {
     @DataProvider(name = "forceScenarios")
     private fun forceScenarios(): Array<Array<out Any?>> {
         return arrayOf(
-                arrayOf(null, null, false, true),    // both virtual
-                arrayOf(100L, null, false, true),     // new output
-                arrayOf(null, 100L, false, true),     // virtual in, existing out
-                arrayOf(100L, 100L, false, true),      // same ages
-                arrayOf(100L, 1000L, false, false),    // output is newer
-                arrayOf(1000L, 100L, false, true),     // input is newer
+                arrayOf(null, null, false, true), // both virtual
+                arrayOf(100L, null, false, true), // new output
+                arrayOf(null, 100L, false, true), // virtual in, existing out
+                arrayOf(100L, 100L, false, true), // same ages
+                arrayOf(100L, 1000L, false, false), // output is newer
+                arrayOf(1000L, 100L, false, true), // input is newer
 
-                arrayOf(null, null, true, true),    // both virtual
-                arrayOf(100L, null, true, true),     // new output
-                arrayOf(null, 100L, true, true),     // virtual in, existing out
-                arrayOf(100L, 100L, true, true),      // same ages
-                arrayOf(100L, 1000L, true, true),    // output is newer
-                arrayOf(1000L, 100L, true, true)      // input is newer
+                arrayOf(null, null, true, true), // both virtual
+                arrayOf(100L, null, true, true), // new output
+                arrayOf(null, 100L, true, true), // virtual in, existing out
+                arrayOf(100L, 100L, true, true), // same ages
+                arrayOf(100L, 1000L, true, true), // output is newer
+                arrayOf(1000L, 100L, true, true) // input is newer
 
         )
     }
 
     @Test
     fun forceJava() {
-        val files = File("../tests/java/src/main/java/").walkTopDown()
-                .filter { it.name.endsWith(".java") }
+        val files = File("../tests/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
 
         val critterContext = CritterContext(force = true)
@@ -73,18 +72,15 @@ class CritterContextTest {
 
     @Test
     fun forceKotlin() {
-        val files = File("../tests/kotlin/src/main/kotlin/").walkTopDown()
-                .filter { it.name.endsWith(".kt") }
-                .toList()
+        val files = File("../tests/kotlin/src/main/kotlin/").walkTopDown().filter { it.name.endsWith(".kt") }.toList()
         val directory = File("target/kotlinClassTest/")
 
         val context = KotlinContext(force = true)
         files.forEach { file ->
             Kibble.parse(files).forEach { fileSpec ->
-                fileSpec.classes
-                        .forEach {
-                            context.add(KotlinClass(context, fileSpec, it, file))
-                        }
+                fileSpec.classes.forEach {
+                    context.add(KotlinClass(context, fileSpec, it, file))
+                }
             }
         }
 

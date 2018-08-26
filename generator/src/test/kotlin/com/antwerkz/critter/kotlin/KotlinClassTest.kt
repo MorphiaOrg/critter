@@ -16,7 +16,7 @@ import org.testng.annotations.Test
 import java.io.File
 
 class KotlinClassTest {
-    private var context= KotlinContext(force = true)
+    private var context = KotlinContext(force = true)
     private val directory = File("target/kotlinClassTest/")
 
     @Test(enabled = false)
@@ -28,7 +28,6 @@ class KotlinClassTest {
                     context.add(KotlinClass(context, file, klass, it))
                 }
             }
-
         }
 
         KotlinBuilder(context).build(directory)
@@ -45,12 +44,14 @@ class KotlinClassTest {
 
     @Test
     fun parentProperties() {
-        val file = Kibble.parseSource("""package properties
+        val file = Kibble.parseSource(
+                """package properties
 
 class Parent(val name: String)
 
 class Child(val age: Int, name: String, val nickNames: List<String>): Parent(name)
-""")
+"""
+        )
 
         val context = KotlinContext(force = true)
         file.classes.forEach { klass ->
@@ -66,9 +67,7 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
 
         val directory = File("target/properties/")
         builder.build(directory)
-        val criteria = Kibble.parse(listOf(directory))
-                .flatMap { it.classes }
-                .associateBy { it.name }
+        val criteria = Kibble.parse(listOf(directory)).flatMap { it.classes }.associateBy { it.name }
         val updater = criteria["ChildCriteria"]!!.classes.first { it.name == "ChildUpdater" }
         Assert.assertNotNull(updater.functions.firstOrNull { it.name == "incAge" })
         Assert.assertNotNull(updater.functions.firstOrNull { it.name == "addToNickNames" })
@@ -84,9 +83,7 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
         val personCriteria = file.classes[0]
         val companion = personCriteria.companion() as TypeSpec
         Assert.assertEquals(companion.properties.size, 5)
-        val sorted = companion.properties
-                .map { it.name }
-                .sorted()
+        val sorted = companion.properties.map { it.name }.sorted()
         Assert.assertEquals(sorted, listOf("age", "first", "id", "last", "ssn"))
         listOf("age", "first", "id", "last", "ssn").forEach {
             val functions = personCriteria.getFunctions(it)
@@ -139,7 +136,7 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
     private fun check(function: FunSpec, parameters: List<Pair<String, String>>, type: String) {
         Assert.assertEquals(function.parameters.size, parameters.size)
         Assert.assertEquals(function.returnType.toString(), type)
-        
+
         parameters.forEachIndexed { p, (first, second) ->
             val functionParam = function.parameters[p]
             Assert.assertEquals(functionParam.name, first)

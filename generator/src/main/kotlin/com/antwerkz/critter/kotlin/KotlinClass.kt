@@ -7,21 +7,12 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
-import kotlin.Long.Companion
 
 @Suppress("UNCHECKED_CAST")
 class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, val file: File) {
-
-//    constructor(pkgName: String, source: TypeSpec, file: File) : this(pkgName, source.name ?: "", source, file)
-
     val name = source.name ?: ""
     val annotations = source.annotations
-    val fields /*= source.propertySpecs
-            .sortedBy(PropertySpec::name)
-            .toMutableList()*/
-     by lazy {
-         listProperties()
-     }
+    val fields by lazy { listProperties() }
 
     internal fun listProperties(type: KotlinClass? = this): List<PropertySpec> {
         val list = mutableListOf<PropertySpec>()
@@ -36,8 +27,8 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
                     .map { listProperties(context.resolve(name, it.key.toString())) }
                     .flatMap { it }
         }
-        return list
 
+        return list
     }
 
     fun isAbstract() = source.isAbstract()
@@ -57,12 +48,9 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
     override fun toString(): String {
         return "KotlinClass(${source.name})"
     }
-
 }
-
 
 internal fun CodeBlock.toPair(): Pair<String, String> {
     val split = toString().split("=")
     return split.take(1)[0] to split.drop(1).joinToString("=")
 }
-

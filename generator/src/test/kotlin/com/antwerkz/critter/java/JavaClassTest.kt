@@ -38,16 +38,13 @@ class JavaClassTest {
 
     @Test
     fun build() {
-        val files = File("../tests/java/src/main/java/")
-                .walkTopDown()
-                .filter { it.name.endsWith(".java") }
+        val files = File("../tests/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
 
         val directory = File("target/javaClassTest/")
         val context = CritterContext(force = true)
 
         files.forEach { context.add(JavaClass(context, it)) }
-        JavaBuilder(context)
-                .build(directory)
+        JavaBuilder(context).build(directory)
 
         val personClass = context.resolve("com.antwerkz.critter.test", "Person") as JavaClass
         Assert.assertEquals(personClass.fields.size, 4)
@@ -57,14 +54,10 @@ class JavaClassTest {
         validatePersonCriteria(personClass, criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource)
         validateAddressCriteria(criteriaFiles)
         validateInvoiceCriteria(criteriaFiles)
-
     }
 
     private fun list(directory: File): List<JavaType<*>> {
-        return directory.walkTopDown()
-                .filter { it.name.endsWith(".java") }
-                .map { Roaster.parse(it) }
-                .toList()
+        return directory.walkTopDown().filter { it.name.endsWith(".java") }.map { Roaster.parse(it) }.toList()
     }
 
     private fun validatePersonCriteria(personClass: JavaClass, personCriteria: JavaClassSource) {
@@ -74,18 +67,16 @@ class JavaClassTest {
         shouldImport(personCriteria, "com.antwerkz.critter.test.Person")
 
         val origFields = personClass.fields
-        val criteriaFields = personCriteria.fields
-                .filter { it.isStatic }
-        Assert.assertEquals(criteriaFields.size, origFields.size,
-                "Criteria fields: $criteriaFields.\n person fields: ${origFields.joinToString("\n")}")
+        val criteriaFields = personCriteria.fields.filter { it.isStatic }
+        Assert.assertEquals(
+                criteriaFields.size, origFields.size, "Criteria fields: $criteriaFields.\n person fields: ${origFields.joinToString("\n")}"
+        )
         val names = criteriaFields.map { it.name }.sortedBy { it }
         Assert.assertEquals(names, listOf("age", "first", "last", "objectId"), "Found instead:  $names")
         origFields.forEach {
             val field = personCriteria.getField(it.name)
             val stringInitializer = field.stringInitializer
-            Assert.assertEquals(
-                    stringInitializer?.replace("\"", ""),
-                    extractName(it))
+            Assert.assertEquals(stringInitializer?.replace("\"", ""), extractName(it))
         }
 
         origFields.forEach { field ->
@@ -174,13 +165,15 @@ class JavaClassTest {
     }
 
     private fun shouldImport(javaClass: JavaClassSource, type: String?) {
-        Assert.assertNotNull(javaClass.imports.firstOrNull { it.qualifiedName == type },
-                "Should find an import for $type in ${javaClass.name}")
+        Assert.assertNotNull(
+                javaClass.imports.firstOrNull { it.qualifiedName == type }, "Should find an import for $type in ${javaClass.name}"
+        )
     }
 
     private fun shouldNotImport(javaClass: JavaClassSource, type: String?) {
-        Assert.assertNull(javaClass.imports.firstOrNull { it.qualifiedName == type },
-                "Should not find an import for $type in ${javaClass.name}")
+        Assert.assertNull(
+                javaClass.imports.firstOrNull { it.qualifiedName == type }, "Should not find an import for $type in ${javaClass.name}"
+        )
     }
 
     private fun extractName(property: CritterField): String {

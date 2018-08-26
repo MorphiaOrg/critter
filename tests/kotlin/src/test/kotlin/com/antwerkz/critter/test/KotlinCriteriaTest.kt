@@ -99,7 +99,7 @@ class KotlinCriteriaTest {
         Assert.assertEquals(delete.n, 1)
     }
 
-    @Test//(enabled = false) // waiting morphia issue #711
+    @Test
     fun updateFirst() {
         for (i in 0..99) {
             datastore.save(Person("First" + i, "Last" + i))

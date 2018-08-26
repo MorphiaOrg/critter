@@ -17,16 +17,21 @@ import org.codehaus.plexus.util.DirectoryWalker
 import org.slf4j.LoggerFactory
 import java.io.File
 
-
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 class CritterMojo : AbstractMojo() {
     companion object {
         val LOG = LoggerFactory.getLogger(CritterMojo::class.java)
     }
+
     @Parameter
     private var sourceDirectory = setOf("src/main/java", "src/main/kotlin")
 
-    @Parameter(property = "critter.output.directory", defaultValue = "\${project.build.directory}/generated-sources/critter", readonly = true, required = true)
+    @Parameter(
+            property = "critter.output.directory",
+            defaultValue = "\${project.build.directory}/generated-sources/critter",
+            readonly = true,
+            required = true
+    )
     private lateinit var outputDirectory: File
 
     @Parameter(property = "critter.criteria.package")
@@ -35,7 +40,7 @@ class CritterMojo : AbstractMojo() {
     @Parameter(property = "critter.force", defaultValue = "false")
     private var force: Boolean = false
 
-    @Parameter(property = "critter.output.type", name="outputType", required = true)
+    @Parameter(property = "critter.output.type", name = "outputType", required = true)
     lateinit var outputType: String
 
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
@@ -48,10 +53,7 @@ class CritterMojo : AbstractMojo() {
         val context = CritterContext(criteriaPackage, force)
         val kotlinContext = KotlinContext(criteriaPackage, force)
         val kotlinParser = KotlinParser(kotlinContext)
-        sourceDirectory
-                .map { File(project.basedir, it) }
-                .filter { it.exists() }
-                .forEach {
+        sourceDirectory.map { File(project.basedir, it) }.filter { it.exists() }.forEach {
                     val walker = DirectoryWalker()
                     walker.baseDir = it
                     walker.includes = listOf("**/*.java", "**/*.kt")

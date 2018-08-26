@@ -4,8 +4,7 @@ interface AnnotationHolder {
     val annotations: MutableList<CritterAnnotation>
 
     fun getValue(ann: Class<out Annotation>, defaultValue: String): String {
-        return annotations.firstOrNull { it.matches(ann) }
-                ?.getValue() ?: defaultValue
+        return annotations.firstOrNull { it.matches(ann) }?.getValue() ?: defaultValue
     }
 
     fun hasAnnotation(aClass: Class<out Annotation>): Boolean {
@@ -19,11 +18,9 @@ class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf()
 
     init {
         if (name.contains(".")) {
-            @Suppress("UNCHECKED_CAST")
-            try {
+            @Suppress("UNCHECKED_CAST") try {
                 klass = Class.forName(name) as Class<out Annotation>?
-            } catch(ignored: ClassNotFoundException) {
-
+            } catch (ignored: ClassNotFoundException) {
             }
         }
     }
@@ -35,5 +32,4 @@ class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf()
     fun getValue(): String? {
         return values["value"] as String?
     }
-
 }

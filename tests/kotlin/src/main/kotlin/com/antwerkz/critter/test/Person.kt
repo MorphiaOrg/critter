@@ -59,8 +59,6 @@ open class Person : AbstractPerson {
         result = 31 * result + (last?.hashCode() ?: 0)
         return result
     }
-
-
 }
 
 class SSN(var value: String) {
