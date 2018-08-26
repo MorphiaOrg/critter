@@ -123,9 +123,9 @@ class KotlinBuilder(val context: KotlinContext) {
     private fun formatOutput(directory: File, fileSpec: FileSpec) {
         val path = fileSpec.toJavaFileObject().toUri().path
         val file = File(directory, path)
-        val cb: (LintError, Boolean) -> Unit = { (line, col, _, detail), corrected ->
+        val cb: (LintError, Boolean) -> Unit = { (line, col, ruleId, detail), corrected ->
             if (!corrected) {
-                LOG.debug("Could not correct formatting error: $path[$line:$col]: $detail")
+                LOG.debug("Could not correct formatting error: ($line:$col) [$ruleId] $path: $detail")
             }
         }
         LOG.info("Formatting generated file: $file")
