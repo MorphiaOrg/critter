@@ -1,6 +1,6 @@
 package com.antwerkz.critter.test
 
-import org.mongodb.morphia.annotations.Entity
+import xyz.morphia.annotations.Entity
 
 @Entity
 class User : AbstractPerson() {

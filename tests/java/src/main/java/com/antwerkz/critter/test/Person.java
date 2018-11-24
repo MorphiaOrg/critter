@@ -15,8 +15,8 @@
  */
 package com.antwerkz.critter.test;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
+import xyz.morphia.annotations.Entity;
+import xyz.morphia.annotations.Id;
 import org.bson.types.ObjectId;
 
 @Entity

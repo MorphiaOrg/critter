@@ -16,9 +16,9 @@
 package com.antwerkz.critter.test
 
 import org.bson.types.ObjectId
-import org.mongodb.morphia.annotations.Entity
-import org.mongodb.morphia.annotations.Id
-import org.mongodb.morphia.annotations.Property
+import xyz.morphia.annotations.Entity
+import xyz.morphia.annotations.Id
+import xyz.morphia.annotations.Property
 
 @Entity
 open class Person : AbstractPerson {

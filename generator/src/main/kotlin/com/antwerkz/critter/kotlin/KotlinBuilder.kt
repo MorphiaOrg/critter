@@ -27,17 +27,17 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import org.mongodb.morphia.Datastore
-import org.mongodb.morphia.annotations.Embedded
-import org.mongodb.morphia.annotations.Id
-import org.mongodb.morphia.annotations.Property
-import org.mongodb.morphia.annotations.Reference
-import org.mongodb.morphia.query.Criteria
-import org.mongodb.morphia.query.CriteriaContainer
-import org.mongodb.morphia.query.Query
-import org.mongodb.morphia.query.UpdateOperations
-import org.mongodb.morphia.query.UpdateResults
 import org.slf4j.LoggerFactory
+import xyz.morphia.Datastore
+import xyz.morphia.annotations.Embedded
+import xyz.morphia.annotations.Id
+import xyz.morphia.annotations.Property
+import xyz.morphia.annotations.Reference
+import xyz.morphia.query.Criteria
+import xyz.morphia.query.CriteriaContainer
+import xyz.morphia.query.Query
+import xyz.morphia.query.UpdateOperations
+import xyz.morphia.query.UpdateResults
 import java.io.File
 import java.util.Comparator.comparingInt
 import java.util.ServiceLoader
@@ -129,8 +129,7 @@ class KotlinBuilder(val context: KotlinContext) {
             }
         }
         LOG.info("Formatting generated file: $file")
-        val text = KtLint.format(file.readText(), ruleSets, mapOf(), cb)
-        file.writeText(text)
+        file.writeText(KtLint.format(file.readText(), ruleSets, mapOf(), cb))
     }
 
     private fun KotlinClass.asTypeName(): TypeName {
@@ -152,7 +151,11 @@ class KotlinBuilder(val context: KotlinContext) {
     }
 
     private fun addPrefixProperty(criteriaClass: TypeSpec.Builder, constructorBuilder: FunSpec.Builder) {
-        criteriaClass.addProperty(PropertySpec.varBuilder("prefix", STRING).addModifiers(PRIVATE).initializer("""fieldName?.let { fieldName + "." } ?: "" """).build())
+        criteriaClass.addProperty(PropertySpec.builder("prefix", STRING)
+            .addModifiers(PRIVATE)
+            .initializer("""fieldName?.let { fieldName + "." } ?: "" """)
+            .build()
+        )
         constructorBuilder.addParameter(ParameterSpec.builder("fieldName", STRING.asNullable()).build())
     }
 
@@ -292,7 +295,7 @@ private fun PropertySpec.isContainer() = type.toString().substringBefore("<") in
 private fun PropertySpec.isNumeric() = CritterField.NUMERIC_TYPES.contains(type.toString())
 
 fun <T : Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
-    return annotations.firstOrNull { it.type == annotation.asTypeName() }
+    return annotations.firstOrNull { it.className == annotation.asTypeName() }
 }
 
 fun <T : Annotation> PropertySpec.hasAnnotation(annotation: Class<T>): Boolean {
@@ -300,7 +303,7 @@ fun <T : Annotation> PropertySpec.hasAnnotation(annotation: Class<T>): Boolean {
 }
 
 fun <T : Annotation> TypeSpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
-    return annotations.firstOrNull { it.type == annotation.asTypeName() }
+    return annotationSpecs.firstOrNull { it.className == annotation.asTypeName() }
 }
 
 fun <T : Annotation> TypeSpec.hasAnnotation(annotation: Class<T>): Boolean {

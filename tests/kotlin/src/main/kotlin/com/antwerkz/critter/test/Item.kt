@@ -15,7 +15,7 @@
  */
 package com.antwerkz.critter.test
 
-import org.mongodb.morphia.annotations.Embedded
+import xyz.morphia.annotations.Embedded
 
 @Embedded
 class Item(var name: String, var price: Double) {

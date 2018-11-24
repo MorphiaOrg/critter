@@ -33,11 +33,11 @@ class KotlinCriteriaTest {
         critter.drop()
     }
 
-    val datastore: org.mongodb.morphia.Datastore by lazy {
+    val datastore: xyz.morphia.Datastore by lazy {
         val mongo = com.mongodb.MongoClient()
         val critter = mongo.getDatabase("critter")
         critter.drop()
-        val morphia = org.mongodb.morphia.Morphia()
+        val morphia = xyz.morphia.Morphia()
         morphia.mapPackage("com.antwerkz")
         morphia.createDatastore(mongo, "critter")
     }

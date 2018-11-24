@@ -42,8 +42,8 @@
         <roaster.version>2.20.1.Final</roaster.version>
         <kotlin.version>1.2.61</kotlin.version>
         <maven.version>3.5.2</maven.version>
-        <kibble.version>0.13</kibble.version>
-        <morphia.version>1.3.2</morphia.version>
+        <kibble.version>0.14-SNAPSHOT</kibble.version>
+        <morphia.version>1.4.0</morphia.version>
         <dokka.version>0.9.17</dokka.version>
         <testng.version>6.14.3</testng.version>
         <slf4j.version>1.7.25</slf4j.version>
@@ -200,8 +200,8 @@
                 <version>${freemarker.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mongodb.morphia</groupId>
-                <artifactId>morphia</artifactId>
+                <groupId>xyz.morphia.morphia</groupId>
+                <artifactId>core</artifactId>
                 <version>${morphia.version}</version>
             </dependency>
             <dependency>
@@ -287,7 +287,6 @@
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <!-- select non-aggregate reports -->
                             <report>report</report>
                         </reports>
                     </reportSet>

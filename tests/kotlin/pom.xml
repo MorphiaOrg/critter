@@ -68,8 +68,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.mongodb.morphia</groupId>
-            <artifactId>morphia</artifactId>
+            <groupId>xyz.morphia.morphia</groupId>
+            <artifactId>core</artifactId>
         </dependency>
 
         <!-- tests -->

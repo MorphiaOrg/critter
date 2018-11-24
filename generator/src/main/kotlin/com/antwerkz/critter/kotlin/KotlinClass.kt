@@ -11,7 +11,7 @@ import java.io.File
 @Suppress("UNCHECKED_CAST")
 class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, val file: File) {
     val name = source.name ?: ""
-    val annotations = source.annotations
+    val annotations = source.annotationSpecs
     val fields by lazy { listProperties() }
 
     internal fun listProperties(type: KotlinClass? = this): List<PropertySpec> {

@@ -1,7 +1,7 @@
 package com.antwerkz.critter.test
 
-import org.mongodb.morphia.annotations.Embedded
-import org.mongodb.morphia.annotations.Property
+import xyz.morphia.annotations.Embedded
+import xyz.morphia.annotations.Property
 
 @Embedded
 class Address {
