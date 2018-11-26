@@ -12,10 +12,6 @@
     <artifactId>critter-generator</artifactId>
     <version>3.0.2-SNAPSHOT</version>
 
-    <properties>
-        <kotlin.version>1.2.60</kotlin.version>
-    </properties>
-
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
@@ -70,6 +66,11 @@
         <dependency>
             <groupId>com.antwerkz.kibble</groupId>
             <artifactId>kibble</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>kotlinpoet</artifactId>
+            <version>${kotlinpoet.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.shyiko</groupId>

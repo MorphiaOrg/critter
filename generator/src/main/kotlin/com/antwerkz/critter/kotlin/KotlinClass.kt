@@ -1,9 +1,9 @@
 package com.antwerkz.critter.kotlin
 
-import com.antwerkz.kibble.isAbstract
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
@@ -54,3 +54,5 @@ internal fun CodeBlock.toPair(): Pair<String, String> {
     val split = toString().split("=")
     return split.take(1)[0] to split.drop(1).joinToString("=")
 }
+
+fun TypeSpec.isAbstract() = KModifier.ABSTRACT in modifiers

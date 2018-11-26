@@ -12,10 +12,6 @@
     <artifactId>critter-tests-kotlin</artifactId>
     <name>critter-tests-kotlin</name>
 
-    <properties>
-        <kotlin.version>1.2.60</kotlin.version>
-    </properties>
-
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
