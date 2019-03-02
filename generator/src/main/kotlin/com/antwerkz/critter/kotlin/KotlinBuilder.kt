@@ -95,7 +95,7 @@ class KotlinBuilder(val context: KotlinContext) {
                 criteriaClass.addFunction(
                         FunSpec.constructorBuilder().addParameter(ParameterSpec.builder("ds", Datastore::class).build()).addParameter(
                                 ParameterSpec.builder(
-                                        "fieldName", ClassName("kotlin", "String")
+                                        "fieldName", ClassName("kotlin", "String").copy(nullable = true)
                                 ).defaultValue("null").build()
                         ).callThisConstructor("ds", "ds.find(${source.name}::class.java)", "fieldName").build()
                 )
@@ -150,7 +150,8 @@ class KotlinBuilder(val context: KotlinContext) {
 
     private fun addCriteriaMethods(source: KotlinClass, criteriaClass: TypeSpec.Builder) {
         criteriaClass.addFunction(
-                FunSpec.builder("query").returns(QUERY.parameterizedBy(source.asTypeName())).addCode("return query as Query<${source.name}>").build()
+                FunSpec.builder("query").returns(QUERY.parameterizedBy(source.asTypeName()))
+                    .addCode("return query as Query<${source.name}>").build()
         )
 
         criteriaClass.addFunction(
@@ -184,7 +185,7 @@ class KotlinBuilder(val context: KotlinContext) {
                         "prefix", STRING
                 ).addModifiers(PRIVATE).initializer("""fieldName?.let { fieldName + "." } ?: "" """).build()
         )
-        constructorBuilder.addParameter(ParameterSpec.builder("fieldName", STRING).build())
+        constructorBuilder.addParameter(ParameterSpec.builder("fieldName", STRING.copy(nullable = true)).build())
     }
 
     private fun addField(source: KotlinClass, criteriaClass: TypeSpec.Builder, field: PropertySpec) {
@@ -326,7 +327,11 @@ class KotlinBuilder(val context: KotlinContext) {
     }
 
     private fun addConstructorProperty(
-        ctorBuilder: Builder, classBuilder: TypeSpec.Builder, name: String, type: TypeName, vararg modifiers: KModifier
+        ctorBuilder: Builder,
+        classBuilder: TypeSpec.Builder,
+        name: String,
+        type: TypeName,
+        vararg modifiers: KModifier
     ) {
         ctorBuilder.addParameter(ParameterSpec.builder(name, type).build())
         classBuilder.addProperty(PropertySpec.builder(name, type).initializer(name).addModifiers(*modifiers).build())
