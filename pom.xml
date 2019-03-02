@@ -39,17 +39,18 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <roaster.version>2.20.1.Final</roaster.version>
-        <kotlin.version>1.3.10</kotlin.version>
-        <maven.version>3.5.2</maven.version>
-        <kibble.version>0.15</kibble.version>
-        <kotlinpoet.version>1.0.0-RC2</kotlinpoet.version>
-        <morphia.version>1.4.0</morphia.version>
+
         <dokka.version>0.9.17</dokka.version>
-        <testng.version>6.14.3</testng.version>
-        <slf4j.version>1.7.25</slf4j.version>
         <jacoco.version>0.8.1</jacoco.version>
-        <ktlint.version>0.27.0</ktlint.version>
+        <kibble.version>0.16</kibble.version>
+        <kotlin.version>1.3.21</kotlin.version>
+        <kotlinpoet.version>1.1.0</kotlinpoet.version>
+        <ktlint.version>0.30.0</ktlint.version>
+        <maven.version>3.5.2</maven.version>
+        <morphia.version>1.4.0</morphia.version>
+        <roaster.version>2.20.1.Final</roaster.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <testng.version>6.14.3</testng.version>
     </properties>
 
     <build>

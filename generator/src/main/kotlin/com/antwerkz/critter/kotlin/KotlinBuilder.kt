@@ -64,10 +64,8 @@ class KotlinBuilder(val context: KotlinContext) {
     }
 
     private val ruleSets: List<RuleSet> by lazy {
-        ServiceLoader.load(RuleSetProvider::class.java)
-                .map<RuleSetProvider, RuleSet> { it.get() }
-                .sortedWith(comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }
-                                    .thenComparing(RuleSet::id))
+        ServiceLoader.load(RuleSetProvider::class.java).map<RuleSetProvider, RuleSet> { it.get() }
+            .sortedWith(comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }.thenComparing(RuleSet::id))
     }
 
     private fun build(directory: File, source: KotlinClass) {
@@ -83,14 +81,24 @@ class KotlinBuilder(val context: KotlinContext) {
             if (!source.isAbstract() && !source.isEnum() && context.shouldGenerate(srcMod, outMod)) {
 
                 val criteriaClass = com.squareup.kotlinpoet.TypeSpec.classBuilder("${source.name}Criteria")
-                criteriaClass.addAnnotation(AnnotationSpec.builder(Suppress::class.java).addMember(CodeBlock.of("\"UNCHECKED_CAST\"")).build())
+                criteriaClass.addAnnotation(
+                        AnnotationSpec.builder(Suppress::class.java).addMember(CodeBlock.of("\"UNCHECKED_CAST\"")).build()
+                )
 
                 val constructorBuilder = FunSpec.constructorBuilder()
 
                 addConstructorProperty(constructorBuilder, criteriaClass, "ds", Datastore::class.java.asTypeName(), PRIVATE)
-                addConstructorProperty(constructorBuilder, criteriaClass, "query", QUERY.parameterizedBy(TypeVariableName("*")), PRIVATE)
+                addConstructorProperty(
+                        constructorBuilder, criteriaClass, "query", QUERY.parameterizedBy(TypeVariableName("*")), PRIVATE
+                )
 
-                criteriaClass.addFunction(FunSpec.constructorBuilder().addParameter(ParameterSpec.builder("ds", Datastore::class).build()).addParameter(ParameterSpec.builder("fieldName", ClassName("kotlin", "String").asNullable()).defaultValue("null").build()).callThisConstructor("ds", "ds.find(${source.name}::class.java)", "fieldName").build())
+                criteriaClass.addFunction(
+                        FunSpec.constructorBuilder().addParameter(ParameterSpec.builder("ds", Datastore::class).build()).addParameter(
+                                ParameterSpec.builder(
+                                        "fieldName", ClassName("kotlin", "String")
+                                ).defaultValue("null").build()
+                        ).callThisConstructor("ds", "ds.find(${source.name}::class.java)", "fieldName").build()
+                )
 
                 addCriteriaMethods(source, criteriaClass)
                 addPrefixProperty(criteriaClass, constructorBuilder)
@@ -141,28 +149,52 @@ class KotlinBuilder(val context: KotlinContext) {
     }
 
     private fun addCriteriaMethods(source: KotlinClass, criteriaClass: TypeSpec.Builder) {
-        criteriaClass.addFunction(FunSpec.builder("query").returns(QUERY.parameterizedBy(source.asTypeName())).addCode("return query as Query<${source.name}>").build())
+        criteriaClass.addFunction(
+                FunSpec.builder("query").returns(QUERY.parameterizedBy(source.asTypeName())).addCode("return query as Query<${source.name}>").build()
+        )
 
-        criteriaClass.addFunction(FunSpec.builder("delete").addParameter(ParameterSpec.builder("wc", WRITE_CONCERN).defaultValue("ds.defaultWriteConcern").build()).returns(WRITE_RESULT).addCode("""return ds.delete(query, wc)""").build())
+        criteriaClass.addFunction(
+                FunSpec.builder("delete").addParameter(
+                        ParameterSpec.builder(
+                                "wc", WRITE_CONCERN
+                        ).defaultValue("ds.defaultWriteConcern").build()
+                ).returns(WRITE_RESULT).addCode("""return ds.delete(query, wc)""").build()
+        )
 
-        criteriaClass.addFunction(FunSpec.builder("or").returns(CRITERIA_CONTAINER).addParameter(ParameterSpec.builder("criteria", CRITERIA).addModifiers(VARARG).build()).addCode("""return query.or(*criteria)""").build())
+        criteriaClass.addFunction(
+                FunSpec.builder("or").returns(CRITERIA_CONTAINER).addParameter(
+                        ParameterSpec.builder(
+                                "criteria", CRITERIA
+                        ).addModifiers(VARARG).build()
+                ).addCode("""return query.or(*criteria)""").build()
+        )
 
-        criteriaClass.addFunction(FunSpec.builder("and").returns(CRITERIA_CONTAINER).addParameter(ParameterSpec.builder("criteria", CRITERIA).addModifiers(VARARG).build()).addCode("""return query.and(*criteria)""").build())
+        criteriaClass.addFunction(
+                FunSpec.builder("and").returns(CRITERIA_CONTAINER).addParameter(
+                        ParameterSpec.builder(
+                                "criteria", CRITERIA
+                        ).addModifiers(VARARG).build()
+                ).addCode("""return query.and(*criteria)""").build()
+        )
     }
 
     private fun addPrefixProperty(criteriaClass: TypeSpec.Builder, constructorBuilder: FunSpec.Builder) {
-        criteriaClass.addProperty(PropertySpec.builder("prefix", STRING)
-            .addModifiers(PRIVATE)
-            .initializer("""fieldName?.let { fieldName + "." } ?: "" """)
-            .build()
+        criteriaClass.addProperty(
+                PropertySpec.builder(
+                        "prefix", STRING
+                ).addModifiers(PRIVATE).initializer("""fieldName?.let { fieldName + "." } ?: "" """).build()
         )
-        constructorBuilder.addParameter(ParameterSpec.builder("fieldName", STRING.asNullable()).build())
+        constructorBuilder.addParameter(ParameterSpec.builder("fieldName", STRING).build())
     }
 
     private fun addField(source: KotlinClass, criteriaClass: TypeSpec.Builder, field: PropertySpec) {
         when {
             source.source.hasAnnotation(Reference::class.java) -> {
-                criteriaClass.addFunction(FunSpec.builder(field.name).addCode("""query.filter("${field.name} = ", reference)""").addParameter(ParameterSpec.builder("reference", field.type).build()).returns(ClassName("${source.name}Criteria", "")).build())
+                criteriaClass.addFunction(
+                        FunSpec.builder(field.name).addCode("""query.filter("${field.name} = ", reference)""").addParameter(
+                                ParameterSpec.builder("reference", field.type).build()
+                        ).returns(ClassName("${source.name}Criteria", "")).build()
+                )
             }
             field.hasAnnotation(Embedded::class.java) -> {
                 var type = field.type
@@ -174,7 +206,11 @@ class KotlinBuilder(val context: KotlinContext) {
 
                 val pkg = context.criteriaPkg ?: "${source.fileSpec.packageName}.criteria"
                 val criteriaType = ClassName(pkg, "${(type as ClassName).simpleName}Criteria")
-                criteriaClass.addFunction(FunSpec.builder(field.name).returns(criteriaType).addCode("""return %T(ds, query, "${field.name}")""", criteriaType).build())
+                criteriaClass.addFunction(
+                        FunSpec.builder(field.name).returns(criteriaType).addCode(
+                                """return %T(ds, query, "${field.name}")""", criteriaType
+                        ).build()
+                )
             }
             else -> {
                 val name = if (field.hasAnnotation(Embedded::class.java) || source.source.hasAnnotation(Embedded::class.java)) {
@@ -183,9 +219,25 @@ class KotlinBuilder(val context: KotlinContext) {
                     field.name
                 }
                 val criteria = source.name + "Criteria"
-                criteriaClass.addFunction(FunSpec.builder(field.name).returns(TYPESAFE_FIELD_END.parameterizedBy(TypeVariableName(criteria), field.type)).addCode(CodeBlock.of("return TypeSafeFieldEnd(this, query, $name)")).build())
+                criteriaClass.addFunction(
+                        FunSpec.builder(field.name).returns(
+                                TYPESAFE_FIELD_END.parameterizedBy(
+                                        TypeVariableName(criteria), field.type
+                                )
+                        ).addCode(CodeBlock.of("return TypeSafeFieldEnd(this, query, $name)")).build()
+                )
 
-                criteriaClass.addFunction(FunSpec.builder(field.name).addParameter(ParameterSpec.builder("__newValue", field.type).build()).returns(CRITERIA).addCode(CodeBlock.of("return TypeSafeFieldEnd<$criteria, %T>(this, query, $name).equal(__newValue)", field.type)).build())
+                criteriaClass.addFunction(
+                        FunSpec.builder(field.name).addParameter(
+                                ParameterSpec.builder(
+                                        "__newValue", field.type
+                                ).build()
+                        ).returns(CRITERIA).addCode(
+                                CodeBlock.of(
+                                        "return TypeSafeFieldEnd<$criteria, %T>(this, query, $name).equal(__newValue)", field.type
+                                )
+                        ).build()
+                )
             }
         }
     }
@@ -204,38 +256,67 @@ class KotlinBuilder(val context: KotlinContext) {
 
     private fun buildUpdater(sourceClass: KotlinClass, criteriaClass: TypeSpec.Builder) {
         val updaterType = ClassName("", "${sourceClass.name}Updater")
-        criteriaClass.addFunction(FunSpec.builder("updater").returns(updaterType).addCode(CodeBlock.of("""return $updaterType(ds, query, ds.createUpdateOperations(${sourceClass.name}::class.java),
-                    |if(prefix.isNotEmpty()) prefix else null)""".trimMargin())).build())
+        criteriaClass.addFunction(
+                FunSpec.builder("updater").returns(updaterType).addCode(
+                        CodeBlock.of(
+                                """return $updaterType(ds, query, ds.createUpdateOperations(${sourceClass.name}::class.java),
+                    |if(prefix.isNotEmpty()) prefix else null)""".trimMargin()
+                        )
+                ).build()
+        )
 
         val updater = TypeSpec.classBuilder(updaterType)
         val updaterCtor = FunSpec.constructorBuilder()
 
         addConstructorProperty(updaterCtor, updater, "ds", Datastore::class.java.asTypeName(), PRIVATE)
         addConstructorProperty(updaterCtor, updater, "query", QUERY.parameterizedBy(TypeVariableName("*")), PRIVATE)
-        addConstructorProperty(updaterCtor, updater, "updateOperations", UPDATE_OPERATIONS.parameterizedBy(TypeVariableName("*")), PRIVATE)
+        addConstructorProperty(
+                updaterCtor, updater, "updateOperations", UPDATE_OPERATIONS.parameterizedBy(TypeVariableName("*")), PRIVATE
+        )
 
         addPrefixProperty(updater, updaterCtor)
 
         updater.primaryConstructor(updaterCtor.build())
         if (!sourceClass.source.hasAnnotation(Embedded::class.java)) {
-            updater.addFunction("updateAll", UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)", parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern"))
+            updater.addFunction(
+                    "updateAll",
+                    UPDATE_RESULTS,
+                    "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)",
+                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern")
+            )
 
-            updater.addFunction("updateFirst", UPDATE_RESULTS, "return ds.updateFirst(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)", parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern"))
+            updater.addFunction(
+                    "updateFirst",
+                    UPDATE_RESULTS,
+                    "return ds.updateFirst(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)",
+                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern")
+            )
 
-            updater.addFunction("upsert", UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, true, wc)", parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern"))
+            updater.addFunction(
+                    "upsert",
+                    UPDATE_RESULTS,
+                    "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, true, wc)",
+                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern")
+            )
 
-            updater.addFunction("remove", WRITE_RESULT, "return ds.delete(query, wc)", parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern"))
+            updater.addFunction(
+                    "remove", WRITE_RESULT, "return ds.delete(query, wc)", parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern")
+            )
         }
         sourceClass.listProperties().forEach { field ->
             if (!field.hasAnnotation(Id::class.java)) {
-                updater.addFunction(field.name, updaterType, """
+                updater.addFunction(
+                        field.name, updaterType, """
                             updateOperations.set(prefix + ${field.name}, __newValue)
-                            return this""".trimMargin(), parameter("__newValue", field.type))
+                            return this""".trimMargin(), parameter("__newValue", field.type)
+                )
 
-                updater.addFunction("unset${field.name.nameCase()}", updaterType, """
+                updater.addFunction(
+                        "unset${field.name.nameCase()}", updaterType, """
                             updateOperations.unset(prefix + ${field.name})
                             return this
-                            """)
+                            """
+                )
 
                 numbers(updaterType, updater, field)
                 containers(updaterType, updater, field)
@@ -245,11 +326,7 @@ class KotlinBuilder(val context: KotlinContext) {
     }
 
     private fun addConstructorProperty(
-        ctorBuilder: Builder,
-        classBuilder: TypeSpec.Builder,
-        name: String,
-        type: TypeName,
-        vararg modifiers: KModifier
+        ctorBuilder: Builder, classBuilder: TypeSpec.Builder, name: String, type: TypeName, vararg modifiers: KModifier
     ) {
         ctorBuilder.addParameter(ParameterSpec.builder(name, type).build())
         classBuilder.addProperty(PropertySpec.builder(name, type).initializer(name).addModifiers(*modifiers).build())
@@ -257,36 +334,52 @@ class KotlinBuilder(val context: KotlinContext) {
 
     private fun numbers(type: ClassName, updater: TypeSpec.Builder, field: PropertySpec) {
         if (field.isNumeric()) {
-            updater.addFunction("inc${field.name.nameCase()}", type, """
+            updater.addFunction(
+                    "inc${field.name.nameCase()}", type, """
                 updateOperations.inc(prefix + ${field.name}, __newValue)
-                return this""".trimIndent(), parameter("__newValue", field.type, "1.to${field.type}()"))
+                return this""".trimIndent(), parameter("__newValue", field.type, "1.to${field.type}()")
+            )
         }
     }
 
     private fun containers(type: ClassName, updater: TypeSpec.Builder, field: PropertySpec) {
         if (field.isContainer()) {
 
-            updater.addFunction("addTo${field.name.nameCase()}", type, """updateOperations.add(prefix + ${field.name}, __newValue)
-                        |return this""".trimMargin(), parameter("__newValue", field.type))
+            updater.addFunction(
+                    "addTo${field.name.nameCase()}", type, """updateOperations.add(prefix + ${field.name}, __newValue)
+                        |return this""".trimMargin(), parameter("__newValue", field.type)
+            )
 
-            updater.addFunction("addTo${field.name.nameCase()}", type, """updateOperations.add(prefix + ${field.name}, __newValue, addDups)
-                        |return this """.trimMargin(), parameter("__newValue", field.type), parameter("addDups", BOOLEAN))
+            updater.addFunction(
+                    "addTo${field.name.nameCase()}", type, """updateOperations.add(prefix + ${field.name}, __newValue, addDups)
+                        |return this """.trimMargin(), parameter("__newValue", field.type), parameter("addDups", BOOLEAN)
+            )
 
-            updater.addFunction("addAllTo${field.name.nameCase()}", type, """updateOperations.addAll(prefix + ${field.name}, values, addDups)
-                        |return this """.trimMargin(), parameter("values", field.type), parameter("addDups", BOOLEAN))
+            updater.addFunction(
+                    "addAllTo${field.name.nameCase()}", type, """updateOperations.addAll(prefix + ${field.name}, values, addDups)
+                        |return this """.trimMargin(), parameter("values", field.type), parameter("addDups", BOOLEAN)
+            )
         }
 
-        updater.addFunction("removeFirstFrom${field.name.nameCase()}", type, """updateOperations.removeFirst(prefix + ${field.name})
-                        |return this """.trimMargin())
+        updater.addFunction(
+                "removeFirstFrom${field.name.nameCase()}", type, """updateOperations.removeFirst(prefix + ${field.name})
+                        |return this """.trimMargin()
+        )
 
-        updater.addFunction("removeLastFrom${field.name.nameCase()}", type, """updateOperations.removeLast(prefix + ${field.name})
-                        |return this """.trimMargin())
+        updater.addFunction(
+                "removeLastFrom${field.name.nameCase()}", type, """updateOperations.removeLast(prefix + ${field.name})
+                        |return this """.trimMargin()
+        )
 
-        updater.addFunction("removeFrom${field.name.nameCase()}", type, """updateOperations.removeAll(prefix + ${field.name}, __newValue)
-                        |return this """.trimMargin(), parameter("__newValue", field.type))
+        updater.addFunction(
+                "removeFrom${field.name.nameCase()}", type, """updateOperations.removeAll(prefix + ${field.name}, __newValue)
+                        |return this """.trimMargin(), parameter("__newValue", field.type)
+        )
 
-        updater.addFunction("removeAllFrom${field.name.nameCase()}", type, """updateOperations.removeAll(prefix + ${field.name}, values)
-                        |return this """.trimMargin(), parameter("values", field.type))
+        updater.addFunction(
+                "removeAllFrom${field.name.nameCase()}", type, """updateOperations.removeAll(prefix + ${field.name}, values)
+                        |return this """.trimMargin(), parameter("values", field.type)
+        )
     }
 }
 
