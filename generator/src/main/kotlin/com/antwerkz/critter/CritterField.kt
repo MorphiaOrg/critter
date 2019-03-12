@@ -2,9 +2,9 @@ package com.antwerkz.critter
 
 import org.jboss.forge.roaster.model.Visibility
 import org.jboss.forge.roaster.model.Visibility.PUBLIC
-import xyz.morphia.annotations.Embedded
-import xyz.morphia.annotations.Id
-import xyz.morphia.annotations.Property
+import dev.morphia.annotations.Embedded
+import dev.morphia.annotations.Id
+import dev.morphia.annotations.Property
 
 class CritterField(val name: String, val type: String) {
     companion object {

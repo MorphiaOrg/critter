@@ -1,6 +1,6 @@
 package com.antwerkz.critter.test;
 
-import xyz.morphia.annotations.Entity;
+import dev.morphia.annotations.Entity;
 
 @Entity
 public class User extends Person {

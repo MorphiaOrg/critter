@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.types.ObjectId;
-import xyz.morphia.annotations.Embedded;
-import xyz.morphia.annotations.Entity;
-import xyz.morphia.annotations.Id;
-import xyz.morphia.annotations.Reference;
+import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Reference;
 
 @Entity
 public class Invoice {

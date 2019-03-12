@@ -17,13 +17,13 @@ package com.antwerkz.critter;
 
 import java.util.List;
 
-import xyz.morphia.query.Criteria;
-import xyz.morphia.query.Query;
-import xyz.morphia.query.Shape;
-import xyz.morphia.query.Shape.Point;
-import static xyz.morphia.query.Shape.box;
-import static xyz.morphia.query.Shape.center;
-import static xyz.morphia.query.Shape.centerSphere;
+import dev.morphia.query.Criteria;
+import dev.morphia.query.Query;
+import dev.morphia.query.Shape;
+import dev.morphia.query.Shape.Point;
+import static dev.morphia.query.Shape.box;
+import static dev.morphia.query.Shape.center;
+import static dev.morphia.query.Shape.centerSphere;
 
 public class TypeSafeFieldEnd<T, V> {
   private T criteria;

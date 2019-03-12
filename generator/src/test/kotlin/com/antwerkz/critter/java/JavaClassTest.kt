@@ -7,8 +7,8 @@ import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.MethodSource
-import xyz.morphia.annotations.Id
-import xyz.morphia.annotations.Property
+import dev.morphia.annotations.Id
+import dev.morphia.annotations.Property
 import org.testng.Assert
 import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test

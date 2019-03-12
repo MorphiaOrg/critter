@@ -15,7 +15,7 @@
  */
 package com.antwerkz.critter.test;
 
-import xyz.morphia.annotations.Embedded;
+import dev.morphia.annotations.Embedded;
 
 @Embedded
 public class Item {

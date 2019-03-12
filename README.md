@@ -43,7 +43,7 @@ What difference does it make?
 -----------------------------
 Before critter, your criteria might look something like this:
 
-    xyz.morphia.query.Query<Query> query = ds.createQuery(Query.class);
+    dev.morphia.query.Query<Query> query = ds.createQuery(Query.class);
     query.and(
       query.criteria("bookmark").equal(bookmark),
       query.criteria("database").equal(database)

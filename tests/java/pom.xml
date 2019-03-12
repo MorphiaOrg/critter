@@ -45,7 +45,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>xyz.morphia.morphia</groupId>
+            <groupId>dev.morphia.morphia</groupId>
             <artifactId>core</artifactId>
         </dependency>
 

@@ -1,7 +1,7 @@
 package com.antwerkz.critter.test
 
-import xyz.morphia.annotations.Embedded
-import xyz.morphia.annotations.Property
+import dev.morphia.annotations.Embedded
+import dev.morphia.annotations.Property
 
 @Embedded
 class Address {
