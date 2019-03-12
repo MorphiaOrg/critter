@@ -9,7 +9,7 @@
 
     <groupId>com.antwerkz.critter</groupId>
     <artifactId>critter</artifactId>
-    <version>3.0.4-SNAPSHOT</version>
+    <version>3.0.4</version>
     <packaging>pom</packaging>
 
     <name>critter</name>
