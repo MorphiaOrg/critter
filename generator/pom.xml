@@ -5,11 +5,11 @@
     <parent>
         <groupId>com.antwerkz.critter</groupId>
         <artifactId>critter</artifactId>
-        <version>3.0.4</version>
+        <version>3.0.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>critter-generator</artifactId>
-    <version>3.0.4</version>
+    <version>3.0.5-SNAPSHOT</version>
 
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
