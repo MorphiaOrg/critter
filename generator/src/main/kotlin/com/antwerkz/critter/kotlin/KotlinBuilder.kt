@@ -27,8 +27,9 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import org.slf4j.LoggerFactory
 import dev.morphia.Datastore
+import dev.morphia.DeleteOptions
+import dev.morphia.UpdateOptions
 import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
@@ -38,6 +39,7 @@ import dev.morphia.query.CriteriaContainer
 import dev.morphia.query.Query
 import dev.morphia.query.UpdateOperations
 import dev.morphia.query.UpdateResults
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Comparator.comparingInt
 import java.util.ServiceLoader
@@ -48,9 +50,11 @@ class KotlinBuilder(val context: KotlinContext) {
         private val BOOLEAN = Boolean::class.asClassName()
         private val CRITERIA = Criteria::class.asClassName()
         private val CRITERIA_CONTAINER = CriteriaContainer::class.asClassName()
+        private val DELETE_OPTIONS = DeleteOptions::class.asClassName()
         private val QUERY = Query::class.asClassName()
         private val TYPESAFE_FIELD_END = TypeSafeFieldEnd::class.asClassName()
         private val UPDATE_OPERATIONS = UpdateOperations::class.asClassName()
+        private val UPDATE_OPTIONS = UpdateOptions::class.asClassName()
         private val UPDATE_RESULTS = UpdateResults::class.asClassName()
         private val WRITE_CONCERN = WriteConcern::class.asClassName()
         private val WRITE_RESULT = WriteResult::class.asClassName()
@@ -155,11 +159,13 @@ class KotlinBuilder(val context: KotlinContext) {
         )
 
         criteriaClass.addFunction(
-                FunSpec.builder("delete").addParameter(
-                        ParameterSpec.builder(
-                                "wc", WRITE_CONCERN
-                        ).defaultValue("ds.defaultWriteConcern").build()
-                ).returns(WRITE_RESULT).addCode("""return ds.delete(query, wc)""").build()
+                FunSpec.builder("delete")
+                    .addParameter(
+                        ParameterSpec.builder("options", DELETE_OPTIONS)
+                            .defaultValue("DeleteOptions()").build())
+                    .returns(WRITE_RESULT)
+                    .addCode("""return ds.delete(query, options)""")
+                    .build()
         )
 
         criteriaClass.addFunction(
@@ -280,28 +286,14 @@ class KotlinBuilder(val context: KotlinContext) {
         updater.primaryConstructor(updaterCtor.build())
         if (!sourceClass.source.hasAnnotation(Embedded::class.java)) {
             updater.addFunction(
-                    "updateAll",
-                    UPDATE_RESULTS,
-                    "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)",
-                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern")
+                    "update",
+                    UPDATE_RESULTS, "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, options)",
+                    parameter("options", UPDATE_OPTIONS, "UpdateOptions()")
             )
 
             updater.addFunction(
-                    "updateFirst",
-                    UPDATE_RESULTS,
-                    "return ds.updateFirst(query as Query<Any>, updateOperations as UpdateOperations<Any>, false, wc)",
-                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern")
-            )
-
-            updater.addFunction(
-                    "upsert",
-                    UPDATE_RESULTS,
-                    "return ds.update(query as Query<Any>, updateOperations as UpdateOperations<Any>, true, wc)",
-                    parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern")
-            )
-
-            updater.addFunction(
-                    "remove", WRITE_RESULT, "return ds.delete(query, wc)", parameter("wc", WRITE_CONCERN, "ds.defaultWriteConcern")
+                    "delete", WRITE_RESULT, "return ds.delete(query as Query<Any>, options)",
+                    parameter("options", DELETE_OPTIONS, "DeleteOptions()")
             )
         }
         sourceClass.listProperties().forEach { field ->
@@ -309,14 +301,15 @@ class KotlinBuilder(val context: KotlinContext) {
                 updater.addFunction(
                         field.name, updaterType, """
                             updateOperations.set(prefix + ${field.name}, __newValue)
-                            return this""".trimMargin(), parameter("__newValue", field.type)
+                            return this
+                            """.trimIndent(), parameter("__newValue", field.type)
                 )
 
                 updater.addFunction(
                         "unset${field.name.nameCase()}", updaterType, """
                             updateOperations.unset(prefix + ${field.name})
                             return this
-                            """
+                            """.trimIndent()
                 )
 
                 numbers(updaterType, updater, field)
@@ -350,41 +343,43 @@ class KotlinBuilder(val context: KotlinContext) {
     private fun containers(type: ClassName, updater: TypeSpec.Builder, field: PropertySpec) {
         if (field.isContainer()) {
 
+            val type1 = field.type
+            type1 as ParameterizedTypeName
             updater.addFunction(
-                    "addTo${field.name.nameCase()}", type, """updateOperations.add(prefix + ${field.name}, __newValue)
-                        |return this""".trimMargin(), parameter("__newValue", field.type)
+                    "addTo${field.name.nameCase()}", type, """updateOperations.addToSet(prefix + ${field.name}, __newValue)
+                        |return this""".trimMargin(), parameter("__newValue", type1)
             )
 
             updater.addFunction(
-                    "addTo${field.name.nameCase()}", type, """updateOperations.add(prefix + ${field.name}, __newValue, addDups)
-                        |return this """.trimMargin(), parameter("__newValue", field.type), parameter("addDups", BOOLEAN)
+                    "pushTo${field.name.nameCase()}", type, """updateOperations.push(prefix + ${field.name}, __newValue)
+                        |return this """.trimMargin(), parameter("__newValue", type1)
             )
 
             updater.addFunction(
-                    "addAllTo${field.name.nameCase()}", type, """updateOperations.addAll(prefix + ${field.name}, values, addDups)
-                        |return this """.trimMargin(), parameter("values", field.type), parameter("addDups", BOOLEAN)
+                    "pushTo${field.name.nameCase()}", type, """updateOperations.push(prefix + ${field.name}, __newValue)
+                            |return this """.trimMargin(), parameter("__newValue", type1.typeArguments.last())
+            )
+
+            updater.addFunction(
+                    "removeFirstFrom${field.name.nameCase()}", type, """updateOperations.removeFirst(prefix + ${field.name})
+                        |return this """.trimMargin()
+            )
+
+            updater.addFunction(
+                    "removeLastFrom${field.name.nameCase()}", type, """updateOperations.removeLast(prefix + ${field.name})
+                        |return this """.trimMargin()
+            )
+
+            updater.addFunction(
+                    "removeFrom${field.name.nameCase()}", type, """updateOperations.removeAll(prefix + ${field.name}, __newValue)
+                        |return this """.trimMargin(), parameter("__newValue", type1)
+            )
+
+            updater.addFunction(
+                    "removeAllFrom${field.name.nameCase()}", type, """updateOperations.removeAll(prefix + ${field.name}, values)
+                        |return this """.trimMargin(), parameter("values", type1)
             )
         }
-
-        updater.addFunction(
-                "removeFirstFrom${field.name.nameCase()}", type, """updateOperations.removeFirst(prefix + ${field.name})
-                        |return this """.trimMargin()
-        )
-
-        updater.addFunction(
-                "removeLastFrom${field.name.nameCase()}", type, """updateOperations.removeLast(prefix + ${field.name})
-                        |return this """.trimMargin()
-        )
-
-        updater.addFunction(
-                "removeFrom${field.name.nameCase()}", type, """updateOperations.removeAll(prefix + ${field.name}, __newValue)
-                        |return this """.trimMargin(), parameter("__newValue", field.type)
-        )
-
-        updater.addFunction(
-                "removeAllFrom${field.name.nameCase()}", type, """updateOperations.removeAll(prefix + ${field.name}, values)
-                        |return this """.trimMargin(), parameter("values", field.type)
-        )
     }
 }
 

@@ -32,16 +32,6 @@ public class TypeSafeFieldEnd<T, V> {
 
   private final String fieldName;
 
-//  @Deprecated
-//  public TypeSafeFieldEnd(Query<?> query, String fieldName) {
-//    throw new RuntimeException("Old constructor");
-//  }
-
-//  @Deprecated
-//  public TypeSafeFieldEnd(Query<?> query, FieldEnd<T> criteria) {
-//    throw new RuntimeException("Old constructor");
-//  }
-
   public TypeSafeFieldEnd(T criteria, Query<?> query, String fieldName) {
     this.criteria = criteria;
     this.query = query;

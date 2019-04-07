@@ -58,16 +58,16 @@ public class CriteriaTest {
         new Item("kleenex", 3.49), new Item("cough and cold syrup", 5.61)));
     InvoiceCriteria invoiceCriteria = new InvoiceCriteria(ds);
     invoiceCriteria.person(john);
-    Invoice invoice = invoiceCriteria.query().get();
-    Invoice doe = ds.createQuery(Invoice.class).filter("person =", john).get();
+    Invoice invoice = invoiceCriteria.query().first();
+    Invoice doe = ds.createQuery(Invoice.class).filter("person =", john).first();
     Assert.assertEquals(invoice, doe);
     Assert.assertEquals(doe.getPerson().getLast(), "Doe");
     Assert.assertEquals(invoice.getPerson().getLast(), "Doe");
-    Invoice query = ds.createQuery(Invoice.class).field("addresses.city").equal("Chicago").get();
+    Invoice query = ds.createQuery(Invoice.class).field("addresses.city").equal("Chicago").first();
     Assert.assertNotNull(query);
     invoiceCriteria = new InvoiceCriteria(ds);
     invoiceCriteria.addresses().city("Chicago");
-    Invoice critter = invoiceCriteria.query().get();
+    Invoice critter = invoiceCriteria.query().first();
     Assert.assertNotNull(critter);
     Assert.assertEquals(critter, query);
   }

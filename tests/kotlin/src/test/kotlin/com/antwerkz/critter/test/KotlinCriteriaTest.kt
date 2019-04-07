@@ -18,10 +18,14 @@ package com.antwerkz.critter.test
 import com.antwerkz.critter.test.criteria.InvoiceCriteria
 import com.antwerkz.critter.test.criteria.PersonCriteria
 import com.mongodb.WriteConcern.MAJORITY
+import com.mongodb.client.MongoCursor
+import dev.morphia.DeleteOptions
+import dev.morphia.UpdateOptions
 import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.Test
 import java.time.LocalDateTime
+import java.util.ArrayList
 
 @Test
 class KotlinCriteriaTest {
@@ -57,16 +61,16 @@ class KotlinCriteriaTest {
                 Item("kleenex", 3.49), Item("cough and cold syrup", 5.61)))
         var invoiceCriteria = InvoiceCriteria(datastore)
         invoiceCriteria.person(john)
-        val invoice = invoiceCriteria.query().get()
-        val doe = datastore.createQuery<Invoice>(Invoice::class.java).filter("person =", john).get()
+        val invoice = invoiceCriteria.query().first()
+        val doe = datastore.createQuery<Invoice>(Invoice::class.java).filter("person =", john).first()
         Assert.assertEquals(invoice, doe)
         Assert.assertEquals(doe.person?.last, "Doe")
         Assert.assertEquals(invoice.person?.last, "Doe")
-        val query = datastore.createQuery<Invoice>(Invoice::class.java).field("addresses.city").equal("Chicago").get()
+        val query = datastore.createQuery<Invoice>(Invoice::class.java).field("addresses.city").equal("Chicago").first()
         Assert.assertNotNull(query)
         invoiceCriteria = InvoiceCriteria(datastore)
         invoiceCriteria.addresses().city("Chicago")
-        val critter = invoiceCriteria.query().get()
+        val critter = invoiceCriteria.query().first()
         Assert.assertNotNull(critter)
         Assert.assertEquals(critter, query)
     }
@@ -82,38 +86,21 @@ class KotlinCriteriaTest {
 
         Assert.assertEquals(personCriteria.updater()
                 .age(30L)
-                .updateAll().updatedCount, 0)
+                .update(UpdateOptions().multi(true)).updatedCount, 0)
 
         Assert.assertEquals(personCriteria.updater()
                 .age(30L)
-                .upsert().insertedCount, 1)
+                .update(UpdateOptions().upsert(true)).insertedCount, 1)
 
-        val update = personCriteria.updater().incAge().updateAll()
+        val update = personCriteria.updater().incAge().update(UpdateOptions().multi(true))
         Assert.assertEquals(update.updatedCount, 1)
-        val get: Person = personCriteria.query().get() as Person
+        val get: Person = personCriteria.query().first() as Person
         Assert.assertEquals(get.age, 31L)
 
-        Assert.assertNotNull(PersonCriteria(datastore).query().get())
+        Assert.assertNotNull(PersonCriteria(datastore).query().first())
 
         val delete = datastore.delete(query)
         Assert.assertEquals(delete.n, 1)
-    }
-
-    @Test
-    fun updateFirst() {
-        for (i in 0..99) {
-            datastore.save(Person("First" + i, "Last" + i))
-        }
-        var criteria = PersonCriteria(datastore)
-        criteria.last().contains("Last2")
-        criteria.updater()
-                .age(1000L)
-                .updateFirst()
-
-        criteria = PersonCriteria(datastore)
-        criteria.age(1000L)
-
-        //    Assert.assertEquals(criteria.query().countAll(), 1);
     }
 
     @Test
@@ -124,7 +111,7 @@ class KotlinCriteriaTest {
         var criteria = PersonCriteria(datastore)
         criteria.last().contains("Last2")
         var result = criteria.updater()
-                .remove()
+                .delete()
         Assert.assertEquals(result.n, 11)
         Assert.assertEquals(criteria.query().count(), 0)
 
@@ -133,7 +120,7 @@ class KotlinCriteriaTest {
 
         criteria = PersonCriteria(datastore)
         criteria.last().contains("Last3")
-        result = criteria.updater().remove(MAJORITY)
+        result = criteria.updater().delete(DeleteOptions().writeConcern(MAJORITY))
         Assert.assertEquals(result.n, 11)
         Assert.assertEquals(criteria.query().count(), 0)
     }
@@ -158,12 +145,12 @@ class KotlinCriteriaTest {
 
         val criteria1 = InvoiceCriteria(datastore)
         criteria1.addresses().city().order()
-        val asList = criteria1.query().asList()
-        Assert.assertEquals(asList[0].addresses!![0].city, "NYC")
+        val asList = criteria1.query().find()
+        Assert.assertEquals(asList.next().addresses!![0].city, "NYC")
 
         val criteria2 = InvoiceCriteria(datastore)
         criteria2.addresses().city().order(false)
-        Assert.assertEquals(criteria2.query().asList()[0].addresses!![0].city, "New York City")
+        Assert.assertEquals(criteria2.query().first()?.addresses!![0].city, "New York City")
     }
 
     fun orQueries() {
@@ -182,8 +169,8 @@ class KotlinCriteriaTest {
                 criteria.last("Tyson")
         )
 
-        Assert.assertEquals(criteria.query().asList().size, 2)
-        Assert.assertEquals(query.asList(), criteria.query().asList())
+        Assert.assertEquals(criteria.query().find().asList().size, 2)
+        Assert.assertEquals(query.find().asList(), criteria.query().find().asList())
     }
 
     fun andQueries() {
@@ -202,7 +189,17 @@ class KotlinCriteriaTest {
                 criteria.last("Tyson")
         )
 
-        Assert.assertEquals(criteria.query().asList().size, 1)
-        Assert.assertEquals(query.asList(), criteria.query().asList())
+        Assert.assertEquals(criteria.query().find().asList().size, 1)
+        Assert.assertEquals(query.find().asList(), criteria.query().find().asList())
     }
+}
+
+fun <TResult> MongoCursor<TResult>.asList(): List<TResult> {
+    val results = ArrayList<TResult>()
+    use {
+        while (hasNext()) {
+            results.add(next())
+        }
+    }
+    return results
 }
