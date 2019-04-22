@@ -9,6 +9,8 @@ import com.mongodb.WriteResult
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import dev.morphia.Datastore
+import dev.morphia.DeleteOptions
+import dev.morphia.UpdateOptions
 import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Reference
@@ -70,6 +72,7 @@ class JavaBuilder(private val context: CritterContext) {
 
     private fun addCriteriaMethods(source: JavaClass, criteriaClass: JavaClassSource) {
         criteriaClass.addImport(CriteriaContainer::class.java)
+        criteriaClass.addImport(DeleteOptions::class.java)
 
         criteriaClass.addMethod("""public Query<${source.name}> query() {
             return (Query<${source.name}>) query;
@@ -80,8 +83,8 @@ class JavaBuilder(private val context: CritterContext) {
         criteriaClass.addMethod("""public WriteResult delete() {
             return ds.delete(query());
         }""")
-        criteriaClass.addMethod("""public WriteResult delete(WriteConcern wc) {
-            return ds.delete(query(), wc);
+        criteriaClass.addMethod("""public WriteResult delete(DeleteOptions options) {
+            return ds.delete(query(), options);
         }""")
         criteriaClass.addMethod("""public CriteriaContainer or(Criteria... criteria) {
             return query.or(criteria);
@@ -103,6 +106,7 @@ class JavaBuilder(private val context: CritterContext) {
         criteriaClass.addImport(source.qualifiedName)
         criteriaClass.addImport(Query::class.java)
         criteriaClass.addImport(UpdateOperations::class.java)
+        criteriaClass.addImport(UpdateOptions::class.java)
         criteriaClass.addImport(UpdateResults::class.java)
         criteriaClass.addImport(WriteConcern::class.java)
         criteriaClass.addImport(WriteResult::class.java)
@@ -129,14 +133,11 @@ class JavaBuilder(private val context: CritterContext) {
         }""")
                 .isConstructor = true
 
-        updaterMethod(updater, "updateAll", "update", "UpdateResults", false)
-        updaterMethod(updater, "updateFirst", "updateFirst", "UpdateResults", false)
-        updaterMethod(updater, "upsert", "update", "UpdateResults", true)
-        updater.addMethod("""public WriteResult remove() {
-                return ds.delete(query);
+        updater.addMethod("""public UpdateResults update() {
+                return ds.update(query, updateOperations, new UpdateOptions());
             }""")
-        updater.addMethod("""public WriteResult remove(WriteConcern wc) {
-                return ds.delete(query, wc);
+        updater.addMethod("""public UpdateResults update(UpdateOptions options) {
+                return ds.update(query, updateOperations, options);
             }""")
 
         source.fields
@@ -160,16 +161,6 @@ class JavaBuilder(private val context: CritterContext) {
                         containers(type, updater, field)
                     }
                 }
-    }
-
-    private fun updaterMethod(updater: JavaClassSource, name: String, dsMethod: String, type: String, createIfMissing: Boolean) {
-        updater.addMethod("""public $type $name() {
-                return ds.$dsMethod(query, updateOperations, $createIfMissing);
-            }""")
-
-        updater.addMethod("""public $type $name(${WriteConcern::class.java.simpleName} wc) {
-               return ds.$dsMethod(query, updateOperations, $createIfMissing, wc);
-            }""")
     }
 
     private fun numbers(type: String, updater: JavaClassSource, field: CritterField) {
@@ -201,18 +192,24 @@ class JavaBuilder(private val context: CritterContext) {
 
             val nameCase = field.name.nameCase()
             val fieldType = field.parameterizedType
-            updater.addMethod("""public $type addTo$nameCase($fieldType __newValue) {
-                updateOperations.add("${field.name}", __newValue);
+            val parameterType = field.fullParameterTypes.last()
+            updater.addMethod("""public $type addTo$nameCase($parameterType __newValue) {
+                updateOperations.addToSet("${field.name}", __newValue);
+                return this;
+            }""")
+
+            updater.addMethod("""public $type pushTo$nameCase($parameterType __newValue) {
+                updateOperations.push("${field.name}", __newValue);
                 return this;
             }""")
 
             updater.addMethod("""public $type addTo$nameCase($fieldType __newValue, boolean addDups) {
-                updateOperations.add("${field.name}", __newValue, addDups);
+                updateOperations.addToSet("${field.name}", __newValue);
                 return this;
             }""")
 
-            updater.addMethod("""public $type addAllTo$nameCase($fieldType __newValue, boolean addDups) {
-                updateOperations.addAll("${field.name}", __newValue, addDups);
+            updater.addMethod("""public $type pushTo$nameCase($fieldType __newValue, boolean addDups) {
+                updateOperations.push("${field.name}", __newValue);
                 return this;
             }""")
 

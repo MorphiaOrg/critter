@@ -15,16 +15,17 @@
  */
 package com.antwerkz.critter;
 
-import java.util.List;
-
 import dev.morphia.query.Criteria;
 import dev.morphia.query.Query;
 import dev.morphia.query.Shape;
 import dev.morphia.query.Shape.Point;
+import dev.morphia.query.Sort;
+
 import static dev.morphia.query.Shape.box;
 import static dev.morphia.query.Shape.center;
 import static dev.morphia.query.Shape.centerSphere;
 
+@SuppressWarnings("unused")
 public class TypeSafeFieldEnd<T, V> {
   private T criteria;
 
@@ -42,17 +43,13 @@ public class TypeSafeFieldEnd<T, V> {
     return query;
   }
 
-  public List distinct() {
-    return query.getCollection().distinct(fieldName);
-  }
-
   public T order() {
     order(true);
     return criteria;
   }
 
   public T order(boolean ascending) {
-    query.order((!ascending ? "-" : "") + fieldName);
+    query.order(ascending ? Sort.ascending(fieldName) : Sort.descending(fieldName)) ;
     return criteria;
   }
 
@@ -136,8 +133,8 @@ public class TypeSafeFieldEnd<T, V> {
     return query.criteria(fieldName).notIn(vals);
   }
 
-  public Criteria hasThisElement(V val) {
-    return query.criteria(fieldName).hasThisElement(val);
+  public Criteria elemMatch(Query<V> query) {
+    return query.criteria(fieldName).elemMatch(query);
   }
 
   public Criteria sizeEq(int val) {

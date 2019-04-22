@@ -140,7 +140,7 @@ class KotlinBuilder(val context: KotlinContext) {
                 LOG.debug("Could not correct formatting error: ($line:$col) [$ruleId] $path: $detail")
             }
         }
-        LOG.info("Formatting generated file: $file")
+        LOG.debug("Formatting generated file: $file")
         file.writeText(KtLint.format(file.readText(), ruleSets, mapOf(), cb))
     }
 

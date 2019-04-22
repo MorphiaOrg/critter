@@ -90,21 +90,9 @@ class JavaClassTest {
     }
 
     private fun validatePersonUpdater(updater: JavaClassSource) {
-        var functions = updater.getMethods("updateAll")
+        var functions = updater.getMethods("update")
         check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
-
-        functions = updater.getMethods("updateFirst")
-        check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
-
-        functions = updater.getMethods("upsert")
-        check(functions[0], listOf(), "UpdateResults")
-        check(functions[1], listOf("wc" to "WriteConcern"), "UpdateResults")
-
-        functions = updater.getMethods("remove")
-        check(functions[0], listOf(), "WriteResult")
-        check(functions[1], listOf("wc" to "WriteConcern"), "WriteResult")
+        check(functions[1], listOf("options" to "UpdateOptions"), "UpdateResults")
 
         functions = updater.getMethods("age")
         Assert.assertEquals(1, functions.size)

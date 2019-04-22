@@ -64,8 +64,8 @@ class KotlinCriteriaTest {
         val invoice = invoiceCriteria.query().first()
         val doe = datastore.createQuery<Invoice>(Invoice::class.java).filter("person =", john).first()
         Assert.assertEquals(invoice, doe)
-        Assert.assertEquals(doe.person?.last, "Doe")
-        Assert.assertEquals(invoice.person?.last, "Doe")
+        Assert.assertEquals(doe?.person?.last, "Doe")
+        Assert.assertEquals(invoice?.person?.last, "Doe")
         val query = datastore.createQuery<Invoice>(Invoice::class.java).field("addresses.city").equal("Chicago").first()
         Assert.assertNotNull(query)
         invoiceCriteria = InvoiceCriteria(datastore)
@@ -106,7 +106,7 @@ class KotlinCriteriaTest {
     @Test
     fun removes() {
         for (i in 0..99) {
-            datastore.save(Person("First" + i, "Last" + i))
+            datastore.save(Person("First$i", "Last$i"))
         }
         var criteria = PersonCriteria(datastore)
         criteria.last().contains("Last2")
