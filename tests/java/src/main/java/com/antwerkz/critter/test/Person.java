@@ -22,42 +22,42 @@ import org.bson.types.ObjectId;
 @Entity
 public class Person extends AbstractPerson {
   @Id
-  private ObjectId objectId;
+  private ObjectId id;
 
-  private String first;
+  private String firstName;
 
-  private String last;
+  private String lastName;
 
   public Person() {
   }
 
-  public Person(String first, String last) {
-    this.first = first;
-    this.last = last;
+  public Person(String firstName, String lastName) {
+    this.firstName = firstName;
+    this.lastName = lastName;
   }
 
-  public ObjectId getObjectId() {
-    return objectId;
+  public ObjectId getId() {
+    return id;
   }
 
-  public void setObjectId(final ObjectId objectId) {
-    this.objectId = objectId;
+  public void setId(final ObjectId id) {
+    this.id = id;
   }
 
-  public String getFirst() {
-    return first;
+  public String getFirstName() {
+    return firstName;
   }
 
-  public void setFirst(String first) {
-    this.first = first;
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
   }
 
-  public String getLast() {
-    return last;
+  public String getLastName() {
+    return lastName;
   }
 
-  public void setLast(String last) {
-    this.last = last;
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
   }
 
   @Override
@@ -71,13 +71,13 @@ public class Person extends AbstractPerson {
 
     final Person person = (Person) o;
 
-    if (first != null ? !first.equals(person.first) : person.first != null) {
+    if (firstName != null ? !firstName.equals(person.firstName) : person.firstName != null) {
       return false;
     }
-    if (objectId != null ? !objectId.equals(person.objectId) : person.objectId != null) {
+    if (id != null ? !id.equals(person.id) : person.id != null) {
       return false;
     }
-    if (last != null ? !last.equals(person.last) : person.last != null) {
+    if (lastName != null ? !lastName.equals(person.lastName) : person.lastName != null) {
       return false;
     }
 
@@ -86,9 +86,9 @@ public class Person extends AbstractPerson {
 
   @Override
   public int hashCode() {
-    int result = objectId != null ? objectId.hashCode() : 0;
-    result = 31 * result + (first != null ? first.hashCode() : 0);
-    result = 31 * result + (last != null ? last.hashCode() : 0);
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
+    result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
     return result;
   }
 }

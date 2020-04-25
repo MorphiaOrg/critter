@@ -38,7 +38,6 @@ import dev.morphia.query.Criteria
 import dev.morphia.query.CriteriaContainer
 import dev.morphia.query.Query
 import dev.morphia.query.UpdateOperations
-import dev.morphia.query.UpdateResults
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Comparator.comparingInt
@@ -52,10 +51,10 @@ class KotlinBuilder(val context: KotlinContext) {
         private val CRITERIA_CONTAINER = CriteriaContainer::class.asClassName()
         private val DELETE_OPTIONS = DeleteOptions::class.asClassName()
         private val QUERY = Query::class.asClassName()
-        private val TYPESAFE_FIELD_END = TypeSafeFieldEnd::class.asClassName()
+        private val TYPESAFE_FIELD_END = Nothing::class.asClassName()
         private val UPDATE_OPERATIONS = UpdateOperations::class.asClassName()
         private val UPDATE_OPTIONS = UpdateOptions::class.asClassName()
-        private val UPDATE_RESULTS = UpdateResults::class.asClassName()
+        private val UPDATE_RESULTS = Nothing::class.asClassName()
         private val WRITE_CONCERN = WriteConcern::class.asClassName()
         private val WRITE_RESULT = WriteResult::class.asClassName()
         private val LOG = LoggerFactory.getLogger(KotlinBuilder::class.java)
@@ -194,7 +193,7 @@ class KotlinBuilder(val context: KotlinContext) {
         constructorBuilder.addParameter(ParameterSpec.builder("fieldName", STRING.copy(nullable = true)).build())
     }
 
-    private fun addField(source: KotlinClass, criteriaClass: TypeSpec.Builder, field: PropertySpec) {
+    private fun addField(source: KotlinClass, criteriaClass: TypeSpec.Builder,  field: PropertySpec) {
         when {
             source.source.hasAnnotation(Reference::class.java) -> {
                 criteriaClass.addFunction(

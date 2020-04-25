@@ -64,11 +64,11 @@ public class CriteriaTest {
 
         Assert.assertNotNull(doe);
         Assert.assertEquals(invoice, doe);
-        Assert.assertEquals(doe.getPerson().getLast(), "Doe");
+        Assert.assertEquals(doe.getPerson().getLastName(), "Doe");
 
         Assert.assertNotNull(invoice);
         Assert.assertNotNull(invoice.getPerson());
-        Assert.assertEquals(invoice.getPerson().getLast(), "Doe");
+        Assert.assertEquals(invoice.getPerson().getLastName(), "Doe");
         Invoice query = ds.createQuery(Invoice.class).field("addresses.city").equal("Chicago").first();
         Assert.assertNotNull(query);
         invoiceCriteria = new InvoiceCriteria(ds);

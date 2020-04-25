@@ -17,16 +17,7 @@ package com.antwerkz.critter;
 
 import dev.morphia.query.Criteria;
 import dev.morphia.query.Query;
-import dev.morphia.query.QueryImpl;
 import dev.morphia.query.Shape;
-import dev.morphia.query.Shape.Point;
-import dev.morphia.query.Sort;
-
-import java.util.List;
-
-import static dev.morphia.query.Shape.box;
-import static dev.morphia.query.Shape.center;
-import static dev.morphia.query.Shape.centerSphere;
 
 @SuppressWarnings("unused")
 public class TypeSafeFieldEnd<T, V> {
@@ -44,20 +35,6 @@ public class TypeSafeFieldEnd<T, V> {
 
     public Query<?> query() {
         return query;
-    }
-
-    public List distinct() {
-        return query.getCollection().distinct(fieldName);
-    }
-
-    public T order() {
-        order(true);
-        return criteria;
-    }
-
-    public T order(boolean ascending) {
-        query.order(ascending ? Sort.ascending(fieldName) : Sort.descending(fieldName));
-        return criteria;
     }
 
     public Criteria exists() {
@@ -166,20 +143,5 @@ public class TypeSafeFieldEnd<T, V> {
 
     public Criteria within(Shape shape) {
         return query.criteria(fieldName).within(shape);
-    }
-
-    @Deprecated
-    public Criteria within(double x, double y, double radius) {
-        return within(center(new Point(x, y), radius));
-    }
-
-    @Deprecated
-    public Criteria within(double x, double y, double radius, boolean spherical) {
-        return within(centerSphere(new Point(x, y), radius));
-    }
-
-    @Deprecated
-    public Criteria within(double x1, double y1, double x2, double y2) {
-        return within(box(new Point(x1, y1), new Point(x2, y2)));
     }
 }

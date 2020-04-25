@@ -14,6 +14,7 @@ import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test
 import java.io.File
 
+@ExperimentalStdlibApi
 class JavaClassTest {
     @BeforeTest
     fun scan() {
@@ -72,7 +73,7 @@ class JavaClassTest {
                 criteriaFields.size, origFields.size, "Criteria fields: $criteriaFields.\n person fields: ${origFields.joinToString("\n")}"
         )
         val names = criteriaFields.map { it.name }.sortedBy { it }
-        Assert.assertEquals(names, listOf("age", "first", "last", "objectId"), "Found instead:  $names")
+        Assert.assertEquals(names, listOf("age", "firstName", "id", "lastName"), "Found instead:  $names")
         origFields.forEach {
             val field = personCriteria.getField(it.name)
             val stringInitializer = field.stringInitializer
@@ -112,7 +113,7 @@ class JavaClassTest {
         check(functions[0], listOf(), "PersonUpdater")
         check(functions[1], listOf("__newValue" to "java.lang.Long"), "PersonUpdater")
 
-        listOf("first", "last").forEach {
+        listOf("firstName", "lastName").forEach {
             functions = updater.getMethods(it)
             Assert.assertEquals(1, functions.size, "Should have found $it")
             check(functions[0], listOf("__newValue" to "java.lang.String"), "PersonUpdater")

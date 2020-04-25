@@ -1,18 +1,28 @@
 package com.antwerkz.critter
 
-import org.jboss.forge.roaster.model.Visibility
-import org.jboss.forge.roaster.model.Visibility.PUBLIC
+import com.mongodb.client.model.geojson.Geometry
 import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
+import org.jboss.forge.roaster.model.Visibility
+import org.jboss.forge.roaster.model.Visibility.PUBLIC
 
 class CritterField(val name: String, val type: String) {
     companion object {
-        val NUMERIC_TYPES = listOf("Float", "Double", "Long", "Integer", "Byte", "Short", "Number").map {
-            listOf(it, "$it?", "java.lang.$it", "java.lang.$it?", "kotlin.$it", "kotlin.$it?")
-        }.flatMap { it } + "Int"
-
         val CONTAINER_TYPES = listOf("List", "Set").map { listOf(it, "java.util.$it", "Mutable$it") }.flatMap { it }
+
+        val GEO_TYPES = listOf("double[]", "Double[]").explodeTypes()
+
+        val NUMERIC_TYPES = listOf("Float", "Double", "Long", "Int", "Integer", "Byte", "Short", "Number").explodeTypes()
+
+        val TEXT_TYPES = listOf("String").explodeTypes()
+
+        private fun List<String>.explodeTypes(): List<String> {
+            return map {
+                listOf(it, "$it?", "java.lang.$it", "java.lang.$it?", "kotlin.$it", "kotlin.$it?")
+            }
+                    .flatMap { it }
+        }
     }
 
     val shortParameterTypes = mutableListOf<String>()
@@ -31,9 +41,22 @@ class CritterField(val name: String, val type: String) {
 
     var parameterizedType = type
 
-    fun isContainer() = type.substringBefore("<") in CritterField.CONTAINER_TYPES
+    fun isContainer() = type.substringBefore("<") in CONTAINER_TYPES
 
-    fun isNumeric() = CritterField.NUMERIC_TYPES.contains(type)
+    fun isGeoCompatible(): Boolean {
+        try {
+            val forName = Class.forName(type)
+            if (Geometry::class.java.isAssignableFrom(forName)) {
+                return true
+            }
+        } catch (ignored: Exception) {
+        }
+        return type in GEO_TYPES
+    }
+
+    fun isNumeric() = NUMERIC_TYPES.contains(type)
+
+    fun isText() = TEXT_TYPES.contains(type)
 
     fun hasAnnotation(aClass: Class<out Annotation>): Boolean {
         return annotations.any { it.matches(aClass) }

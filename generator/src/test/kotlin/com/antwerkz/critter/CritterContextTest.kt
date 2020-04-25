@@ -12,6 +12,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
 
+@ExperimentalStdlibApi
 class CritterContextTest {
     @Test(dataProvider = "forceScenarios")
     fun force(source: Long?, output: Long?, force: Boolean, result: Boolean) {
