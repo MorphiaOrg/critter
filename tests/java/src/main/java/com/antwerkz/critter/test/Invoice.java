@@ -35,7 +35,6 @@ public class Invoice {
   @Reference
   private Person person;
 
-  @Embedded
   private List<Address> addresses;
 
   private Double total = 0.0;

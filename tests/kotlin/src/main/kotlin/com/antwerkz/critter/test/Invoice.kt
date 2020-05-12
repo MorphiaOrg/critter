@@ -16,7 +16,6 @@
 package com.antwerkz.critter.test
 
 import org.bson.types.ObjectId
-import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Reference
@@ -27,12 +26,11 @@ class Invoice {
     @Id
     private val id: ObjectId = ObjectId()
 
-    var date: LocalDateTime? = null
+    var orderDate: LocalDateTime? = null
 
     @Reference
     var person: Person? = null
 
-    @Embedded
     var addresses: MutableList<Address>? = null
 
     var total: Double = 0.0
@@ -42,7 +40,7 @@ class Invoice {
     constructor() {}
 
     constructor(date: LocalDateTime, person: Person, address: Address, vararg items: Item) {
-        this.date = date
+        this.orderDate = date
         this.person = person
         add(address)
         for (item in items) {
@@ -86,7 +84,7 @@ class Invoice {
     override fun toString(): String {
         return "Invoice{" +
                 "id=" + id +
-                ", date=" + date +
+                ", date=" + orderDate +
                 ", person=" + person +
                 ", addresses=" + addresses +
                 ", total=" + total +

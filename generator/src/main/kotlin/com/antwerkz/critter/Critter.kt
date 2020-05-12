@@ -6,8 +6,7 @@ import org.jboss.forge.roaster.model.source.MethodSource
 
 object Critter {
     fun JavaClassSource.addMethods(methods: String): List<MethodSource<JavaClassSource>> {
-        val parse = Roaster.parse("""
-            class ${name} {
+        val parse = Roaster.parse("""class ${name} {
                 $methods            
             }
             """.trimIndent()) as JavaClassSource

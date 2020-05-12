@@ -1,8 +1,18 @@
 package com.antwerkz.critter
 
-import com.antwerkz.critter.Handler.Companion.generics
+import com.antwerkz.critter.kotlin.isContainer
+import com.antwerkz.critter.kotlin.isNumeric
+import com.antwerkz.critter.kotlin.isText
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier.VARARG
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.query.experimental.filters.Filter
 import dev.morphia.query.experimental.filters.Filters
+import dev.morphia.query.experimental.filters.RegexFilter
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.TreeSet
 import kotlin.reflect.full.functions
@@ -14,7 +24,8 @@ import kotlin.reflect.typeOf
 object FilterSieve {
     internal val functions = filters()
             .map { it.name to it }
-            .toMap().toSortedMap()
+            .toMap()
+            .toSortedMap()
 
 
     @ExperimentalStdlibApi
@@ -23,7 +34,7 @@ object FilterSieve {
             .filter { it.name !in setOf("and", "or", "nor", "expr", "where", "uniqueDocs", "text", "comment") }
 
     fun handlers(field: CritterField, target: JavaClassSource) {
-        val handlers = TreeSet(generics())
+        val handlers = TreeSet(Handler.common())
         if (field.isNumeric()) {
             handlers.addAll(Handler.numerics())
         }
@@ -36,13 +47,31 @@ object FilterSieve {
         if (field.isGeoCompatible()) {
             handlers.addAll(Handler.geoFilters())
         }
-
         handlers.forEach {
-            it.java(field, target)
+            it.handle(field, target)
         }
     }
+
+    fun handlers(field: PropertySpec, target: TypeSpec.Builder) {
+        val handlers = TreeSet(Handler.common())
+        if (field.isNumeric()) {
+            handlers.addAll(Handler.numerics())
+        }
+        if (field.isText()) {
+            handlers.addAll(Handler.strings())
+        }
+        if (field.isContainer()) {
+            handlers.addAll(Handler.containers())
+        }
+
+        handlers.forEach {
+            it.handle(field, target)
+        }
+    }
+
 }
 
+@Suppress("unused", "EnumEntryName")
 @ExperimentalStdlibApi
 enum class Handler {
     all,
@@ -50,24 +79,32 @@ enum class Handler {
     bitsAllSet,
     bitsAnyClear,
     bitsAnySet,
-    box {
-        override fun java(field: CritterField, target: JavaClassSource) {
-            target.addMethod("""
-                public static Filter exists() {
-                    return Filters.exists("${field.name}");
-                } """.trimIndent())
-        }
-    },
+    box,
     center,
     centerSphere,
-    elemMatch,
+    elemMatch {
+        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+            target.addFunction(FunSpec
+                    .builder(name)
+                    .addParameter("values", typeOf<Filter>().asTypeName(), VARARG)
+                    .addCode("""return Filters.${name}(extendPath(prefix, "${field.name}"), *values)""")
+                    .build())
+        }
+    },
     eq,
     exists {
-        override fun java(field: CritterField, target: JavaClassSource) {
+        override fun handle(field: CritterField, target: JavaClassSource) {
             target.addMethod("""
-                public static Filter exists() {
-                    return Filters.exists("${field.name}");
+                public ${Filter::class.java.name} exists() {
+                    return Filters.${name}(extendPath(prefix, "${field.name}"));
                 } """.trimIndent())
+        }
+
+        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+            target.addFunction(FunSpec
+                    .builder(name)
+                    .addCode("""return Filters.${name}(extendPath(prefix, "${field.name}"))""")
+                    .build())
         }
     },
     geoIntersects,
@@ -75,7 +112,16 @@ enum class Handler {
     geoWithin,
     gt,
     gte,
-    `in`,
+    `in` {
+        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+            target.addFunction(FunSpec
+                    .builder(name)
+                    .addParameter(ParameterSpec.builder("value", typeOf<Iterable<Any>>().asTypeName()).build())
+                    .addCode("""return Filters.`${name}`(extendPath(prefix, "${field.name}"), value)""")
+                    .build())
+        }
+
+    },
     jsonSchema,
     lt,
     lte,
@@ -88,12 +134,18 @@ enum class Handler {
     nin,
     polygon,
     regex {
-        override fun java(field: CritterField, target: JavaClassSource) {
+        override fun handle(field: CritterField, target: JavaClassSource) {
             target.addMethod("""
-            public RegexFilter regex() {
-                return Filters.regex("${field.name}");
+            public ${RegexFilter::class.java.name} regex() {
+                return Filters.regex(extendPath(prefix, "${field.name}"));
             } """.trimIndent())
+        }
 
+        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+            target.addFunction(FunSpec
+                    .builder(name)
+                    .addCode("""return Filters.${name}(extendPath(prefix, "${field.name}"))""")
+                    .build())
         }
     },
     size,
@@ -101,7 +153,7 @@ enum class Handler {
     ;
 
     companion object {
-        fun get(name: String): Handler = valueOf(name.toUpperCase())
+        fun get(name: String) = valueOf(name)
 
         fun numerics(): List<Handler> = listOf(gt, gte, lt, lte, mod, bitsAllClear, bitsAllSet, bitsAnyClear, bitsAnySet)
 
@@ -109,48 +161,55 @@ enum class Handler {
 
         fun containers() = listOf(all, elemMatch, size)
 
-        fun geoFilters()  = listOf(box, center, centerSphere, geoIntersects, geometry, geoWithin, maxDistance, minDistance, near,
+        fun geoFilters() = listOf(box, center, centerSphere, geoIntersects, geometry, geoWithin, maxDistance, minDistance, near,
                 nearSphere, polygon)
 
-        fun generics() = values().toList() - numerics() - strings() - containers() - geoFilters()
+        fun common() = values().toList() - numerics() - strings() - containers() - geoFilters()
     }
 
-    open fun java(field: CritterField, target: JavaClassSource) {
-        defaultCall(target, field)
-    }
+    open fun handle(field: CritterField, target: JavaClassSource) {
+        target.addImport(Filters::class.java)
+        target.addImport(Filter::class.java)
 
-    private fun defaultCall(target: JavaClassSource, field: CritterField) {
-        val kFunction1 = FilterSieve.functions[name]
-        val kFunction = if (kFunction1 != null) {
-            kFunction1
-        } else {
-            TODO("no handler for ${name}")
-        }
+        val kFunction = FilterSieve.functions[name] ?: TODO("no handler for $name")
+
         if (kFunction.parameters[0].type.javaType != String::class.java) {
-            throw UnsupportedOperationException("${kFunction} needs a custom implementation")
+            throw UnsupportedOperationException("Parameters are nonstandard.  '${kFunction}' needs a custom implementation")
         }
         val params = kFunction.parameters.drop(1).map {
-            "final ${it.type.javaType.typeName} ${it.name}"
-        }
-                .joinToString(", ")
-        val args = kFunction.parameters.drop(1).map { it.name }
-                .joinToString(", ")
-
+            "${it.type.javaType.typeName} ${it.name}"
+        }.joinToString(", ")
+        val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
         val returnType = kFunction.returnType.javaType.typeName
+        var parameters = """extendPath(prefix, "${field.name}")"""
+        if (args.isNotBlank()) {
+            parameters += ", ${args}"
+        }
         target.addMethod("""
             public ${returnType} ${kFunction.name}(${params}) {
-                return Filters.${kFunction.name}("${field.name}", ${args});
+                return Filters.${kFunction.name}(${parameters});
             } """.trimIndent())
     }
 
-    private fun basicCall(target: JavaClassSource, field: CritterField) {
-        val kFunction = FilterSieve.functions[name] ?: TODO("no handler for ${name}")
-        if (kFunction.parameters.size != 2) throw UnsupportedOperationException("${name} needs a custom implementation")
-        val second = kFunction.parameters[1].type.javaType.typeName
-        val returnType = kFunction.returnType.javaType.typeName
-        target.addMethod("""
-                    public ${returnType} ${kFunction.name}(final ${second} __value) {
-                           return Filters.${kFunction.name}("${field.name}", __value);
-                    } """.trimIndent())
+    open fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+        val kFunction = FilterSieve.functions[name] ?: TODO("no handler for $name")
+
+        if (kFunction.parameters[0].type.asTypeName() != String::class.asClassName()) {
+            throw UnsupportedOperationException("Parameters are nonstandard.  '${kFunction}' needs a custom implementation")
+        }
+        val params = kFunction.parameters.drop(1).map {
+            ParameterSpec.builder(it.name!!, it.type.asTypeName()).build()
+        }
+        val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
+        var parameters = """extendPath(prefix, "${field.name}")"""
+        if (args.isNotBlank()) {
+            parameters += ", ${args}"
+        }
+        target.addFunction(FunSpec
+                .builder(kFunction.name)
+                .addParameters(params)
+                .addCode("""return Filters.${kFunction.name}(${parameters})""")
+                .build())
     }
+
 }

@@ -15,11 +15,12 @@ import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
 
+@ExperimentalStdlibApi
 class KotlinClassTest {
     private var context = KotlinContext(force = true)
-    private val directory = File("target/kotlinClassTest/")
+    private val directory = File("../tests/kotlin/target/generated-sources/critter")
 
-    @Test(enabled = false)
+    @Test
     fun build() {
         val files = File("../tests/kotlin/src/main/kotlin/").walkTopDown().iterator().asSequence().toList()
         files.forEach {
@@ -67,69 +68,24 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
 
         val directory = File("target/properties/")
         builder.build(directory)
-        val criteria = Kibble.parse(listOf(directory)).flatMap { it.classes }.associateBy { it.name }
-        val updater = criteria["ChildCriteria"]!!.classes.first { it.name == "ChildUpdater" }
-        Assert.assertNotNull(updater.functions.firstOrNull { it.name == "incAge" })
-        Assert.assertNotNull(updater.functions.firstOrNull { it.name == "addToNickNames" })
     }
 
     private fun validateInvoiceCriteria(file: FileSpec) {
         val invoiceCriteria = file.classes[0]
         val addresses = invoiceCriteria.getFunctions("addresses")[0]
-        Assert.assertEquals(addresses.returnType?.toString(), "AddressCriteria")
+        Assert.assertEquals(addresses.returnType?.toString(), "com.antwerkz.critter.test.criteria.AddressesCriteria")
     }
 
     private fun validatePersonCriteria(file: FileSpec) {
         val personCriteria = file.classes[0]
         val companion = personCriteria.companion() as TypeSpec
-        Assert.assertEquals(companion.properties.size, 5)
-        val sorted = companion.properties.map { it.name }.sorted()
+        Assert.assertEquals(companion.propertySpecs.size, 5)
+        val sorted = companion.propertySpecs.map { it.name }.sorted()
         Assert.assertEquals(sorted, listOf("age", "first", "id", "last", "ssn"))
         listOf("age", "first", "id", "last", "ssn").forEach {
             val functions = personCriteria.getFunctions(it)
-            Assert.assertEquals(functions.size, 2)
+            Assert.assertEquals(functions.size, 1)
             Assert.assertEquals(functions[0].parameters.size, 0)
-            Assert.assertEquals(functions[1].parameters.size, 1)
-        }
-
-        val updater = personCriteria.getClass("PersonUpdater")!!
-
-        validatePersonUpdater(updater)
-    }
-
-    private fun validatePersonUpdater(updater: TypeSpec) {
-        var functions = updater.getFunctions("updateAll")
-        check(functions[0], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
-
-        functions = updater.getFunctions("updateFirst")
-        check(functions[0], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
-
-        functions = updater.getFunctions("upsert")
-        check(functions[0], listOf("wc" to WriteConcern::class.java.name), "UpdateResults")
-
-        functions = updater.getFunctions("remove")
-        check(functions[0], listOf("wc" to WriteConcern::class.java.name), "WriteResult")
-
-        functions = updater.getFunctions("age")
-        Assert.assertEquals(1, functions.size)
-        check(functions[0], listOf("__newValue" to "Long"), "PersonUpdater")
-
-        functions = updater.getFunctions("unsetAge")
-        Assert.assertEquals(functions.size, 1)
-        check(functions[0], listOf(), "PersonUpdater")
-
-        functions = updater.getFunctions("incAge")
-        Assert.assertEquals(functions.size, 1)
-        check(functions[0], listOf("__newValue" to "Long"), "PersonUpdater")
-
-        listOf("first", "last").forEach {
-            functions = updater.getFunctions(it)
-            Assert.assertEquals(1, functions.size, "Should have found $it")
-            check(functions[0], listOf("__newValue" to "String?"), "PersonUpdater")
-
-            functions = updater.getFunctions("unset${it.capitalize()}")
-            Assert.assertEquals(1, functions.size, "Should have found unset${it.capitalize()}")
-            check(functions[0], listOf(), "PersonUpdater")
         }
     }
 

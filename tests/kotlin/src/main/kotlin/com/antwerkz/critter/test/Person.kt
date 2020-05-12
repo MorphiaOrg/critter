@@ -15,6 +15,7 @@
  */
 package com.antwerkz.critter.test
 
+import dev.morphia.annotations.Embedded
 import org.bson.types.ObjectId
 import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
@@ -61,6 +62,7 @@ open class Person : AbstractPerson {
     }
 }
 
+@Embedded
 class SSN(var value: String) {
     private constructor() : this("")
 }

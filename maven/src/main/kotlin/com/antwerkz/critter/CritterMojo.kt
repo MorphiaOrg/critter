@@ -17,6 +17,7 @@ import org.codehaus.plexus.util.DirectoryWalker
 import org.slf4j.LoggerFactory
 import java.io.File
 
+@ExperimentalStdlibApi
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 class CritterMojo : AbstractMojo() {
     companion object {
