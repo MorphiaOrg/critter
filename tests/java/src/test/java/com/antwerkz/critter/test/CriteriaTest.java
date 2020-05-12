@@ -185,7 +185,7 @@ public class CriteriaTest {
         Assert.assertEquals(criteria.count(), 0);
     }
 
-    @Test(enabled = false) // waiting morphia issue #711
+    @Test
     public void updateFirst() {
         for (int i = 0; i < 100; i++) {
             getDatastore().save(new Person("First" + i, "Last" + i));
