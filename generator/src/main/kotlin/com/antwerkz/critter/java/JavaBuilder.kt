@@ -35,7 +35,7 @@ class JavaBuilder(private val context: CritterContext) {
             if (!source.isAbstract() && context.shouldGenerate(source.lastModified(), filters.lastModified())) {
                 criteriaClass.addField("private static final ${criteriaClass.name}Impl instance = new ${criteriaClass.name}Impl()")
                 criteriaClass.addMethod("""
-                    public static ${criteriaClass.name}Impl ${source.name.toMethodCase()}() {
+                    private static ${criteriaClass.name}Impl ${source.name.toMethodCase()}() {
                         return instance;
                     }
                 """.trimIndent())

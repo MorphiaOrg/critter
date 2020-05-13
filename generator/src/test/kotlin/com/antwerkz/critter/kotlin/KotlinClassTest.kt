@@ -73,18 +73,18 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
     private fun validateInvoiceCriteria(file: FileSpec) {
         val invoiceCriteria = file.classes[0]
         val addresses = invoiceCriteria.getFunctions("addresses")[0]
-        Assert.assertEquals(addresses.returnType?.toString(), "com.antwerkz.critter.test.criteria.AddressesCriteria")
+        Assert.assertNotNull(addresses)
     }
 
     private fun validatePersonCriteria(file: FileSpec) {
         val personCriteria = file.classes[0]
         val companion = personCriteria.companion() as TypeSpec
-        Assert.assertEquals(companion.propertySpecs.size, 5)
+        Assert.assertEquals(companion.propertySpecs.size, 6, companion.propertySpecs.toString())
         val sorted = companion.propertySpecs.map { it.name }.sorted()
-        Assert.assertEquals(sorted, listOf("age", "first", "id", "last", "ssn"))
+        Assert.assertEquals(sorted, listOf("age", "first", "id", "last", "ssn", "person").sorted(), sorted.toString())
         listOf("age", "first", "id", "last", "ssn").forEach {
             val functions = personCriteria.getFunctions(it)
-            Assert.assertEquals(functions.size, 1)
+            Assert.assertEquals(functions.size, 1, it)
             Assert.assertEquals(functions[0].parameters.size, 0)
         }
     }

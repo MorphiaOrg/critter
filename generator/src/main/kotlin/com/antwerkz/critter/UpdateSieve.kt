@@ -100,20 +100,22 @@ enum class Updates {
     },
     dec {
         override fun handle(field: CritterField, target: JavaClassSource) {
-            super.handle(field, target)
-
             target.addMethod("""
-            public UpdateOperator ${name}(Number value) {
-                return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value);
-            } """.trimIndent())
+                public UpdateOperator ${name}() {
+                    return UpdateOperators.${name}(extendPath(prefix, "${field.name}"));
+                } """.trimIndent())
+            target.addMethod("""
+                public UpdateOperator ${name}(Number value) {
+                    return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value);
+                } """.trimIndent())
         }
 
         override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
-            super.handle(field, target)
-
+            target.addFunction(FunSpec.builder(name)
+                    .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"))""")
+                    .build())
             target.addFunction(FunSpec.builder(name)
                     .addParameter("value", Number::class.asClassName())
-                    .returns(UpdateOperator::class.asClassName())
                     .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value)""")
                     .build())
         }
@@ -121,20 +123,22 @@ enum class Updates {
     },
     inc {
         override fun handle(field: CritterField, target: JavaClassSource) {
-            super.handle(field, target)
-
             target.addMethod("""
-            public UpdateOperator ${name}(Number value) {
-                return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value);
-            } """.trimIndent())
+                public UpdateOperator ${name}() {
+                    return UpdateOperators.${name}(extendPath(prefix, "${field.name}"));
+                } """.trimIndent())
+            target.addMethod("""
+                public UpdateOperator ${name}(Number value) {
+                    return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value);
+                } """.trimIndent())
         }
 
         override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
-            super.handle(field, target)
-
+            target.addFunction(FunSpec.builder(name)
+                    .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"))""")
+                    .build())
             target.addFunction(FunSpec.builder(name)
                     .addParameter("value", Number::class.asClassName())
-                    .returns(UpdateOperator::class.asClassName())
                     .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value)""")
                     .build())
         }
