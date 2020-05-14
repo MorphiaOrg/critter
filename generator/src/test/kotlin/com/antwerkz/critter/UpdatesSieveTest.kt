@@ -7,9 +7,9 @@ class UpdatesSieveTest {
     @Test
     @ExperimentalStdlibApi
     fun methods() {
-        UpdateSieve.filters()
+        UpdateSieve.updates()
                 .forEach {
-                    Assert.assertNotNull(Updates.get(it.name), it.toString())
+                    Assert.assertNotNull(Updates[it.name], it.toString())
                 }
     }
 

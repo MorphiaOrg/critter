@@ -8,7 +8,6 @@ import com.squareup.kotlinpoet.KModifier.VARARG
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.query.experimental.filters.Filter
 import dev.morphia.query.experimental.filters.Filters
@@ -48,7 +47,7 @@ object FilterSieve {
             handlers.addAll(Handler.geoFilters())
         }
         handlers.forEach {
-            it.handle(field, target)
+            it.handle(target, field)
         }
     }
 
@@ -73,7 +72,7 @@ object FilterSieve {
 
 @Suppress("unused", "EnumEntryName")
 @ExperimentalStdlibApi
-enum class Handler {
+enum class Handler: OperationGenerator {
     all,
     bitsAllClear,
     bitsAllSet,
@@ -93,7 +92,7 @@ enum class Handler {
     },
     eq,
     exists {
-        override fun handle(field: CritterField, target: JavaClassSource) {
+        override fun handle(target: JavaClassSource, field: CritterField) {
             target.addMethod("""
                 public ${Filter::class.java.name} exists() {
                     return Filters.${name}(extendPath(prefix, "${field.name}"));
@@ -134,7 +133,7 @@ enum class Handler {
     nin,
     polygon,
     regex {
-        override fun handle(field: CritterField, target: JavaClassSource) {
+        override fun handle(target: JavaClassSource, field: CritterField) {
             target.addMethod("""
             public ${RegexFilter::class.java.name} regex() {
                 return Filters.regex(extendPath(prefix, "${field.name}"));
@@ -167,49 +166,12 @@ enum class Handler {
         fun common() = values().toList() - numerics() - strings() - containers() - geoFilters()
     }
 
-    open fun handle(field: CritterField, target: JavaClassSource) {
-        target.addImport(Filters::class.java)
-        target.addImport(Filter::class.java)
-
-        val kFunction = FilterSieve.functions[name] ?: TODO("no handler for $name")
-
-        if (kFunction.parameters[0].type.javaType != String::class.java) {
-            throw UnsupportedOperationException("Parameters are nonstandard.  '${kFunction}' needs a custom implementation")
-        }
-        val params = kFunction.parameters.drop(1).map {
-            "${it.type.javaType.typeName} ${it.name}"
-        }.joinToString(", ")
-        val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
-        val returnType = kFunction.returnType.javaType.typeName
-        var parameters = """extendPath(prefix, "${field.name}")"""
-        if (args.isNotBlank()) {
-            parameters += ", ${args}"
-        }
-        target.addMethod("""
-            public ${returnType} ${kFunction.name}(${params}) {
-                return Filters.${kFunction.name}(${parameters});
-            } """.trimIndent())
+    open fun handle(target: JavaClassSource, field: CritterField) {
+        handle(target, field, name, FilterSieve.functions, "Filters")
     }
 
     open fun handle(field: PropertySpec, target: TypeSpec.Builder) {
-        val kFunction = FilterSieve.functions[name] ?: TODO("no handler for $name")
-
-        if (kFunction.parameters[0].type.asTypeName() != String::class.asClassName()) {
-            throw UnsupportedOperationException("Parameters are nonstandard.  '${kFunction}' needs a custom implementation")
-        }
-        val params = kFunction.parameters.drop(1).map {
-            ParameterSpec.builder(it.name!!, it.type.asTypeName()).build()
-        }
-        val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
-        var parameters = """extendPath(prefix, "${field.name}")"""
-        if (args.isNotBlank()) {
-            parameters += ", ${args}"
-        }
-        target.addFunction(FunSpec
-                .builder(kFunction.name)
-                .addParameters(params)
-                .addCode("""return Filters.${kFunction.name}(${parameters})""")
-                .build())
+        handle(target, field, name, FilterSieve.functions, "Filters")
     }
 
 }

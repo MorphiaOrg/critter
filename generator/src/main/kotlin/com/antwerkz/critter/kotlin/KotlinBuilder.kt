@@ -14,7 +14,6 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier.INLINE
 import com.squareup.kotlinpoet.KModifier.INTERNAL
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.ParameterSpec
@@ -31,7 +30,6 @@ import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
 import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.updates.UpdateOperators
-import org.jetbrains.kotlin.resolve.calls.smartcasts.IdentifierInfo.NULL
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Comparator.comparingInt
@@ -102,7 +100,7 @@ class KotlinBuilder(val context: KotlinContext) {
                         }
 
                         addFunction(FunSpec.builder("extendPath")
-                                .addModifiers(PRIVATE, INLINE)
+                                .addModifiers(PRIVATE)
                                 .addParameter("prefix", NULLABLE_STRING)
                                 .addParameter("path", STRING)
                                 .addCode("""return prefix?.let { prefix + "." + path } ?: path""")

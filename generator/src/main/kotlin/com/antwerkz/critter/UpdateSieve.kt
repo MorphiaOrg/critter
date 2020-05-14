@@ -5,9 +5,9 @@ import com.antwerkz.critter.kotlin.isContainer
 import com.antwerkz.critter.kotlin.isNumeric
 import com.antwerkz.critter.kotlin.isText
 import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.query.experimental.updates.AddToSetOperator
@@ -22,14 +22,13 @@ import kotlin.reflect.typeOf
 
 @ExperimentalStdlibApi
 object UpdateSieve {
-    internal val functions = filters()
+    internal val functions = updates()
             .map { it.name to it }
             .toMap()
             .toSortedMap()
 
-
     @ExperimentalStdlibApi
-    fun filters() = UpdateOperators::class.functions
+    fun updates() = UpdateOperators::class.functions
             .filter { typeOf<UpdateOperator>().isSupertypeOf(it.returnType) }
             .filter { it.name !in setOf("setOnInsert") }
             .filterNot { it.name == "set" && it.parameters.size == 1 }
@@ -46,7 +45,7 @@ object UpdateSieve {
             updates.addAll(Updates.containers())
         }
         updates.forEach {
-            it.handle(field, target)
+            it.handle(target, field)
         }
     }
 
@@ -63,16 +62,17 @@ object UpdateSieve {
         }
 
         updates.forEach {
-            it.handle(field, target)
+            it.handle(target, field)
         }
     }
 }
 
 @Suppress("EnumEntryName")
 @ExperimentalStdlibApi
-enum class Updates {
+enum class Updates : OperationGenerator {
+    and,
     addToSet {
-        override fun handle(field: CritterField, target: JavaClassSource) {
+        override fun handle(target: JavaClassSource, field: CritterField) {
             target.addImport(AddToSetOperator::class.java)
             target.addMethods("""
             public AddToSetOperator ${name}(Object value) {
@@ -84,7 +84,7 @@ enum class Updates {
             } """.trimIndent())
         }
 
-        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+        override fun handle(target: Builder, field: PropertySpec) {
             target.addFunction(FunSpec.builder(name)
                     .addParameter("value", typeOf<Any>().asTypeName())
                     .returns(AddToSetOperator::class.asClassName())
@@ -98,8 +98,9 @@ enum class Updates {
                     .build())
         }
     },
+    currentDate,
     dec {
-        override fun handle(field: CritterField, target: JavaClassSource) {
+        override fun handle(target: JavaClassSource, field: CritterField) {
             target.addMethod("""
                 public UpdateOperator ${name}() {
                     return UpdateOperators.${name}(extendPath(prefix, "${field.name}"));
@@ -110,7 +111,7 @@ enum class Updates {
                 } """.trimIndent())
         }
 
-        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+        override fun handle(target: Builder, field: PropertySpec) {
             target.addFunction(FunSpec.builder(name)
                     .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"))""")
                     .build())
@@ -119,10 +120,9 @@ enum class Updates {
                     .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value)""")
                     .build())
         }
-
     },
     inc {
-        override fun handle(field: CritterField, target: JavaClassSource) {
+        override fun handle(target: JavaClassSource, field: CritterField) {
             target.addMethod("""
                 public UpdateOperator ${name}() {
                     return UpdateOperators.${name}(extendPath(prefix, "${field.name}"));
@@ -133,7 +133,7 @@ enum class Updates {
                 } """.trimIndent())
         }
 
-        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+        override fun handle(target: Builder, field: PropertySpec) {
             target.addFunction(FunSpec.builder(name)
                     .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"))""")
                     .build())
@@ -142,14 +142,15 @@ enum class Updates {
                     .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value)""")
                     .build())
         }
-
     },
     max,
     min,
+    mul,
+    or,
     pop,
     pull,
     pullAll {
-        override fun handle(field: CritterField, target: JavaClassSource) {
+        override fun handle(target: JavaClassSource, field: CritterField) {
             target.addImport(java.util.List::class.java)
             target.addMethod("""
             public UpdateOperator ${name}(List<?> values) {
@@ -158,66 +159,24 @@ enum class Updates {
         }
     },
     push,
+    rename,
     set,
-    unset;
+    unset,
+    xor;
 
     companion object {
-        fun get(name: String) = valueOf(name)
-
-        fun numerics(): List<Updates> = listOf(dec, inc, max, min)
-
+        operator fun get(name: String) = valueOf(name)
+        fun numerics(): List<Updates> = listOf(and, dec, inc, max, min, mul, or, xor)
         fun strings() = listOf<Updates>()
-
         fun containers() = listOf(addToSet, pop, pull, pullAll, push)
-        
         fun common() = values().toList() - numerics() - strings() - containers()
     }
-    
-    open fun handle(field: CritterField, target: JavaClassSource) {
-        target.addImport(UpdateOperators::class.java.name)
-        target.addImport(UpdateOperator::class.java.name)
 
-        val kFunction = UpdateSieve.functions[name] ?:  TODO("no handler for $name")
-
-        if (kFunction.parameters[0].type.javaType != String::class.java) {
-            throw UnsupportedOperationException("Parameters are nonstandard.  '${kFunction}' needs a custom implementation")
-        }
-        val params = kFunction.parameters.drop(1).map {
-            "${it.type.javaType.asTypeName()} ${it.name}"
-        }.joinToString(", ")
-        val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
-        val returnType = kFunction.returnType.asTypeName()
-        var parameters = """extendPath(prefix, "${field.name}")"""
-        if(args.isNotBlank()) {
-            parameters += ", ${args}"
-        }
-        target.addMethod("""
-            public ${returnType} ${kFunction.name}(${params}) {
-                return UpdateOperators.${kFunction.name}(${parameters});
-            } """.trimIndent())
+    open fun handle(target: JavaClassSource, field: CritterField) {
+        handle(target, field, name, UpdateSieve.functions, "UpdateOperators")
     }
 
-    open fun handle(field: PropertySpec, target: TypeSpec.Builder) {
-        val kFunction = UpdateSieve.functions[name] ?: TODO("no handler for $name")
-
-        if (kFunction.parameters[0].type.asTypeName() != String::class.asClassName()) {
-            throw UnsupportedOperationException("Parameters are nonstandard.  '${kFunction}' needs a custom implementation")
-        }
-        val params = kFunction.parameters.drop(1).map {
-            ParameterSpec.builder(it.name!!, it.type.asTypeName()).build()
-        }
-        val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
-        var parameters = """extendPath(prefix, "${field.name}")"""
-        if(args.isNotBlank()) {
-            parameters += ", ${args}"
-        }
-        target.addFunction(FunSpec
-                .builder(kFunction.name)
-                .addParameters(params)
-                .addCode("""return UpdateOperators.${kFunction.name}(${parameters})""")
-                .build())
+    open fun handle(target: Builder, field: PropertySpec) {
+        handle(target, field, name, UpdateSieve.functions, "UpdateOperators")
     }
-
 }
-
-
