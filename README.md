@@ -35,7 +35,7 @@ Include the dependency in your pom.xml like this:
         <version>${critter.version}</version>
     </dependency>
 
-*Critter also requires morphia 1.3.2 and 3.6.0 of the mongo-java-driver and is built for Java 8.*
+*Critter also requires Morphia 2.0.0 and is built for Java 11.*
 
 Gradle users can look [here](gradle/README.md) for details on using critter with gradle.
 
@@ -43,26 +43,27 @@ What difference does it make?
 -----------------------------
 Before critter, your criteria might look something like this:
 
-    dev.morphia.query.Query<Query> query = ds.createQuery(Query.class);
-    query.and(
-      query.criteria("bookmark").equal(bookmark),
-      query.criteria("database").equal(database)
-    );
+```java
+Query<Book> query = ds.find(Book.class)
+    .filter(and(
+        eq("bookmark",bookmark),
+        eq("database",database)));
+```
 
 But using critter, it would look like this:
 
-    QueryCriteria criteria = new QueryCriteria(datastore);
-    criteria.and(
-      criteria.bookmark(bookmark),
-      criteria.database(database)
-    );
-    Query query = criteria.query().get();
+```java
+Query<Book> query = ds.find(Book.class)
+    .filter(and(
+        Person.bookmark().eq(bookmark),
+        Person.database().eq(database)));
+```
 
-Notice how bookmark() and database() methods were created based on the model object Query's fields.  The comparison
-methods you're familiar with from Morphia's criteria API are all there but now only take the type of the field itself.
+Notice how bookmark() and database() methods were created based on the model object Book's fields.  The comparison
+methods you're familiar with from Morphia's filters API are all there but now only take the type of the field itself.
 With this code in place if the model object changes, the code above runs the risk of failing to compile allowing you to
 catch model/query conflicts at compile time rather than waiting for things to fail at runtime (or in your tests if you're
-lucky enough to those).
+lucky enough to have those).
 
 You can see a working example in the [tests](https://github.com/evanchooly/critter/tree/master/tests).
 
