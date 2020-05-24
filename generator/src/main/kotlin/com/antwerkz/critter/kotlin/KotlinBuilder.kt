@@ -67,9 +67,6 @@ class KotlinBuilder(val context: KotlinContext) {
             if (!source.isAbstract() && !source.isEnum() && context.shouldGenerate(srcMod, outMod)) {
                 val criteriaName = "${source.name}Criteria"
                 val criteriaClass = TypeSpec.classBuilder(criteriaName)
-                criteriaClass.addAnnotation(
-                        AnnotationSpec.builder(Suppress::class.java).addMember(CodeBlock.of("\"UNCHECKED_CAST\"")).build()
-                )
 
                 criteriaClass.primaryConstructor(
                         FunSpec.constructorBuilder()

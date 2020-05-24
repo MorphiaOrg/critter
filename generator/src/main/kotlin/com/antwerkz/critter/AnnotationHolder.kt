@@ -19,7 +19,7 @@ class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf()
     init {
         if (name.contains(".")) {
             @Suppress("UNCHECKED_CAST") try {
-                klass = Class.forName(name) as Class<out Annotation>?
+                klass = Class.forName(name) as Class<out Annotation>
             } catch (ignored: ClassNotFoundException) {
             }
         }
