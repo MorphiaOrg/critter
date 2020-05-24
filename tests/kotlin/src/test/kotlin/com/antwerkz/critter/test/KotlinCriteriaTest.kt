@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2017 Justin Lee <jlee@antwerkz.com>
+ * Copyright (C) 2012-2020 Justin Lee <jlee@antwerkz.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import dev.morphia.Morphia
 import dev.morphia.UpdateOptions
 import dev.morphia.query.FindOptions
 import dev.morphia.query.Sort
+import dev.morphia.query.Sort.ascending
 import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.filters.Filters.and
 import org.bson.UuidRepresentation.STANDARD
@@ -41,7 +42,7 @@ import java.time.LocalDateTime
 class KotlinCriteriaTest {
 
     @AfterMethod
-    fun clean() {2
+    fun clean() {
         val mongo = com.mongodb.MongoClient()
         val critter = mongo.getDatabase("critter")
         critter.drop()
@@ -147,6 +148,17 @@ class KotlinCriteriaTest {
         Assert.assertEquals(query.count(), 0)
     }
 
+    fun paths() {
+        Assert.assertEquals(
+                InvoiceCriteria.addresses().city().path,
+                "addresses.city"
+        )
+        Assert.assertEquals(
+                InvoiceCriteria.orderDate().path,
+                "orderDate"
+        )
+    }
+
     fun embeds() {
         var invoice = Invoice()
         invoice.orderDate = LocalDateTime.now()
@@ -166,17 +178,19 @@ class KotlinCriteriaTest {
         datastore.save(invoice)
 
         val query = datastore.find(Invoice::class.java)
-        Assert.assertEquals(query.iterator(FindOptions()
-                .sort(Sort.ascending(addresses().city().path()))).next().addresses!![0].city, "NYC")
+        Assert.assertEquals(query
+                .filter(InvoiceCriteria.orderDate().lte(LocalDateTime.now().plusDays(5)))
+                .iterator(FindOptions()
+                        .sort(ascending(addresses().city().path))).next().addresses!![0].city, "NYC")
 
         Assert.assertEquals(query.first(FindOptions()
-                .sort(Sort.descending(addresses().city().path())))?.addresses!![0].city, "New York City")
+                .sort(Sort.descending(addresses().city().path)))?.addresses!![0].city, "New York City")
     }
 
     fun orQueries() {
         datastore.save(Person("Mike", "Bloomberg"))
         datastore.save(Person("Mike", "Tyson"))
-        val query1 = datastore.find<Person>(Person::class.java)
+        val query1 = datastore.find(Person::class.java)
                 .filter(Filters.or(
                                 Filters.eq("last", "Bloomberg"),
                                 Filters.eq("last", "Tyson")

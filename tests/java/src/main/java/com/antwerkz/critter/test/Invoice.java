@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2013 Justin Lee <jlee@antwerkz.com>
+ * Copyright (C) 2012-2020 Justin Lee <jlee@antwerkz.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.types.ObjectId;
-import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Reference;
@@ -30,7 +29,7 @@ public class Invoice {
   @Id
   private ObjectId id = new ObjectId();
 
-  private LocalDateTime date;
+  private LocalDateTime orderDate;
 
   @Reference
   private Person person;
@@ -44,8 +43,8 @@ public class Invoice {
   public Invoice() {
   }
 
-  public Invoice(LocalDateTime date, Person person, Address address, Item... items) {
-    this.date = date;
+  public Invoice(LocalDateTime orderDate, Person person, Address address, Item... items) {
+    this.orderDate = orderDate;
     this.person = person;
     add(address);
     for (Item item : items) {
@@ -53,12 +52,12 @@ public class Invoice {
     }
   }
 
-  public LocalDateTime getDate() {
-    return date;
+  public LocalDateTime getOrderDate() {
+    return orderDate;
   }
 
-  public void setDate(LocalDateTime date) {
-    this.date = date;
+  public void setOrderDate(LocalDateTime orderDate) {
+    this.orderDate = orderDate;
   }
 
   public Person getPerson() {
@@ -115,12 +114,12 @@ public class Invoice {
   @Override
   public String toString() {
     return "Invoice{" +
-               "id=" + id +
-               ", date=" + date +
-               ", person=" + person +
-               ", addresses=" + addresses +
-               ", total=" + total +
-               ", items=" + items +
-               '}';
+           "id=" + id +
+           ", date=" + orderDate +
+           ", person=" + person +
+           ", addresses=" + addresses +
+           ", total=" + total +
+           ", items=" + items +
+           '}';
   }
 }

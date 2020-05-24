@@ -76,11 +76,11 @@ enum class Updates : OperationGenerator {
             target.addImport(AddToSetOperator::class.java)
             target.addMethods("""
             public AddToSetOperator ${name}(Object value) {
-                return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value);
+                return UpdateOperators.${name}(path, value);
             }         
             
             public AddToSetOperator ${name}(List<?> values) {
-                return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), values);
+                return UpdateOperators.${name}(path, values);
             } """.trimIndent())
         }
 
@@ -88,13 +88,13 @@ enum class Updates : OperationGenerator {
             target.addFunction(FunSpec.builder(name)
                     .addParameter("value", typeOf<Any>().asTypeName())
                     .returns(AddToSetOperator::class.asClassName())
-                    .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value)""")
+                    .addCode("""return UpdateOperators.${name}(path, value)""")
                     .build())
 
             target.addFunction(FunSpec.builder(name)
                     .addParameter("values", typeOf<List<Any>>().asTypeName())
                     .returns(AddToSetOperator::class.asClassName())
-                    .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), values)""")
+                    .addCode("""return UpdateOperators.${name}(path, values)""")
                     .build())
         }
     },
@@ -103,21 +103,21 @@ enum class Updates : OperationGenerator {
         override fun handle(target: JavaClassSource, field: CritterField) {
             target.addMethod("""
                 public UpdateOperator ${name}() {
-                    return UpdateOperators.${name}(extendPath(prefix, "${field.name}"));
+                    return UpdateOperators.${name}(path);
                 } """.trimIndent())
             target.addMethod("""
                 public UpdateOperator ${name}(Number value) {
-                    return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value);
+                    return UpdateOperators.${name}(path, value);
                 } """.trimIndent())
         }
 
         override fun handle(target: Builder, field: PropertySpec) {
             target.addFunction(FunSpec.builder(name)
-                    .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"))""")
+                    .addCode("""return UpdateOperators.${name}(path)""")
                     .build())
             target.addFunction(FunSpec.builder(name)
                     .addParameter("value", Number::class.asClassName())
-                    .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value)""")
+                    .addCode("""return UpdateOperators.${name}(path, value)""")
                     .build())
         }
     },
@@ -125,21 +125,21 @@ enum class Updates : OperationGenerator {
         override fun handle(target: JavaClassSource, field: CritterField) {
             target.addMethod("""
                 public UpdateOperator ${name}() {
-                    return UpdateOperators.${name}(extendPath(prefix, "${field.name}"));
+                    return UpdateOperators.${name}(path);
                 } """.trimIndent())
             target.addMethod("""
                 public UpdateOperator ${name}(Number value) {
-                    return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value);
+                    return UpdateOperators.${name}(path, value);
                 } """.trimIndent())
         }
 
         override fun handle(target: Builder, field: PropertySpec) {
             target.addFunction(FunSpec.builder(name)
-                    .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"))""")
+                    .addCode("""return UpdateOperators.${name}(path)""")
                     .build())
             target.addFunction(FunSpec.builder(name)
                     .addParameter("value", Number::class.asClassName())
-                    .addCode("""return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), value)""")
+                    .addCode("""return UpdateOperators.${name}(path, value)""")
                     .build())
         }
     },
@@ -154,7 +154,7 @@ enum class Updates : OperationGenerator {
             target.addImport(java.util.List::class.java)
             target.addMethod("""
             public UpdateOperator ${name}(List<?> values) {
-                return UpdateOperators.${name}(extendPath(prefix, "${field.name}"), values);
+                return UpdateOperators.${name}(path, values);
             } """.trimIndent())
         }
     },

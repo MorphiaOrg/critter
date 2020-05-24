@@ -6,43 +6,49 @@ import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import org.jboss.forge.roaster.model.Visibility
 import org.jboss.forge.roaster.model.Visibility.PUBLIC
+import java.time.temporal.Temporal
+import java.util.Date
 
 class CritterField(val name: String, val type: String) {
     companion object {
-        val CONTAINER_TYPES = listOf("List", "Set").map { listOf(it, "java.util.$it", "Mutable$it") }.flatMap { it }
-
-        val GEO_TYPES = listOf("double[]", "Double[]").explodeTypes()
-
-        val NUMERIC_TYPES = listOf("Float", "Double", "Long", "Int", "Integer", "Byte", "Short", "Number").explodeTypes()
-
-        val TEXT_TYPES = listOf("String").explodeTypes()
-
+        internal val CONTAINER_TYPES = listOf("List", "Set").map { listOf(it, "java.util.$it", "Mutable$it") }.flatMap { it }
+        internal val GEO_TYPES = listOf("double[]", "Double[]").explodeTypes()
+        internal val NUMERIC_TYPES = listOf("Float", "Double", "Long", "Int", "Integer", "Byte", "Short", "Number").explodeTypes()
+        internal val TEXT_TYPES = listOf("String").explodeTypes()
         private fun List<String>.explodeTypes(): List<String> {
             return map {
                 listOf(it, "$it?", "java.lang.$it", "java.lang.$it?", "kotlin.$it", "kotlin.$it?")
             }
                     .flatMap { it }
         }
+
+        fun isNumeric(type: String): Boolean {
+            var numeric = NUMERIC_TYPES.contains(type)
+            if (!numeric) {
+                numeric = try {
+                    val clazz = Class.forName(type)
+                    Temporal::class.java.isAssignableFrom(clazz)
+                            || Date::class.java.isAssignableFrom(clazz)
+                } catch (_: java.lang.Exception) {
+                    false
+                }
+            }
+
+            return numeric
+        }
+
+        fun isText(type: String) = TEXT_TYPES.contains(type)
     }
 
     val shortParameterTypes = mutableListOf<String>()
-
     val fullParameterTypes = mutableListOf<String>()
-
     val annotations = mutableListOf<CritterAnnotation>()
-
     var isStatic = false
-
     var isFinal = false
-
     var stringLiteralInitializer: String? = null
-
     var visibility: Visibility = PUBLIC
-
     var parameterizedType = type
-
     fun isContainer() = type.substringBefore("<") in CONTAINER_TYPES
-
     fun isGeoCompatible(): Boolean {
         try {
             val forName = Class.forName(type)
@@ -54,10 +60,8 @@ class CritterField(val name: String, val type: String) {
         return type in GEO_TYPES
     }
 
-    fun isNumeric() = NUMERIC_TYPES.contains(type)
-
-    fun isText() = TEXT_TYPES.contains(type)
-
+    fun isNumeric() = isNumeric(type)
+    fun isText() = isText(type)
     fun hasAnnotation(aClass: Class<out Annotation>): Boolean {
         return annotations.any { it.matches(aClass) }
     }

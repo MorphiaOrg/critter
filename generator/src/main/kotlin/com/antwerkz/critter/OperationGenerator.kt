@@ -31,7 +31,7 @@ interface OperationGenerator {
         }.joinToString(", ")
         val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
         val returnType = kFunction.returnType.javaType.typeName
-        var parameters = """extendPath(prefix, "${field.name}")"""
+        var parameters = """path"""
         if (args.isNotBlank()) {
             parameters += ", ${args}"
         }
@@ -51,7 +51,7 @@ interface OperationGenerator {
             ParameterSpec.builder(it.name!!, it.type.asTypeName()).build()
         }
         val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
-        var parameters = """extendPath(prefix, "${field.name}")"""
+        var parameters = """path"""
         if (args.isNotBlank()) {
             parameters += ", ${args}"
         }

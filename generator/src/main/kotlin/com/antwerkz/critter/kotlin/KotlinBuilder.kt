@@ -25,6 +25,7 @@ import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.annotations.Embedded
+import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
@@ -73,20 +74,20 @@ class KotlinBuilder(val context: KotlinContext) {
                 criteriaClass.primaryConstructor(
                         FunSpec.constructorBuilder()
                                 .addModifiers(INTERNAL)
-                                .addParameter(ParameterSpec.builder("prefix", NULLABLE_STRING)
+                                .addParameter(ParameterSpec.builder("path", NULLABLE_STRING)
                                         .defaultValue("null")
                                         .build())
                                 .build())
 
                 criteriaClass.addProperty(
-                        PropertySpec.builder("prefix", NULLABLE_STRING)
-                                .initializer("prefix")
+                        PropertySpec.builder("path", NULLABLE_STRING)
+                                .initializer("path")
                                 .addModifiers(PRIVATE)
                                 .build())
 
                 if (source.fields.isNotEmpty()) {
                     TypeSpec.companionObjectBuilder().apply {
-                        val propertyName = source.name.toMethodCase()
+                        val propertyName = "__instance"
                         addProperty(PropertySpec.builder(propertyName, ClassName("", criteriaName), PRIVATE)
                                 .initializer("""${criteriaName}()""")
                                 .build())
@@ -101,9 +102,9 @@ class KotlinBuilder(val context: KotlinContext) {
 
                         addFunction(FunSpec.builder("extendPath")
                                 .addModifiers(PRIVATE)
-                                .addParameter("prefix", NULLABLE_STRING)
-                                .addParameter("path", STRING)
-                                .addCode("""return prefix?.let { prefix + "." + path } ?: path""")
+                                .addParameter("path", NULLABLE_STRING)
+                                .addParameter("addition", STRING)
+                                .addCode("""return path?.let { path + "." + addition } ?: addition""")
                                 .build())
                         criteriaClass.addType(build())
                     }
@@ -131,17 +132,15 @@ class KotlinBuilder(val context: KotlinContext) {
     private fun Builder.addFieldCriteriaMethod(field: PropertySpec) {
         val concreteType = field.type.concreteType()
         val annotations = context.classes[concreteType.canonicalName]?.annotations
-        val fieldCriteriaName = if (annotations == null) {
+        val none = annotations?.none { it.className.packageName.startsWith("dev.morphia.annotations") } ?: true
+        val fieldCriteriaName = if (none) {
             field.name.toTitleCase() + "FieldCriteria"
         } else {
             concreteType.simpleName + "Criteria"
         }
-        var prefix = "prefix"
-        if(field.isMappedType()) {
-            prefix = """extendPath(prefix, "${field.name}")"""
-        }
+        var path = """extendPath(path, "${field.name}")"""
         addFunction(FunSpec.builder(field.name)
-                .addCode(CodeBlock.of("return ${fieldCriteriaName}(${prefix})"))
+                .addCode(CodeBlock.of("return ${fieldCriteriaName}(${path})"))
                 .build())
     }
 
@@ -162,6 +161,7 @@ class KotlinBuilder(val context: KotlinContext) {
             addReferenceCriteria(criteriaClass, field)
         } else {
             criteriaClass.addFieldCriteriaMethod(field)
+
             if (!field.isMappedType()) {
                 addFieldCriteriaClass(field, criteriaClass)
             }
@@ -172,20 +172,15 @@ class KotlinBuilder(val context: KotlinContext) {
                 .apply {
                     primaryConstructor(FunSpec.constructorBuilder()
                             .addModifiers(INTERNAL)
-                            .addParameter(ParameterSpec.builder("prefix", NULLABLE_STRING)
-                                    .defaultValue("null")
+                            .addParameter(ParameterSpec.builder("path", STRING)
                                     .build())
                             .build())
-                            .addProperty(PropertySpec.builder("prefix", NULLABLE_STRING)
-                                    .initializer("prefix")
-                                    .addModifiers(PRIVATE)
+                            .addProperty(PropertySpec.builder("path", STRING)
+                                    .initializer("path")
                                     .build())
 
                     attachFilters(field)
                     attachUpdates(field)
-                    addFunction(FunSpec.builder("path")
-                            .addCode("""return extendPath(prefix, "${field.name}")""")
-                            .build())
                     criteriaClass.addType(build())
                 }
     }
@@ -193,7 +188,7 @@ class KotlinBuilder(val context: KotlinContext) {
     private fun addReferenceCriteria(criteriaClass: Builder, field: PropertySpec) {
         val fieldCriteriaName = field.name.toTitleCase() + "FieldCriteria"
         criteriaClass.addFunction(FunSpec.builder(field.name)
-                .addCode(CodeBlock.of("return ${fieldCriteriaName}(prefix)"))
+                .addCode(CodeBlock.of("return ${fieldCriteriaName}(extendPath(path, \"${field.name}\"))"))
                 .build())
         addFieldCriteriaClass(field, criteriaClass)
     }
@@ -203,7 +198,10 @@ class KotlinBuilder(val context: KotlinContext) {
     }
 
     fun PropertySpec.isMappedType(): Boolean {
-        return mappedType() != null
+        val mappedType = mappedType()
+        return mappedType != null && mappedType.annotations.any {
+            it.className.packageName in listOf(Entity::class.java.simpleName, Embedded::class.java.simpleName)
+        }
     }
 }
 
@@ -216,7 +214,7 @@ private fun TypeName.concreteType(): ClassName {
 }
 
 fun PropertySpec.isContainer() = type.toString().substringBefore("<") in CritterField.CONTAINER_TYPES
-fun PropertySpec.isNumeric() = CritterField.NUMERIC_TYPES.contains(type.toString())
+fun PropertySpec.isNumeric() = CritterField.isNumeric(type.toString())
 fun PropertySpec.isText() = CritterField.TEXT_TYPES.contains(type.toString())
 fun <T : Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
     return annotations.firstOrNull { it.className == annotation.asTypeName() }

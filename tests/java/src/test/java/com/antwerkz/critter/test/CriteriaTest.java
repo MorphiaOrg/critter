@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2017 Justin Lee <jlee@antwerkz.com>
+ * Copyright (C) 2012-2020 Justin Lee <jlee@antwerkz.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.testng.annotations.Test;
 import java.time.LocalDateTime;
 
 import static com.antwerkz.critter.test.criteria.InvoiceCriteria.addresses;
+import static com.antwerkz.critter.test.criteria.InvoiceCriteria.orderDate;
 import static com.antwerkz.critter.test.criteria.PersonCriteria.age;
 import static com.antwerkz.critter.test.criteria.PersonCriteria.firstName;
 import static com.antwerkz.critter.test.criteria.PersonCriteria.lastName;
@@ -49,6 +50,15 @@ import static dev.morphia.query.experimental.filters.Filters.or;
 public class CriteriaTest {
 
     private Datastore datastore;
+
+    public void paths() {
+        Assert.assertEquals(
+            InvoiceCriteria.addresses().city().path(),
+            "addresses.city");
+        Assert.assertEquals(
+            InvoiceCriteria.orderDate().path(),
+            "orderDate");
+    }
 
     public void andQueries() {
         getDatastore().save(new Person("Mike", "Bloomberg"));
@@ -74,7 +84,7 @@ public class CriteriaTest {
 
     public void embeds() {
         Invoice invoice = new Invoice();
-        invoice.setDate(LocalDateTime.now());
+        invoice.setOrderDate(LocalDateTime.now());
         Person person = new Person("Mike", "Bloomberg");
         getDatastore().save(person);
         invoice.setPerson(person);
@@ -82,7 +92,7 @@ public class CriteriaTest {
         getDatastore().save(invoice);
 
         invoice = new Invoice();
-        invoice.setDate(LocalDateTime.now());
+        invoice.setOrderDate(LocalDateTime.now());
         person = new Person("Andy", "Warhol");
         getDatastore().save(person);
 
@@ -91,6 +101,7 @@ public class CriteriaTest {
         getDatastore().save(invoice);
 
         MorphiaCursor<Invoice> criteria1 = datastore.find(Invoice.class)
+                                                    .filter(orderDate().lte(LocalDateTime.now().plusDays(5)))
                                                     .iterator(new FindOptions()
                                                                   .sort(ascending(addresses().city().path())));
         Assert.assertEquals(criteria1.toList().get(0).getAddresses().get(0).getCity(), "NYC");

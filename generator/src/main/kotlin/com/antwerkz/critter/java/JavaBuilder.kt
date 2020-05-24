@@ -34,31 +34,26 @@ class JavaBuilder(private val context: CritterContext) {
             val filters = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
             if (!source.isAbstract() && context.shouldGenerate(source.lastModified(), filters.lastModified())) {
                 criteriaClass.addField("private static final ${criteriaClass.name}Impl instance = new ${criteriaClass.name}Impl()")
-                criteriaClass.addMethod("""
-                    private static ${criteriaClass.name}Impl ${source.name.toMethodCase()}() {
-                        return instance;
-                    }
-                """.trimIndent())
                 val impl = Roaster.create(JavaClassSource::class.java)
                         .setName(source.name + "CriteriaImpl")
                         .setStatic(true)
                         .setFinal(true)
                         .apply {
-                            addField("private final String prefix")
+                            addField("private final String path")
                             addMethods("""
                                 ${name}() {
-                                    this.prefix = null;
+                                    this.path = null;
                                 }
             
                                 ${name}(String fieldName) {
-                                    this.prefix = fieldName;
+                                    this.path = fieldName;
                                 }"""
                             ).forEach { it.isConstructor = true }
                         }
 
                 criteriaClass.addMethod("""
-                    private static String extendPath(String prefix, String path) {
-                        return prefix != null ? prefix + "." + path : path;
+                    private static String extendPath(String path, String addition) {
+                        return path != null ? path + "." + addition : addition;
                     }
                 """)
                 processFields(source, criteriaClass, impl)
@@ -79,6 +74,11 @@ class JavaBuilder(private val context: CritterContext) {
             criteriaClass.addField("public static final String ${field.name} = ${field.mappedName()}; ")
             addField(criteriaClass, impl, field)
         }
+        impl.addMethod("""
+            public String path() {
+                return path;
+            }""".trimIndent())
+
     }
 
     private fun addField(criteriaClass: JavaClassSource, impl: JavaClassSource, field: CritterField) {
@@ -98,16 +98,16 @@ class JavaBuilder(private val context: CritterContext) {
                     name = "${field.name.toTitleCase()}FieldCriteria"
                     isStatic = true
                     isFinal = true
-                    addField("private String prefix")
+                    addField("private String path")
 
-                    addMethod("""${name}(String prefix) {
-                        |this.prefix = prefix;
+                    addMethod("""${name}(String path) {
+                        |this.path = path;
                         |}""".trimMargin()).isConstructor = true
                     attachFilters(field)
                     attachUpdates(field)
                     addMethod("""
                         public String path() {
-                            return extendPath(prefix, "${field.name}");
+                            return path;
                         }""")
                 }
     }
@@ -121,7 +121,7 @@ class JavaBuilder(private val context: CritterContext) {
             }""")
         impl.addMethod("""
             public ${fieldCriteriaName} ${field.name}() {
-                return new ${fieldCriteriaName}(prefix);
+                return new ${fieldCriteriaName}(extendPath(path, "${field.name}"));
             }""")
         addFieldCriteriaClass(field)
     }
@@ -161,13 +161,10 @@ class JavaBuilder(private val context: CritterContext) {
                 return instance.${field.name}();
             }""".trimIndent())
 
-        var prefix = "prefix"
-        if(field.isMappedType()) {
-            prefix = """extendPath(prefix, "${field.name}")"""
-        }
+        var path = """extendPath(path, "${field.name}")"""
         addMethods("""
             public ${fieldCriteriaName} ${field.name}() {
-                return new ${fieldCriteriaName}(${prefix});
+                return new ${fieldCriteriaName}(${path});
             }""".trimIndent())
 
     }

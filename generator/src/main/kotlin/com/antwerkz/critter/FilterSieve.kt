@@ -86,7 +86,7 @@ enum class Handler: OperationGenerator {
             target.addFunction(FunSpec
                     .builder(name)
                     .addParameter("values", typeOf<Filter>().asTypeName(), VARARG)
-                    .addCode("""return Filters.${name}(extendPath(prefix, "${field.name}"), *values)""")
+                    .addCode("""return Filters.${name}(path, *values)""")
                     .build())
         }
     },
@@ -95,14 +95,14 @@ enum class Handler: OperationGenerator {
         override fun handle(target: JavaClassSource, field: CritterField) {
             target.addMethod("""
                 public ${Filter::class.java.name} exists() {
-                    return Filters.${name}(extendPath(prefix, "${field.name}"));
+                    return Filters.${name}(path);
                 } """.trimIndent())
         }
 
         override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
             target.addFunction(FunSpec
                     .builder(name)
-                    .addCode("""return Filters.${name}(extendPath(prefix, "${field.name}"))""")
+                    .addCode("""return Filters.${name}(path)""")
                     .build())
         }
     },
@@ -116,7 +116,7 @@ enum class Handler: OperationGenerator {
             target.addFunction(FunSpec
                     .builder(name)
                     .addParameter(ParameterSpec.builder("value", typeOf<Iterable<Any>>().asTypeName()).build())
-                    .addCode("""return Filters.`${name}`(extendPath(prefix, "${field.name}"), value)""")
+                    .addCode("""return Filters.`${name}`(path, value)""")
                     .build())
         }
 
@@ -136,14 +136,14 @@ enum class Handler: OperationGenerator {
         override fun handle(target: JavaClassSource, field: CritterField) {
             target.addMethod("""
             public ${RegexFilter::class.java.name} regex() {
-                return Filters.regex(extendPath(prefix, "${field.name}"));
+                return Filters.regex(path);
             } """.trimIndent())
         }
 
         override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
             target.addFunction(FunSpec
                     .builder(name)
-                    .addCode("""return Filters.${name}(extendPath(prefix, "${field.name}"))""")
+                    .addCode("""return Filters.${name}(path)""")
                     .build())
         }
     },

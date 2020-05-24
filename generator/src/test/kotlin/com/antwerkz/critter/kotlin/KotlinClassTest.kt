@@ -81,7 +81,7 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
         val companion = personCriteria.companion() as TypeSpec
         Assert.assertEquals(companion.propertySpecs.size, 6, companion.propertySpecs.toString())
         val sorted = companion.propertySpecs.map { it.name }.sorted()
-        Assert.assertEquals(sorted, listOf("age", "first", "id", "last", "ssn", "person").sorted(), sorted.toString())
+        Assert.assertEquals(sorted, listOf("age", "first", "id", "last", "ssn", "__instance").sorted(), sorted.toString())
         listOf("age", "first", "id", "last", "ssn").forEach {
             val functions = personCriteria.getFunctions(it)
             Assert.assertEquals(functions.size, 1, it)

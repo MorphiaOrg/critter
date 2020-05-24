@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2013 Justin Lee <jlee></jlee>@antwerkz.com>
+ * Copyright (C) 2012-2020 Justin Lee <jlee></jlee>@antwerkz.com>
 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import org.bson.types.ObjectId
 import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
+import java.time.LocalDateTime
 
 @Entity
 open class Person : AbstractPerson {
