@@ -40,7 +40,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <dokka.version>0.9.17</dokka.version>
+        <dokka.version>0.10.0</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.16</kibble.version>
         <kotlin.version>1.3.72</kotlin.version>
