@@ -5,7 +5,7 @@ Critter will look at your source code and generate type safe criteria builders f
 each model object.  To use it, you simply need to add a plugin to your maven pom:
 
     <plugin>
-        <groupId>com.antwerkz.critter</groupId>
+        <groupId>dev.morphia.critter</groupId>
         <artifactId>critter-maven</artifactId>
         <version>${critter.version}</version>
         <executions>
@@ -30,7 +30,7 @@ documentation purposes using the default values.  They can be left out altogethe
 Include the dependency in your pom.xml like this:
 
     <dependency>
-        <groupId>com.antwerkz.critter</groupId>
+        <groupId>dev.morphia.critter</groupId>
         <artifactId>critter-core</artifactId>
         <version>${critter.version}</version>
     </dependency>

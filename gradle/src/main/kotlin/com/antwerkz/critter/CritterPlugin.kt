@@ -1,4 +1,4 @@
-package com.antwerkz.critter
+package dev.morphia.critter
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project

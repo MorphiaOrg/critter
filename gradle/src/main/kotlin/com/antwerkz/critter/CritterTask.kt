@@ -1,6 +1,6 @@
-package com.antwerkz.critter
+package dev.morphia.critter
 
-import com.antwerkz.critter.java.JavaClass
+import dev.morphia.critter.java.JavaClass
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 import org.jboss.forge.roaster.Roaster

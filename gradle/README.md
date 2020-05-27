@@ -4,7 +4,7 @@ Gradle Support
 To enable this plugin, add the following line to your buildscript dependencies section:
 
 ```groovy
-    classpath group: 'com.antwerkz.critter', name: 'critter-gradle', version: '${critter.version}', changing: true
+    classpath group: 'dev.morphia.critter', name: 'critter-gradle', version: '${critter.version}', changing: true
 ```
 
 The plugin can be configured as follows:
@@ -41,5 +41,5 @@ less than ideal but for now is necessary.
 Once that's done, you'll need to add dependency in your project's dependencies as well:
 
 ```groovy
-  compile "com.antwerkz.critter:critter-core:${critter.version}"
+  compile "dev.morphia.critter:critter-core:${critter.version}"
 ```

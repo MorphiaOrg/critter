@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.antwerkz.critter</groupId>
+        <groupId>dev.morphia.critter</groupId>
         <artifactId>critter-tests</artifactId>
         <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -17,7 +17,7 @@
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
-                <groupId>com.antwerkz.critter</groupId>
+                <groupId>dev.morphia.critter</groupId>
                 <artifactId>critter-maven</artifactId>
                 <version>${project.version}</version>
                 <executions>
@@ -58,11 +58,6 @@
     </build>
 
     <dependencies>
-        <dependency>
-            <groupId>com.antwerkz.critter</groupId>
-            <artifactId>critter-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>dev.morphia.morphia</groupId>
             <artifactId>morphia-core</artifactId>

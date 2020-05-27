@@ -1,4 +1,4 @@
-package com.antwerkz.critter
+package dev.morphia.critter
 
 class CritterPluginExtension {
     var criteriaPackage: String? = null
