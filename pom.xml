@@ -13,12 +13,12 @@
     <packaging>pom</packaging>
 
     <name>critter</name>
-    <url>https://github.com/evanchooly/critter</url>
+    <url>https://github.com/MorphiaOrg/critter</url>
 
     <scm>
-        <connection>scm:git:git@github.com:evanchooly/critter.git</connection>
-        <developerConnection>scm:git:git@github.com:evanchooly/critter.git</developerConnection>
-        <url>git@github.com:evanchooly/critter.git</url>
+        <connection>scm:git:git@github.com:MorphiaOrg/critter.git</connection>
+        <developerConnection>scm:git:git@github.com:MorphiaOrg/critter.git</developerConnection>
+        <url>git@github.com:MorphiaOrg/critter.git</url>
     </scm>
 
     <pluginRepositories>

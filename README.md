@@ -65,7 +65,7 @@ With this code in place if the model object changes, the code above runs the ris
 catch model/query conflicts at compile time rather than waiting for things to fail at runtime (or in your tests if you're
 lucky enough to have those).
 
-You can see a working example in the [tests](https://github.com/evanchooly/critter/tree/master/tests).
+You can see a working example in the [tests](https://github.com/MorphiaOrg/critter/tree/master/tests).
 
 
 IDEA Users
