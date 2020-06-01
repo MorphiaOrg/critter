@@ -37,8 +37,6 @@ Include the dependency in your pom.xml like this:
 
 *Critter also requires Morphia 2.0.0 and is built for Java 11.*
 
-Gradle users can look [here](gradle/README.md) for details on using critter with gradle.
-
 What difference does it make?
 -----------------------------
 Before critter, your criteria might look something like this:
@@ -59,11 +57,10 @@ Query<Book> query = ds.find(Book.class)
         Person.database().eq(database)));
 ```
 
-Notice how bookmark() and database() methods were created based on the model object Book's fields.  The comparison
-methods you're familiar with from Morphia's filters API are all there but now only take the type of the field itself.
-With this code in place if the model object changes, the code above runs the risk of failing to compile allowing you to
-catch model/query conflicts at compile time rather than waiting for things to fail at runtime (or in your tests if you're
-lucky enough to have those).
+Notice how bookmark() and database() methods were created based on the model object `Book`'s fields.  The query filters you're familiar with
+from Morphia's filters API are all there but now only take the type of the field itself. With this code in place if the model object 
+changes, the code above runs the risk of failing to compile allowing you to catch model/query conflicts at compile time rather than waiting 
+for things to fail at runtime (or in your tests if you're lucky enough to have those).
 
 You can see a working example in the [tests](https://github.com/MorphiaOrg/critter/tree/master/tests).
 
