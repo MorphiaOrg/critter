@@ -151,44 +151,59 @@
         </pluginManagement>
 
         <plugins>
-<!--
             <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.version}</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
                 <executions>
                     <execution>
-                        <id>default-prepare-agent</id>
+                        <id>sign-artifacts</id>
+                        <phase>deploy</phase>
                         <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>default-report</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>report</goal>
+                            <goal>sign</goal>
                         </goals>
                     </execution>
                 </executions>
-                <inherited>true</inherited>
             </plugin>
-            <plugin>
-                <groupId>com.github.gantsign.maven</groupId>
-                <artifactId>ktlint-maven-plugin</artifactId>
-                <version>1.4.2</version>
-                <executions>
-                    <execution>
-                        <id>format-and-check</id>
-                        <goals>
-                            &lt;!&ndash;<goal>format</goal>&ndash;&gt;
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <inherited>true</inherited>
-            </plugin>
--->
+
+            <!--
+                        <plugin>
+                            <groupId>org.jacoco</groupId>
+                            <artifactId>jacoco-maven-plugin</artifactId>
+                            <version>${jacoco.version}</version>
+                            <executions>
+                                <execution>
+                                    <id>default-prepare-agent</id>
+                                    <goals>
+                                        <goal>prepare-agent</goal>
+                                    </goals>
+                                </execution>
+                                <execution>
+                                    <id>default-report</id>
+                                    <phase>prepare-package</phase>
+                                    <goals>
+                                        <goal>report</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                            <inherited>true</inherited>
+                        </plugin>
+                        <plugin>
+                            <groupId>com.github.gantsign.maven</groupId>
+                            <artifactId>ktlint-maven-plugin</artifactId>
+                            <version>1.4.2</version>
+                            <executions>
+                                <execution>
+                                    <id>format-and-check</id>
+                                    <goals>
+                                        &lt;!&ndash;<goal>format</goal>&ndash;&gt;
+                                        <goal>check</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                            <inherited>true</inherited>
+                        </plugin>
+            -->
         </plugins>
     </build>
     <dependencyManagement>
