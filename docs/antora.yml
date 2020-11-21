@@ -1,0 +1,11 @@
+name: critter
+title: Critter
+version: 4.0.0
+
+nav:
+- modules/ROOT/nav.adoc
+
+asciidoc:
+  attributes:
+    artifactId: critter
+    version: 4.0.0
