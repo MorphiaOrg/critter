@@ -1,6 +1,6 @@
 name: critter
 title: Critter
-version: 4.0.0
+version: master
 
 nav:
 - modules/ROOT/nav.adoc
@@ -8,4 +8,4 @@ nav:
 asciidoc:
   attributes:
     artifactId: critter
-    version: 4.0.0
+    version: 4.1.0-SNAPSHOT
