@@ -8,7 +8,7 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
 <plugin>
     <groupId>dev.morphia.critter</groupId>
     <artifactId>critter-maven</artifactId>
-    <version>${version}</version>
+    <version>{version}</version>
     <executions>
         <execution>
             <id>critter</id>
