@@ -1,6 +1,7 @@
 name: critter
 title: Critter
-version: master
+version: 4.1
+prerelease: -SNAPSHOT
 
 nav:
 - modules/ROOT/nav.adoc
