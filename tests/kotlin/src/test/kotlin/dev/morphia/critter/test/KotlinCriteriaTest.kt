@@ -15,57 +15,49 @@
  */
 package dev.morphia.critter.test
 
-import dev.morphia.critter.test.criteria.InvoiceCriteria
-import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.addresses
-import dev.morphia.critter.test.criteria.PersonCriteria.Companion.age
-import dev.morphia.critter.test.criteria.PersonCriteria.Companion.first
-import dev.morphia.critter.test.criteria.PersonCriteria.Companion.last
-import com.mongodb.MongoClientSettings
+import com.antwerkz.bottlerocket.BottleRocket
+import com.antwerkz.bottlerocket.BottleRocketTest
+import com.github.zafarkhaja.semver.Version
 import com.mongodb.WriteConcern.MAJORITY
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoClients
 import dev.morphia.DeleteOptions
 import dev.morphia.Morphia
 import dev.morphia.UpdateOptions
+import dev.morphia.critter.test.criteria.InvoiceCriteria
+import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.addresses
+import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.orderDate
+import dev.morphia.critter.test.criteria.PersonCriteria.Companion.age
+import dev.morphia.critter.test.criteria.PersonCriteria.Companion.first
+import dev.morphia.critter.test.criteria.PersonCriteria.Companion.last
 import dev.morphia.query.FindOptions
 import dev.morphia.query.Sort
 import dev.morphia.query.Sort.ascending
 import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.filters.Filters.and
-import org.bson.UuidRepresentation.STANDARD
 import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.Test
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 @Test
-class KotlinCriteriaTest {
+class KotlinCriteriaTest: BottleRocketTest() {
+    override fun databaseName(): String {
+        return "critter"
+    }
+
+    override fun version(): Version {
+        return BottleRocket.DEFAULT_VERSION
+    }
 
     @AfterMethod
     fun clean() {
-        val mongo = com.mongodb.MongoClient()
-        val critter = mongo.getDatabase("critter")
-        critter.drop()
-    }
-
-    val mongo: MongoClient by lazy {
-        val builder = MongoClientSettings.builder()
-
-        try {
-            builder.uuidRepresentation(STANDARD)
-        } catch (ignored: java.lang.Exception) {
-            // not a 4.0 driver
-        }
-
-        MongoClients.create(builder
-                .build())
+        database.drop()
     }
 
     val datastore: dev.morphia.Datastore by lazy {
-        val critter = mongo.getDatabase("critter")
-        val ds = Morphia.createDatastore(mongo, "critter")
+        val ds = Morphia.createDatastore(mongoClient, databaseName())
         ds.mapper.mapPackage("dev.morphia")
-        critter.drop()
+        database.drop()
 
         ds
     }
@@ -149,19 +141,13 @@ class KotlinCriteriaTest {
     }
 
     fun paths() {
-        Assert.assertEquals(
-                InvoiceCriteria.addresses().city().path,
-                "addresses.city"
-        )
-        Assert.assertEquals(
-                InvoiceCriteria.orderDate().path,
-                "orderDate"
-        )
+        Assert.assertEquals(addresses().city().path, "addresses.city")
+        Assert.assertEquals(orderDate().path, "orderDate")
     }
 
     fun embeds() {
         var invoice = Invoice()
-        invoice.orderDate = LocalDateTime.now()
+        invoice.orderDate = now()
         var person = Person("Mike", "Bloomberg")
         datastore.save(person)
         invoice.person = person
@@ -169,7 +155,7 @@ class KotlinCriteriaTest {
         datastore.save(invoice)
 
         invoice = Invoice()
-        invoice.orderDate = LocalDateTime.now()
+        invoice.orderDate = now()
         person = Person("Andy", "Warhol")
         datastore.save(person)
 
@@ -179,7 +165,7 @@ class KotlinCriteriaTest {
 
         val query = datastore.find(Invoice::class.java)
         Assert.assertEquals(query
-                .filter(InvoiceCriteria.orderDate().lte(LocalDateTime.now().plusDays(5)))
+                .filter(orderDate().lte(now().plusDays(5)))
                 .iterator(FindOptions()
                         .sort(ascending(addresses().city().path))).next().addresses!![0].city, "NYC")
 
@@ -214,7 +200,7 @@ class KotlinCriteriaTest {
                         Filters.eq("last", "Tyson")))
 
         val query2 = datastore.find(Person::class.java)
-                .filter(Filters.and(
+                .filter(and(
                         first().eq("Mike"),
                         last().eq("Tyson")))
 
