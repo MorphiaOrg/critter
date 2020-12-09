@@ -15,9 +15,10 @@
  */
 package dev.morphia.critter.test;
 
-import dev.morphia.critter.test.criteria.InvoiceCriteria;
-import dev.morphia.critter.test.criteria.PersonCriteria;
-import com.mongodb.MongoClient;
+import com.antwerkz.bottlerocket.BottleRocket;
+import com.antwerkz.bottlerocket.BottleRocketTest;
+import com.github.zafarkhaja.semver.Version;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -31,17 +32,14 @@ import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.internal.MorphiaCursor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
 
-import static dev.morphia.critter.test.criteria.InvoiceCriteria.addresses;
-import static dev.morphia.critter.test.criteria.InvoiceCriteria.orderDate;
-import static dev.morphia.critter.test.criteria.PersonCriteria.age;
-import static dev.morphia.critter.test.criteria.PersonCriteria.firstName;
-import static dev.morphia.critter.test.criteria.PersonCriteria.lastName;
 import static com.mongodb.WriteConcern.MAJORITY;
 import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.Sort.descending;
@@ -49,9 +47,21 @@ import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.filters.Filters.or;
 
 @Test
-public class CriteriaTest {
+public class CriteriaTest extends BottleRocketTest {
 
     private Datastore datastore;
+
+    @NotNull
+    @Override
+    public String databaseName() {
+        return "critter";
+    }
+
+    @Nullable
+    @Override
+    public Version version() {
+        return BottleRocket.DEFAULT_VERSION;
+    }
 
     public void paths() {
         Assert.assertEquals(
@@ -249,10 +259,10 @@ public class CriteriaTest {
 
     private Datastore getDatastore() {
         if (datastore == null) {
-            MongoClient mongo = new MongoClient();
-            MongoDatabase critter = mongo.getDatabase("critter");
+            MongoClient mongo = getMongoClient();
+            MongoDatabase critter = getDatabase();
             critter.drop();
-            datastore = Morphia.createDatastore("critter");
+            datastore = Morphia.createDatastore(mongo, getDatabase().getName());
             datastore.getMapper().mapPackage("dev.morphia");
         }
         return datastore;

@@ -12,6 +12,19 @@
     <artifactId>critter-tests</artifactId>
     <packaging>pom</packaging>
 
+
+
+    <repositories>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <name>Sontatype Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <modules>
         <module>kotlin</module>
         <module>java</module>
@@ -26,6 +39,10 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.antwerkz.bottlerocket</groupId>
+            <artifactId>bottlerocket</artifactId>
         </dependency>
     </dependencies>
 

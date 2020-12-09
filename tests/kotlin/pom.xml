@@ -78,5 +78,10 @@
             <artifactId>kotlin-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.antwerkz.bottlerocket</groupId>
+            <artifactId>bottlerocket</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
