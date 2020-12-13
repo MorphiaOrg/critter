@@ -1,14 +1,14 @@
 package dev.morphia.critter
 
-import dev.morphia.critter.kotlin.isContainer
-import dev.morphia.critter.kotlin.isNumeric
-import dev.morphia.critter.kotlin.isText
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.VARARG
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asTypeName
+import dev.morphia.critter.kotlin.isContainer
+import dev.morphia.critter.kotlin.isNumeric
+import dev.morphia.critter.kotlin.isText
 import dev.morphia.query.experimental.filters.Filter
 import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.filters.RegexFilter
@@ -16,7 +16,6 @@ import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.TreeSet
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSupertypeOf
-import kotlin.reflect.jvm.javaType
 import kotlin.reflect.typeOf
 
 @ExperimentalStdlibApi
@@ -51,7 +50,7 @@ object FilterSieve {
         }
     }
 
-    fun handlers(field: PropertySpec, target: TypeSpec.Builder) {
+    fun handlers(field: PropertySpec, target: Builder) {
         val handlers = TreeSet(Handler.common())
         if (field.isNumeric()) {
             handlers.addAll(Handler.numerics())
@@ -82,7 +81,7 @@ enum class Handler: OperationGenerator {
     center,
     centerSphere,
     elemMatch {
-        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+        override fun handle(field: PropertySpec, target: Builder) {
             target.addFunction(FunSpec
                     .builder(name)
                     .addParameter("values", typeOf<Filter>().asTypeName(), VARARG)
@@ -99,7 +98,7 @@ enum class Handler: OperationGenerator {
                 } """.trimIndent())
         }
 
-        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+        override fun handle(field: PropertySpec, target: Builder) {
             target.addFunction(FunSpec
                     .builder(name)
                     .addCode("""return Filters.${name}(path)""")
@@ -112,7 +111,7 @@ enum class Handler: OperationGenerator {
     gt,
     gte,
     `in` {
-        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+        override fun handle(field: PropertySpec, target: Builder) {
             target.addFunction(FunSpec
                     .builder(name)
                     .addParameter(ParameterSpec.builder("value", typeOf<Iterable<Any>>().asTypeName()).build())
@@ -121,7 +120,9 @@ enum class Handler: OperationGenerator {
         }
 
     },
-    jsonSchema,
+    jsonSchema {
+        override fun handle(field: PropertySpec, target: Builder) {}
+    },
     lt,
     lte,
     maxDistance,
@@ -140,7 +141,7 @@ enum class Handler: OperationGenerator {
             } """.trimIndent())
         }
 
-        override fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+        override fun handle(field: PropertySpec, target: Builder) {
             target.addFunction(FunSpec
                     .builder(name)
                     .addCode("""return Filters.${name}(path)""")
@@ -170,7 +171,7 @@ enum class Handler: OperationGenerator {
         handle(target, field, name, FilterSieve.functions, "Filters")
     }
 
-    open fun handle(field: PropertySpec, target: TypeSpec.Builder) {
+    open fun handle(field: PropertySpec, target: Builder) {
         handle(target, field, name, FilterSieve.functions, "Filters")
     }
 

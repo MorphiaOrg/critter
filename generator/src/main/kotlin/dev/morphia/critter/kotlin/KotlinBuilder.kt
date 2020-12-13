@@ -1,10 +1,5 @@
 package dev.morphia.critter.kotlin
 
-import dev.morphia.critter.CritterField
-import dev.morphia.critter.FilterSieve
-import dev.morphia.critter.UpdateSieve
-import dev.morphia.critter.java.toMethodCase
-import dev.morphia.critter.java.toTitleCase
 import com.github.shyiko.ktlint.core.KtLint
 import com.github.shyiko.ktlint.core.LintError
 import com.github.shyiko.ktlint.core.RuleSet
@@ -29,6 +24,10 @@ import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
+import dev.morphia.critter.CritterField
+import dev.morphia.critter.FilterSieve
+import dev.morphia.critter.UpdateSieve
+import dev.morphia.critter.java.toTitleCase
 import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.updates.UpdateOperators
 import org.slf4j.LoggerFactory
@@ -52,7 +51,7 @@ class KotlinBuilder(val context: KotlinContext) {
 
     private val ruleSets: List<RuleSet> by lazy {
         ServiceLoader.load(RuleSetProvider::class.java).map<RuleSetProvider, RuleSet> { it.get() }
-                .sortedWith(comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }.thenComparing(RuleSet::id))
+            .sortedWith(comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }.thenComparing(RuleSet::id))
     }
 
     private fun build(directory: File, source: KotlinClass) {
@@ -69,42 +68,26 @@ class KotlinBuilder(val context: KotlinContext) {
                 val criteriaClass = TypeSpec.classBuilder(criteriaName)
 
                 criteriaClass.primaryConstructor(
-                        FunSpec.constructorBuilder()
-                                .addModifiers(INTERNAL)
-                                .addParameter(ParameterSpec.builder("path", NULLABLE_STRING)
-                                        .defaultValue("null")
-                                        .build())
-                                .build())
+                    FunSpec.constructorBuilder()
+                        .addModifiers(INTERNAL)
+                        .addParameter(
+                            ParameterSpec.builder("path", NULLABLE_STRING)
+                                .addModifiers(PRIVATE)
+                                .defaultValue("null")
+                                .build()
+                        )
+                        .build()
+                )
 
                 criteriaClass.addProperty(
-                        PropertySpec.builder("path", NULLABLE_STRING)
-                                .initializer("path")
-                                .addModifiers(PRIVATE)
-                                .build())
+                    PropertySpec.builder("path", NULLABLE_STRING)
+                        .initializer("path")
+                        .addModifiers(PRIVATE)
+                        .build()
+                )
 
                 if (source.fields.isNotEmpty()) {
-                    TypeSpec.companionObjectBuilder().apply {
-                        val propertyName = "__instance"
-                        addProperty(PropertySpec.builder(propertyName, ClassName("", criteriaName), PRIVATE)
-                                .initializer("""${criteriaName}()""")
-                                .build())
-
-                        source.fields.forEach { field ->
-                            addProperty(PropertySpec.builder(field.name, STRING).initializer(""""${field.mappedName()}"""")
-                                    .build())
-                            addFunction(FunSpec.builder(field.name)
-                                    .addCode(CodeBlock.of("return ${propertyName}.${field.name}()"))
-                                    .build())
-                        }
-
-                        addFunction(FunSpec.builder("extendPath")
-                                .addModifiers(PRIVATE)
-                                .addParameter("path", NULLABLE_STRING)
-                                .addParameter("addition", STRING)
-                                .addCode("""return path?.let { path + "." + addition } ?: addition""")
-                                .build())
-                        criteriaClass.addType(build())
-                    }
+                    buildCompanionObject(criteriaName, source, criteriaClass)
                 }
 
                 source.fields.forEach { field ->
@@ -113,9 +96,9 @@ class KotlinBuilder(val context: KotlinContext) {
 
                 fileBuilder.addType(criteriaClass.build())
                 val fileSpec = fileBuilder
-                        .addImport(Filters::class.java.packageName, "Filters", "Filter")
-                        .addImport(UpdateOperators::class.java.packageName, "UpdateOperators", "UpdateOperator")
-                        .build()
+                    .addImport(Filters::class.java.packageName, "Filters", "Filter")
+                    .addImport(UpdateOperators::class.java.packageName, "UpdateOperators", "UpdateOperator")
+                    .build()
                 fileSpec.writeTo(directory)
 
                 formatOutput(directory, fileSpec)
@@ -123,6 +106,44 @@ class KotlinBuilder(val context: KotlinContext) {
         } catch (e: Exception) {
             LOG.error("Failed to process ${source.fileSpec.packageName}.${source.name}")
             throw e
+        }
+    }
+
+    private fun buildCompanionObject(
+        criteriaName: String,
+        source: KotlinClass,
+        criteriaClass: Builder
+    ) {
+        TypeSpec.companionObjectBuilder().apply {
+            val propertyName = "__criteria"
+            addProperty(
+                PropertySpec.builder(propertyName, ClassName("", criteriaName), PRIVATE)
+                    .initializer("""${criteriaName}()""")
+                    .build()
+            )
+
+            source.fields.forEach { field ->
+                addProperty(
+                    PropertySpec.builder(field.name, STRING)
+                        .initializer(""""${field.mappedName()}"""")
+                        .build()
+                )
+                addFunction(
+                    FunSpec.builder(field.name)
+                        .addCode(CodeBlock.of("return ${propertyName}.${field.name}()"))
+                        .build()
+                )
+            }
+
+            addFunction(
+                FunSpec.builder("extendPath")
+                    .addModifiers(PRIVATE)
+                    .addParameter("path", NULLABLE_STRING)
+                    .addParameter("addition", STRING)
+                    .addCode("""return path?.let { path + "." + addition } ?: addition""")
+                    .build()
+            )
+            criteriaClass.addType(build())
         }
     }
 
@@ -136,9 +157,11 @@ class KotlinBuilder(val context: KotlinContext) {
             concreteType.simpleName + "Criteria"
         }
         var path = """extendPath(path, "${field.name}")"""
-        addFunction(FunSpec.builder(field.name)
+        addFunction(
+            FunSpec.builder(field.name)
                 .addCode(CodeBlock.of("return ${fieldCriteriaName}(${path})"))
-                .build())
+                .build()
+        )
     }
 
     private fun formatOutput(directory: File, fileSpec: FileSpec) {
@@ -164,29 +187,39 @@ class KotlinBuilder(val context: KotlinContext) {
             }
         }
     }
+
     private fun addFieldCriteriaClass(field: PropertySpec, criteriaClass: Builder) {
         TypeSpec.classBuilder("${field.name.toTitleCase()}FieldCriteria")
-                .apply {
-                    primaryConstructor(FunSpec.constructorBuilder()
-                            .addModifiers(INTERNAL)
-                            .addParameter(ParameterSpec.builder("path", STRING)
-                                    .build())
-                            .build())
-                            .addProperty(PropertySpec.builder("path", STRING)
-                                    .initializer("path")
-                                    .build())
+            .apply {
+                primaryConstructor(
+                    FunSpec.constructorBuilder()
+                        .addModifiers(INTERNAL)
+                        .addParameter(
+                            ParameterSpec.builder("path", STRING)
+                                .addModifiers(PRIVATE)
+                                .build()
+                        )
+                        .build()
+                )
+                    .addProperty(
+                        PropertySpec.builder("path", STRING)
+                            .initializer("path")
+                            .build()
+                    )
 
-                    attachFilters(field)
-                    attachUpdates(field)
-                    criteriaClass.addType(build())
-                }
+                attachFilters(field)
+                attachUpdates(field)
+                criteriaClass.addType(build())
+            }
     }
 
     private fun addReferenceCriteria(criteriaClass: Builder, field: PropertySpec) {
         val fieldCriteriaName = field.name.toTitleCase() + "FieldCriteria"
-        criteriaClass.addFunction(FunSpec.builder(field.name)
+        criteriaClass.addFunction(
+            FunSpec.builder(field.name)
                 .addCode(CodeBlock.of("return ${fieldCriteriaName}(extendPath(path, \"${field.name}\"))"))
-                .build())
+                .build()
+        )
         addFieldCriteriaClass(field, criteriaClass)
     }
 
