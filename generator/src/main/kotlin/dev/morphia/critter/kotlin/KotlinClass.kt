@@ -14,7 +14,7 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
     val annotations = source.annotationSpecs
     val fields by lazy { listProperties() }
 
-    internal fun listProperties(type: KotlinClass? = this): List<PropertySpec> {
+    private fun listProperties(type: KotlinClass? = this): List<PropertySpec> {
         val list = mutableListOf<PropertySpec>()
         type?.let { current ->
             val typeSpec = current.source
@@ -25,7 +25,7 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
 
             list += current.source.superinterfaces
                     .map { listProperties(context.resolve(name, it.key.toString())) }
-                    .flatMap { it }
+                    .flatten()
         }
 
         return list
@@ -35,14 +35,14 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
 
     fun isEnum() = source.isEnum
 
-    fun lastModified(): Long? {
+    fun lastModified(): Long {
         val sourceMod = fileSpec.toJavaFileObject().lastModified
         val list = listOf(source.superclass) + source.superinterfaces.keys
                 .filter { it != ANY }
         val max = list
-                .mapNotNull { context.resolveFile(it.toString())?.lastModified() }
-                .max()
-        return Math.max(sourceMod, max ?: Long.MIN_VALUE)
+            .mapNotNull { context.resolveFile(it.toString())?.lastModified() }
+            .maxOrNull()
+        return sourceMod.coerceAtLeast(max ?: Long.MIN_VALUE)
     }
 
     override fun toString(): String {

@@ -7,8 +7,8 @@ import java.io.File
 class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false) {
     val classes = mutableMapOf<String, JavaClass>()
 
-    fun shouldGenerate(source: Long?, output: Long?): Boolean {
-        return force || source == null || output == null || output <= source
+    fun shouldGenerate(sourceTimestamp: Long?, Timestamp: Long?): Boolean {
+        return force || sourceTimestamp == null || Timestamp == null || Timestamp <= sourceTimestamp
     }
 
     fun add(klass: JavaClass) {

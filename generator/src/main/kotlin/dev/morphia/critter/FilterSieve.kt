@@ -122,6 +122,7 @@ enum class Handler: OperationGenerator {
     },
     jsonSchema {
         override fun handle(field: PropertySpec, target: Builder) {}
+        override fun handle(target: JavaClassSource, field: CritterField) {}
     },
     lt,
     lte,

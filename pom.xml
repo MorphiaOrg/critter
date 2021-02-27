@@ -45,7 +45,7 @@
         <jacoco.version>0.8.1</jacoco.version>
         <bottlerocket.version>0.13</bottlerocket.version>
         <kibble.version>0.16</kibble.version>
-        <kotlin.version>1.4.21</kotlin.version>
+        <kotlin.version>1.4.30</kotlin.version>
         <kotlinpoet.version>1.5.0</kotlinpoet.version>
         <ktlint.version>0.31.0</ktlint.version>
         <maven.version>3.5.2</maven.version>
@@ -191,11 +191,16 @@
                 <version>${kotlin.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-compiler-embeddable</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.antwerkz.kibble</groupId>
                 <artifactId>kibble</artifactId>
                 <version>${kibble.version}</version>
             </dependency>
-                <dependency>
+            <dependency>
                 <groupId>com.antwerkz.bottlerocket</groupId>
                 <artifactId>bottlerocket</artifactId>
                 <version>${bottlerocket.version}</version>
@@ -293,7 +298,7 @@
     <modules>
         <module>generator</module>
         <module>maven</module>
-        <!--<module>gradle</module>-->
+        <module>gradle</module>
         <module>tests</module>
     </modules>
 </project>

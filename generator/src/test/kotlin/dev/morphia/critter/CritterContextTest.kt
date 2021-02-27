@@ -8,6 +8,7 @@ import dev.morphia.critter.kotlin.KotlinContext
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
 import org.testng.Assert
+import org.testng.Assert.fail
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
@@ -15,9 +16,9 @@ import java.io.File
 @ExperimentalStdlibApi
 class CritterContextTest {
     @Test(dataProvider = "forceScenarios")
-    fun force(source: Long?, output: Long?, force: Boolean, result: Boolean) {
-        val critterContext = CritterContext(force = force)
-        Assert.assertEquals(critterContext.shouldGenerate(source, output), result)
+    fun force(sourceTimestamp: Long?, outputTimestamp: Long?, force: Boolean, result: Boolean) {
+        Assert.assertEquals(CritterContext(force = force)
+            .shouldGenerate(sourceTimestamp, outputTimestamp), result)
     }
 
     @DataProvider(name = "forceScenarios")

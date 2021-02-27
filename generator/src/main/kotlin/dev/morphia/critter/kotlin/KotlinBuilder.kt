@@ -101,7 +101,7 @@ class KotlinBuilder(val context: KotlinContext) {
                     .build()
                 fileSpec.writeTo(directory)
 
-                formatOutput(directory, fileSpec)
+//                formatOutput(directory, fileSpec)
             }
         } catch (e: Exception) {
             LOG.error("Failed to process ${source.fileSpec.packageName}.${source.name}")
