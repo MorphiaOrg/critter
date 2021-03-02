@@ -3,8 +3,11 @@ package dev.morphia.critter
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.VARARG
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec.Builder
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.critter.kotlin.isContainer
 import dev.morphia.critter.kotlin.isNumeric
@@ -14,22 +17,21 @@ import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.filters.RegexFilter
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.TreeSet
+import kotlin.jvm.internal.Reflection.typeOf
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSupertypeOf
-import kotlin.reflect.typeOf
 
-@ExperimentalStdlibApi
 object FilterSieve {
     internal val functions = filters()
-            .map { it.name to it }
-            .toMap()
-            .toSortedMap()
+        .map { it.name to it }
+        .toMap()
+        .toSortedMap()
 
-
-    @ExperimentalStdlibApi
     fun filters() = Filters::class.functions
-            .filter { typeOf<Filter>().isSupertypeOf(it.returnType) }
-            .filter { it.name !in setOf("and", "or", "nor", "expr", "where", "uniqueDocs", "text", "comment") }
+        .filter { Filter::class.createType().isSupertypeOf(it.returnType) }
+        .filter { it.name !in setOf("and", "or", "nor", "expr", "where", "uniqueDocs", "text", "comment") }
 
     fun handlers(field: CritterField, target: JavaClassSource) {
         val handlers = TreeSet(Handler.common())
@@ -66,12 +68,10 @@ object FilterSieve {
             it.handle(field, target)
         }
     }
-
 }
 
 @Suppress("unused", "EnumEntryName")
-@ExperimentalStdlibApi
-enum class Handler: OperationGenerator {
+enum class Handler : OperationGenerator {
     all,
     bitsAllClear,
     bitsAllSet,
@@ -82,27 +82,33 @@ enum class Handler: OperationGenerator {
     centerSphere,
     elemMatch {
         override fun handle(field: PropertySpec, target: Builder) {
-            target.addFunction(FunSpec
+            target.addFunction(
+                FunSpec
                     .builder(name)
-                    .addParameter("values", typeOf<Filter>().asTypeName(), VARARG)
+                    .addParameter("values", Filter::class.asTypeName(), VARARG)
                     .addCode("""return Filters.${name}(path, *values)""")
-                    .build())
+                    .build()
+            )
         }
     },
     eq,
     exists {
         override fun handle(target: JavaClassSource, field: CritterField) {
-            target.addMethod("""
+            target.addMethod(
+                """
                 public ${Filter::class.java.name} exists() {
                     return Filters.${name}(path);
-                } """.trimIndent())
+                } """.trimIndent()
+            )
         }
 
         override fun handle(field: PropertySpec, target: Builder) {
-            target.addFunction(FunSpec
+            target.addFunction(
+                FunSpec
                     .builder(name)
                     .addCode("""return Filters.${name}(path)""")
-                    .build())
+                    .build()
+            )
         }
     },
     geoIntersects,
@@ -112,13 +118,15 @@ enum class Handler: OperationGenerator {
     gte,
     `in` {
         override fun handle(field: PropertySpec, target: Builder) {
-            target.addFunction(FunSpec
+            val typeOf = typeOf(Iterable::class.java, KTypeProjection.invariant(Any::class.createType()))
+            target.addFunction(
+                FunSpec
                     .builder(name)
-                    .addParameter(ParameterSpec.builder("value", typeOf<Iterable<Any>>().asTypeName()).build())
+                    .addParameter(ParameterSpec.builder("value", Iterable::class.asClassName().parameterizedBy(STAR)).build())
                     .addCode("""return Filters.`${name}`(path, value)""")
-                    .build())
+                    .build()
+            )
         }
-
     },
     jsonSchema {
         override fun handle(field: PropertySpec, target: Builder) {}
@@ -136,17 +144,21 @@ enum class Handler: OperationGenerator {
     polygon,
     regex {
         override fun handle(target: JavaClassSource, field: CritterField) {
-            target.addMethod("""
+            target.addMethod(
+                """
             public ${RegexFilter::class.java.name} regex() {
                 return Filters.regex(path);
-            } """.trimIndent())
+            } """.trimIndent()
+            )
         }
 
         override fun handle(field: PropertySpec, target: Builder) {
-            target.addFunction(FunSpec
+            target.addFunction(
+                FunSpec
                     .builder(name)
                     .addCode("""return Filters.${name}(path)""")
-                    .build())
+                    .build()
+            )
         }
     },
     size,
@@ -155,15 +167,13 @@ enum class Handler: OperationGenerator {
 
     companion object {
         fun get(name: String) = valueOf(name)
-
         fun numerics(): List<Handler> = listOf(gt, gte, lt, lte, mod, bitsAllClear, bitsAllSet, bitsAnyClear, bitsAnySet)
-
         fun strings() = listOf(regex)
-
         fun containers() = listOf(all, elemMatch, size)
-
-        fun geoFilters() = listOf(box, center, centerSphere, geoIntersects, geometry, geoWithin, maxDistance, minDistance, near,
-                nearSphere, polygon)
+        fun geoFilters() = listOf(
+            box, center, centerSphere, geoIntersects, geometry, geoWithin, maxDistance, minDistance, near,
+            nearSphere, polygon
+        )
 
         fun common() = values().toList() - numerics() - strings() - containers() - geoFilters()
     }
@@ -175,5 +185,4 @@ enum class Handler: OperationGenerator {
     open fun handle(field: PropertySpec, target: Builder) {
         handle(target, field, name, FilterSieve.functions, "Filters")
     }
-
 }

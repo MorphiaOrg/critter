@@ -41,18 +41,19 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+        <bottlerocket.version>0.14</bottlerocket.version>
         <dokka.version>0.10.0</dokka.version>
+        <gradle.executable>./gradlew</gradle.executable>
         <jacoco.version>0.8.1</jacoco.version>
-        <bottlerocket.version>0.13</bottlerocket.version>
         <kibble.version>0.16</kibble.version>
-        <kotlin.version>1.4.30</kotlin.version>
-        <kotlinpoet.version>1.5.0</kotlinpoet.version>
+        <kotlin.version>1.4.31</kotlin.version>
+        <kotlinpoet.version>1.7.2</kotlinpoet.version>
         <ktlint.version>0.31.0</ktlint.version>
-        <maven.version>3.5.2</maven.version>
-        <morphia.version>2.1.2</morphia.version>
+        <maven.version>3.6.3</maven.version>
+        <morphia.version>2.1.4</morphia.version>
         <roaster.version>2.21.1.Final</roaster.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <testng.version>6.14.3</testng.version>
+        <testng.version>7.4.0</testng.version>
     </properties>
 
     <build>
@@ -161,11 +162,6 @@
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.freemarker</groupId>
-                <artifactId>freemarker</artifactId>
-                <version>${freemarker.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>dev.morphia.morphia</groupId>
                 <artifactId>morphia-core</artifactId>
                 <version>${morphia.version}</version>
@@ -236,7 +232,7 @@
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-slf4j-impl</artifactId>
-                <version>2.11.1</version>
+                <version>2.14.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -294,11 +290,23 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <gradle.executable>gradlew.bat</gradle.executable>
+            </properties>
+        </profile>
     </profiles>
+
     <modules>
         <module>generator</module>
-        <module>maven</module>
-        <module>gradle</module>
+        <module>build-tools</module>
         <module>tests</module>
     </modules>
+
 </project>

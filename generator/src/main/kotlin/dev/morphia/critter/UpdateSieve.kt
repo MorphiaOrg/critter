@@ -5,7 +5,9 @@ import dev.morphia.critter.kotlin.isContainer
 import dev.morphia.critter.kotlin.isNumeric
 import dev.morphia.critter.kotlin.isText
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
@@ -15,21 +17,20 @@ import dev.morphia.query.experimental.updates.UpdateOperator
 import dev.morphia.query.experimental.updates.UpdateOperators
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.TreeSet
+import kotlin.reflect.full.createType
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSupertypeOf
 import kotlin.reflect.jvm.javaType
 import kotlin.reflect.typeOf
 
-@ExperimentalStdlibApi
 object UpdateSieve {
     internal val functions = updates()
             .map { it.name to it }
             .toMap()
             .toSortedMap()
 
-    @ExperimentalStdlibApi
     fun updates() = UpdateOperators::class.functions
-            .filter { typeOf<UpdateOperator>().isSupertypeOf(it.returnType) }
+            .filter { UpdateOperator::class.createType().isSupertypeOf(it.returnType) }
             .filter { it.name !in setOf("setOnInsert") }
             .filterNot { it.name == "set" && it.parameters.size == 1 }
 
@@ -68,7 +69,6 @@ object UpdateSieve {
 }
 
 @Suppress("EnumEntryName")
-@ExperimentalStdlibApi
 enum class Updates : OperationGenerator {
     and,
     addToSet {
@@ -86,13 +86,13 @@ enum class Updates : OperationGenerator {
 
         override fun handle(target: Builder, field: PropertySpec) {
             target.addFunction(FunSpec.builder(name)
-                    .addParameter("value", typeOf<Any>().asTypeName())
+                    .addParameter("value", Any::class.asTypeName())
                     .returns(AddToSetOperator::class.asClassName())
                     .addCode("""return UpdateOperators.${name}(path, value)""")
                     .build())
 
             target.addFunction(FunSpec.builder(name)
-                    .addParameter("values", typeOf<List<Any>>().asTypeName())
+                    .addParameter("values", List::class.asClassName().parameterizedBy(STAR))
                     .returns(AddToSetOperator::class.asClassName())
                     .addCode("""return UpdateOperators.${name}(path, values)""")
                     .build())

@@ -23,11 +23,37 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
     </executions>
 </plugin>
 ----
+This will generate your criteria classes in `target/generated-sources/critter` and add the directory as a source directory of your maven
+project.
 
-This will generate your criteria classes in `target/generated-sources/critter` and add the directory as a source
-directory of your maven project.  If the `criteriaPackage` option is omitted, the code will be generated using the 
-package of your entities with `.criteria` appended. (The options are shown here for documentation purposes using the 
-default values.  They can be left out altogether if the defaults are acceptable.)
+If you use gradle, you would configure your file like so (using the kotlin dsl):
+
+[source,kotlin,subs="verbatim,attributes"]
+----
+plugins {
+    id("dev.morphia.critter") version "4.1.0-SNAPSHOT"
+}
+
+
+tasks {
+    critter {
+        force = true
+        outputType = "java"
+    }
+}
+----
+This will generate your criteria classes in `build/generated-src/critter` and add the directory as a source directory of your gradle
+project.
+
+[options="header"]
+|=======
+|criteriaPackage | If the `criteriaPackage` option is omitted, the code will be generated using the package of your entities with
+`.criteria` appended.  If a value is given, every criteria generated will live in the named package.
+|force | This defaults to false but if it's set to true, critter will always regenerate your criteria classes.
+|outputType | This defaults to `kotlin` but also accepts `java` as well.  Setting this changes the language used in the generated
+criteria classes.
+|=======
+
 
 
 [NOTE]

@@ -35,7 +35,6 @@ import java.io.File
 import java.util.Comparator.comparingInt
 import java.util.ServiceLoader
 
-@ExperimentalStdlibApi
 class KotlinBuilder(val context: KotlinContext) {
     companion object {
         private val STRING = String::class.asClassName()
@@ -72,7 +71,6 @@ class KotlinBuilder(val context: KotlinContext) {
                         .addModifiers(INTERNAL)
                         .addParameter(
                             ParameterSpec.builder("path", NULLABLE_STRING)
-                                .addModifiers(PRIVATE)
                                 .defaultValue("null")
                                 .build()
                         )
@@ -82,7 +80,6 @@ class KotlinBuilder(val context: KotlinContext) {
                 criteriaClass.addProperty(
                     PropertySpec.builder("path", NULLABLE_STRING)
                         .initializer("path")
-                        .addModifiers(PRIVATE)
                         .build()
                 )
 
@@ -196,7 +193,6 @@ class KotlinBuilder(val context: KotlinContext) {
                         .addModifiers(INTERNAL)
                         .addParameter(
                             ParameterSpec.builder("path", STRING)
-                                .addModifiers(PRIVATE)
                                 .build()
                         )
                         .build()
@@ -267,12 +263,10 @@ fun PropertySpec.mappedName(): String {
     }
 }
 
-@ExperimentalStdlibApi
 private fun Builder.attachFilters(field: PropertySpec) {
     FilterSieve.handlers(field, this)
 }
 
-@ExperimentalStdlibApi
 private fun Builder.attachUpdates(field: PropertySpec) {
     UpdateSieve.handlers(field, this)
 }

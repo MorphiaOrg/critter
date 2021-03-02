@@ -6,13 +6,10 @@
         <groupId>dev.morphia.critter</groupId>
         <artifactId>critter</artifactId>
         <version>4.1.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>critter-tests</artifactId>
     <packaging>pom</packaging>
-
-
 
     <repositories>
         <repository>
@@ -26,8 +23,8 @@
     </repositories>
 
     <modules>
-        <module>kotlin</module>
-        <module>java</module>
+        <module>gradle</module>
+        <module>maven</module>
     </modules>
 
     <dependencies>
@@ -62,6 +59,4 @@
             </plugin>
         </plugins>
     </build>
-
-
 </project>

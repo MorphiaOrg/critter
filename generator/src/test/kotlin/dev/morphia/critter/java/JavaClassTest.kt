@@ -15,7 +15,6 @@ import org.testng.annotations.Test
 import java.io.File
 import kotlin.test.assertTrue
 
-@ExperimentalStdlibApi
 class JavaClassTest {
     @BeforeTest
     fun scan() {
@@ -25,8 +24,8 @@ class JavaClassTest {
     fun parents() {
         val context = CritterContext(force = true)
 
-        context.add(JavaClass(context, File("../tests/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java")))
-        context.add(JavaClass(context, File("../tests/java/src/main/java/dev/morphia/critter/test/Person.java")))
+        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java")))
+        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java")))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
 
         val directory = File("target/parentTest/")
@@ -40,9 +39,9 @@ class JavaClassTest {
 
     @Test
     fun build() {
-        val files = File("../tests/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
+        val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
 
-        val directory = File("../tests/java/target/generated-sources/critter")
+        val directory = File("../tests/maven/java/target/generated-sources/critter")
         val context = CritterContext(force = true)
 
         files.forEach { context.add(JavaClass(context, it)) }

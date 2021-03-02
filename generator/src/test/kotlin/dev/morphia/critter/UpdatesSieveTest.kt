@@ -5,12 +5,10 @@ import org.testng.annotations.Test
 
 class UpdatesSieveTest {
     @Test
-    @ExperimentalStdlibApi
     fun methods() {
         UpdateSieve.updates()
-                .forEach {
-                    Assert.assertNotNull(Updates[it.name], it.toString())
-                }
+            .forEach {
+                Assert.assertNotNull(Updates[it.name], it.toString())
+            }
     }
-
 }

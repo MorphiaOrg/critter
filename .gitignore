@@ -2,5 +2,7 @@
 *.log
 *.iml
 target/
+build/
+temp/
 .gradle
 *.sw*

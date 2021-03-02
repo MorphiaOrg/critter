@@ -1,25 +1,16 @@
 package dev.morphia.critter.java
 
+import dev.morphia.annotations.Reference
 import dev.morphia.critter.Critter.addMethods
 import dev.morphia.critter.CritterContext
 import dev.morphia.critter.CritterField
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.UpdateSieve
-import dev.morphia.critter.kotlin.KotlinBuilder
-import dev.morphia.critter.kotlin.KotlinBuilder.Companion
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier.PRIVATE
-import com.squareup.kotlinpoet.ParameterizedTypeName
-import com.squareup.kotlinpoet.TypeName
-import dev.morphia.annotations.Reference
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
 import java.io.PrintWriter
 
-@ExperimentalStdlibApi
 class JavaBuilder(private val context: CritterContext) {
     private var nested = mutableListOf<JavaClassSource>()
 
@@ -27,7 +18,7 @@ class JavaBuilder(private val context: CritterContext) {
         context.classes.values.forEach { source ->
             nested.clear()
             val criteriaClass = Roaster.create(JavaClassSource::class.java)
-                    .setPackage(source.pkgName + ".criteria")
+                    .setPackage(context.criteriaPkg ?: source.pkgName + ".criteria")
                     .setName(source.name + "Criteria")
                     .setFinal(true)
 
@@ -173,12 +164,10 @@ class JavaBuilder(private val context: CritterContext) {
 
 fun CritterField.concreteType() = if(fullParameterTypes.isNotEmpty()) fullParameterTypes.last() else type
 
-@ExperimentalStdlibApi
 private fun JavaClassSource.attachFilters(field: CritterField) {
     FilterSieve.handlers(field, this)
 }
 
-@ExperimentalStdlibApi
 private fun JavaClassSource.attachUpdates(field: CritterField) {
     UpdateSieve.handlers(field, this)
 }
