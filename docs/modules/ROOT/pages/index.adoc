@@ -31,7 +31,7 @@ If you use gradle, you would configure your file like so (using the kotlin dsl):
 [source,kotlin,subs="verbatim,attributes"]
 ----
 plugins {
-    id("dev.morphia.critter") version "4.1.0-SNAPSHOT"
+    id("dev.morphia.critter") version "{version}"
 }
 
 
