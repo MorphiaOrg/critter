@@ -22,22 +22,6 @@
         <url>git@github.com:MorphiaOrg/critter.git</url>
     </scm>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>jcenter</id>
-            <name>JCenter</name>
-            <url>https://jcenter.bintray.com/</url>
-        </pluginRepository>
-        <pluginRepository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-gantsign-maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/gantsign/maven</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
