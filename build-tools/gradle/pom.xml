@@ -101,7 +101,7 @@
                     </execution>
                     <execution>
                         <id>gradle</id>
-                        <phase>prepare-package</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
