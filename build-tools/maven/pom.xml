@@ -6,6 +6,7 @@
         <groupId>dev.morphia.critter</groupId>
         <artifactId>build-tools</artifactId>
         <version>4.1.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>critter-maven</artifactId>

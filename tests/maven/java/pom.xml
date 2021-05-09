@@ -6,6 +6,7 @@
         <groupId>dev.morphia.critter</groupId>
         <artifactId>critter-tests-maven</artifactId>
         <version>4.1.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>critter-tests-maven-java</artifactId>
