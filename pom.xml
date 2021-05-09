@@ -10,7 +10,7 @@
 
     <groupId>dev.morphia.critter</groupId>
     <artifactId>critter</artifactId>
-    <version>4.1.1-SNAPSHOT</version>
+    <version>4.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>critter</name>
@@ -26,10 +26,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <bottlerocket.version>0.14</bottlerocket.version>
-        <dokka.version>0.10.0</dokka.version>
+        <dokka.version>1.4.32</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.16</kibble.version>
-        <kotlin.version>1.4.31</kotlin.version>
+        <kotlin.version>1.5.0</kotlin.version>
         <kotlinpoet.version>1.7.2</kotlinpoet.version>
         <ktlint.version>0.31.0</ktlint.version>
         <maven.version>3.6.3</maven.version>
