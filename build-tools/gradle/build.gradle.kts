@@ -1,3 +1,10 @@
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader
+
+buildscript {
+    dependencies {
+        classpath("org.apache.maven:maven-model:3.3.9")
+    }
+}
 repositories {
     mavenLocal()
     mavenCentral()
@@ -6,7 +13,8 @@ repositories {
     }
 }
 
-project.version = findProperty("critter.version") as String
+project.version = MavenXpp3Reader().read(file("pom.xml").inputStream())
+    .parent.version
 
 plugins {
     id("com.gradle.plugin-publish") version "0.13.0"
@@ -15,7 +23,7 @@ plugins {
 }
 
 dependencies {
-    implementation("dev.morphia.critter:critter-generator:${findProperty("critter.version")}")
+    implementation("dev.morphia.critter:critter-generator:${project.version}")
 }
 
 gradlePlugin {
