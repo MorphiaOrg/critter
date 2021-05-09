@@ -48,6 +48,7 @@
                             <arguments>
                                 <argument>-cp</argument>
                                 <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
                                 <argument>classes</argument>
                                 <argument>--stacktrace</argument>
                             </arguments>
@@ -66,6 +67,7 @@
                             <arguments>
                                 <argument>-cp</argument>
                                 <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
                                 <argument>testClasses</argument>
                                 <argument>--stacktrace</argument>
                             </arguments>
@@ -84,6 +86,7 @@
                             <arguments>
                                 <argument>-cp</argument>
                                 <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
                                 <argument>test</argument>
                             </arguments>
                             <useMavenLogger>true</useMavenLogger>
@@ -101,6 +104,7 @@
                             <arguments>
                                 <argument>-cp</argument>
                                 <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
                                 <argument>clean</argument>
                             </arguments>
                             <useMavenLogger>true</useMavenLogger>
