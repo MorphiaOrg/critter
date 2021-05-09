@@ -7,12 +7,12 @@
     <parent>
         <groupId>dev.morphia.critter</groupId>
         <artifactId>critter-tests-gradle</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>critter-tests-gradle-java</artifactId>
     <packaging>pom</packaging>
-    <version>4.1.0</version>
+    <version>4.1.1-SNAPSHOT</version>
 
     <build>
         <plugins>
