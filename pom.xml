@@ -27,7 +27,6 @@
 
         <bottlerocket.version>0.14</bottlerocket.version>
         <dokka.version>0.10.0</dokka.version>
-        <gradle.executable>./gradlew</gradle.executable>
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.16</kibble.version>
         <kotlin.version>1.4.31</kotlin.version>
@@ -294,17 +293,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>windows</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                </os>
-            </activation>
-            <properties>
-                <gradle.executable>gradlew.bat</gradle.executable>
-            </properties>
         </profile>
     </profiles>
 
