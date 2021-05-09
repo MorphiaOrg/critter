@@ -43,9 +43,11 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${gradle.executable}</executable>
+                            <executable>java</executable>
                             <workingDirectory>${project.basedir}</workingDirectory>
                             <arguments>
+                                <argument>-cp</argument>
+                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
                                 <argument>classes</argument>
                                 <argument>--stacktrace</argument>
                             </arguments>
@@ -59,9 +61,11 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${gradle.executable}</executable>
+                            <executable>java</executable>
                             <workingDirectory>${project.basedir}</workingDirectory>
                             <arguments>
+                                <argument>-cp</argument>
+                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
                                 <argument>testClasses</argument>
                                 <argument>--stacktrace</argument>
                             </arguments>
@@ -75,8 +79,11 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${gradle.executable}</executable>
+                            <executable>java</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
                             <arguments>
+                                <argument>-cp</argument>
+                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
                                 <argument>test</argument>
                             </arguments>
                             <useMavenLogger>true</useMavenLogger>
@@ -89,8 +96,11 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${gradle.executable}</executable>
+                            <executable>java</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
                             <arguments>
+                                <argument>-cp</argument>
+                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
                                 <argument>clean</argument>
                             </arguments>
                             <useMavenLogger>true</useMavenLogger>
