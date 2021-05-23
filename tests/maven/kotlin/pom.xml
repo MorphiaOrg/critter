@@ -19,7 +19,7 @@
             <plugin>
                 <groupId>dev.morphia.critter</groupId>
                 <artifactId>critter-maven</artifactId>
-                <version>4.1.0</version>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>critter</id>
