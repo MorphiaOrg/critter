@@ -34,6 +34,7 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
                 <executions>
@@ -52,7 +53,10 @@
                         </goals>
                     </execution>
                 </executions>
-                <groupId>org.jetbrains.kotlin</groupId>
+                <configuration>
+                    <javaParameters>true</javaParameters>
+                    <jvmTarget>11</jvmTarget>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -72,10 +76,12 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
