@@ -2,8 +2,10 @@ package dev.morphia.critter
 
 import dev.morphia.critter.OutputType.JAVA
 import dev.morphia.critter.OutputType.KOTLIN
-import dev.morphia.critter.java.JavaBuilder
-import dev.morphia.critter.kotlin.KotlinBuilder
+import dev.morphia.critter.java.JavaCriteriaBuilder
+import dev.morphia.critter.java.JavaClass
+import dev.morphia.critter.java.JavaContext
+import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
 import dev.morphia.critter.kotlin.KotlinContext
 import dev.morphia.critter.kotlin.KotlinParser
 import org.codehaus.plexus.util.DirectoryWalkListener
@@ -11,12 +13,17 @@ import org.codehaus.plexus.util.DirectoryWalker
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.MethodSource
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Locale
 
 object Critter {
-    val LOG = LoggerFactory.getLogger(Critter::class.java)
+    private val LOG: Logger = LoggerFactory.getLogger(Critter::class.java)
+    private lateinit var kotlinContext: KotlinContext
+    private lateinit var javaContext: JavaContext
+    private lateinit var kotlinParser: KotlinParser
+    private lateinit var outputType: OutputType
 
     fun scan(
         baseDir: File,
@@ -26,9 +33,10 @@ object Critter {
         outputType: OutputType,
         outputDirectory: File
     ) {
-        val context = CritterContext(criteriaPackage, force)
-        val kotlinContext = KotlinContext(criteriaPackage, force)
-        val kotlinParser = KotlinParser(kotlinContext)
+        javaContext = JavaContext(criteriaPackage, force, outputDirectory)
+        kotlinContext = KotlinContext(criteriaPackage, force, outputDirectory)
+        this.outputType = outputType
+        kotlinParser = KotlinParser(kotlinContext)
         sourceDirectory
             .map { File(baseDir, it) }
             .filter { it.exists() }
@@ -38,13 +46,22 @@ object Critter {
                 walker.includes = listOf("**/*.java", "**/*.kt")
 
                 LOG.info("Scanning $it for classes")
-                walker.addDirectoryWalkListener(Walker(context, kotlinParser))
+                walker.addDirectoryWalkListener(Walker(javaContext, kotlinParser))
                 walker.scan()
             }
+    }
 
+    fun generateCriteria() {
         when (outputType) {
-            JAVA -> JavaBuilder(context).build(outputDirectory)
-            KOTLIN -> KotlinBuilder(kotlinContext).build(outputDirectory)
+            JAVA -> JavaCriteriaBuilder(javaContext).build()
+            KOTLIN -> KotlinCriteriaBuilder(kotlinContext).build()
+        }
+    }
+
+    fun generateCodecs() {
+        when (outputType) {
+            JAVA -> JavaCriteriaBuilder(javaContext).build()
+            KOTLIN -> KotlinCriteriaBuilder(kotlinContext).build()
         }
     }
 
@@ -68,13 +85,13 @@ object Critter {
     }
 }
 
-private class Walker(private val context: CritterContext,
+private class Walker(private val context: JavaContext,
                      private val kotlinParser: KotlinParser)
     : DirectoryWalkListener {
     override fun directoryWalkStarting(basedir: File) {}
     override fun directoryWalkStep(percentage: Int, file: File) {
         if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
-            context.add(file)
+            context.add(JavaClass(context, file))
         } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
             kotlinParser.parse(file)
         }

@@ -24,6 +24,7 @@ import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
+import dev.morphia.critter.CriteriaBuilder
 import dev.morphia.critter.CritterField
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.UpdateSieve
@@ -35,16 +36,16 @@ import java.io.File
 import java.util.Comparator.comparingInt
 import java.util.ServiceLoader
 
-class KotlinBuilder(val context: KotlinContext) {
+class KotlinCriteriaBuilder(val context: KotlinContext): CriteriaBuilder {
     companion object {
         private val STRING = String::class.asClassName()
         private val NULLABLE_STRING = STRING.copy(nullable = true)
-        private val LOG = LoggerFactory.getLogger(KotlinBuilder::class.java)
+        private val LOG = LoggerFactory.getLogger(KotlinCriteriaBuilder::class.java)
     }
 
-    fun build(directory: File) {
+    override fun build() {
         context.classes.values.forEach {
-            build(directory, it)
+            build(context.outputDirectory, it)
         }
     }
 

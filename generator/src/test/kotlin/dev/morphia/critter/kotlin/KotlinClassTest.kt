@@ -12,8 +12,8 @@ import org.testng.annotations.Test
 import java.io.File
 
 class KotlinClassTest {
-    private var context = KotlinContext(force = true)
     private val directory = File("../tests/kotlin/target/generated-sources/critter")
+    private var context = KotlinContext(force = true, outputDirectory = directory)
 
     @Test
     fun build() {
@@ -26,7 +26,7 @@ class KotlinClassTest {
             }
         }
 
-        KotlinBuilder(context).build(directory)
+        KotlinCriteriaBuilder(context).build()
         val personClass = context.resolve("dev.morphia.critter.test", "Person")
         Assert.assertNotNull(personClass)
         personClass as KotlinClass
@@ -46,7 +46,7 @@ class Parent(val name: String)
 class Child(val age: Int, name: String, val nickNames: List<String>): Parent(name)
 """
         )
-        val context = KotlinContext(force = true)
+        val context = KotlinContext(force = true, outputDirectory = directory)
         file.classes.forEach { klass ->
             context.add(KotlinClass(context, file, klass, File("")))
         }
@@ -54,9 +54,9 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
         val child = context.resolve("properties", "Child")!!
         Assert.assertEquals(parent.fields.size, 1, "Found: \n${parent.fields.joinToString(",\n")}")
         Assert.assertEquals(child.fields.size, 3, "Found: \n${child.fields.joinToString(",\n")}")
-        val builder = KotlinBuilder(context)
+        val builder = KotlinCriteriaBuilder(context)
         val directory = File("target/properties/")
-        builder.build(directory)
+        builder.build()
     }
 
     private fun validateInvoiceCriteria(file: FileSpec) {

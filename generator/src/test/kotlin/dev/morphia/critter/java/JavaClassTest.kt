@@ -1,10 +1,8 @@
 package dev.morphia.critter.java
 
-import dev.morphia.critter.CritterContext
 import dev.morphia.critter.CritterField
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
-import org.bson.types.ObjectId
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
@@ -22,15 +20,15 @@ class JavaClassTest {
 
     @Test
     fun parents() {
-        val context = CritterContext(force = true)
+        val directory = File("target/parentTest/")
+        val context = JavaContext(outputDirectory = directory)
 
-        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java"))
-        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java"))
+        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java")))
+        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java")))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
 
-        val directory = File("target/parentTest/")
 
-        JavaBuilder(context).build(directory)
+        JavaCriteriaBuilder(context).build()
 
         val criteriaFiles = list(directory)
 
@@ -42,10 +40,10 @@ class JavaClassTest {
         val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
 
         val directory = File("../tests/maven/java/target/generated-sources/critter")
-        val context = CritterContext(force = true)
+        val context = JavaContext(outputDirectory = directory)
 
-        files.forEach { context.add(it) }
-        JavaBuilder(context).build(directory)
+        files.forEach { context.add(JavaClass(context, it)) }
+        JavaCriteriaBuilder(context).build()
 
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
         assertEquals(personClass.fields.size, 4)

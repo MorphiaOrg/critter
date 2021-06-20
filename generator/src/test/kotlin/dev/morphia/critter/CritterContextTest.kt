@@ -2,8 +2,10 @@ package dev.morphia.critter
 
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
-import dev.morphia.critter.java.JavaBuilder
-import dev.morphia.critter.kotlin.KotlinBuilder
+import dev.morphia.critter.java.JavaCriteriaBuilder
+import dev.morphia.critter.java.JavaClass
+import dev.morphia.critter.java.JavaContext
+import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
 import dev.morphia.critter.kotlin.KotlinClass
 import dev.morphia.critter.kotlin.KotlinContext
 import org.testng.Assert
@@ -15,7 +17,7 @@ class CritterContextTest {
     @Test(dataProvider = "forceScenarios")
     fun force(sourceTimestamp: Long?, outputTimestamp: Long?, force: Boolean, result: Boolean) {
         Assert.assertEquals(
-            CritterContext(force = force)
+            JavaContext(outputDirectory = File.createTempFile("ddd", "ddd"))
                 .shouldGenerate(sourceTimestamp, outputTimestamp), result
         )
     }
@@ -42,27 +44,27 @@ class CritterContextTest {
     fun forceJava() {
         val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
-        val critterContext = CritterContext(force = true)
-        files.forEach { critterContext.add(it) }
-        val builder = JavaBuilder(critterContext)
-        builder.build(directory)
+        val critterContext = JavaContext(outputDirectory = directory)
+        files.forEach { critterContext.add(JavaClass(critterContext, it)) }
+        val builder = JavaCriteriaBuilder(critterContext)
+        builder.build()
         val file = File(directory, "dev/morphia/critter/test/criteria/PersonCriteria.java")
         Assert.assertTrue(file.exists())
         Assert.assertFalse(file.readLines().contains("test update"))
 
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
-        builder.build(directory)
+        builder.build()
         Assert.assertFalse(file.readLines().contains("test update"))
 
         critterContext.force = false
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
-        builder.build(directory)
+        builder.build()
         Assert.assertTrue(file.readLines().contains("test update"))
 
         critterContext.force = true
-        builder.build(directory)
+        builder.build()
         Assert.assertFalse(file.readLines().contains("test update"))
     }
 
@@ -70,7 +72,7 @@ class CritterContextTest {
     fun forceKotlin() {
         val files = File("../tests/maven/kotlin/src/main/kotlin/").walkTopDown().filter { it.name.endsWith(".kt") }.toList()
         val directory = File("target/kotlinClassTest/")
-        val context = KotlinContext(force = true)
+        val context = KotlinContext(force = true, outputDirectory = directory)
         files.forEach { file ->
             Kibble.parse(files).forEach { fileSpec ->
                 fileSpec.classes.forEach {
@@ -78,25 +80,25 @@ class CritterContextTest {
                 }
             }
         }
-        val kotlinBuilder = KotlinBuilder(context)
-        kotlinBuilder.build(directory)
+        val kotlinBuilder = KotlinCriteriaBuilder(context)
+        kotlinBuilder.build()
         val file = File(directory, "dev/morphia/critter/test/criteria/PersonCriteria.kt")
         Assert.assertTrue(file.exists())
         Assert.assertFalse(file.readLines().contains("test update"))
 
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
-        kotlinBuilder.build(directory)
+        kotlinBuilder.build()
         Assert.assertFalse(file.readLines().contains("test update"))
 
         context.force = false
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
-        kotlinBuilder.build(directory)
+        kotlinBuilder.build()
         Assert.assertFalse(file.readLines().contains("test update"))
 
         context.force = true
-        kotlinBuilder.build(directory)
+        kotlinBuilder.build()
         Assert.assertFalse(file.readLines().contains("test update"))
     }
 }

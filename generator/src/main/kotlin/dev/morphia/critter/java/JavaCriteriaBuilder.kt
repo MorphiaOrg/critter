@@ -1,8 +1,8 @@
 package dev.morphia.critter.java
 
 import dev.morphia.annotations.Reference
+import dev.morphia.critter.CriteriaBuilder
 import dev.morphia.critter.Critter.addMethods
-import dev.morphia.critter.CritterContext
 import dev.morphia.critter.CritterField
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.UpdateSieve
@@ -12,18 +12,18 @@ import java.io.File
 import java.io.PrintWriter
 import java.util.Locale
 
-class JavaBuilder(private val context: CritterContext) {
+class JavaCriteriaBuilder(private val context: JavaContext): CriteriaBuilder {
     private var nested = mutableListOf<JavaClassSource>()
 
-    fun build(directory: File) {
-        context.classes().values.forEach { source ->
+    override fun build() {
+        context.classes.values.forEach { source ->
             nested.clear()
             val criteriaClass = Roaster.create(JavaClassSource::class.java)
-                    .setPackage(context.criteriaPkg ?: (source.pkgName + ".criteria"))
+                    .setPackage(context.criteriaPkg ?: source.pkgName + ".criteria")
                     .setName(source.name + "Criteria")
                     .setFinal(true)
 
-            val filters = File(directory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
+            val filters = File(context.outputDirectory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
             if (!source.isAbstract() && context.shouldGenerate(source.lastModified(), filters.lastModified())) {
                 criteriaClass.addField("private static final ${criteriaClass.name}Impl instance = new ${criteriaClass.name}Impl()")
                 val impl = Roaster.create(JavaClassSource::class.java)
@@ -128,17 +128,17 @@ class JavaBuilder(private val context: CritterContext) {
         PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toString()) }
     }
 
-    private fun CritterField.mappedType(): JavaClass? {
-        return context.classes()[concreteType()]
+    fun CritterField.mappedType(): JavaClass? {
+        return context.classes[concreteType()]
     }
 
-    private fun CritterField.isMappedType(): Boolean {
+    fun CritterField.isMappedType(): Boolean {
         return mappedType() != null
     }
 
     private fun JavaClassSource.addFieldCriteriaMethod(criteriaClass: JavaClassSource, field: CritterField) {
         val concreteType = field.concreteType()
-        val annotations = context.classes()[concreteType]?.annotations
+        val annotations = context.classes[concreteType]?.annotations
         val fieldCriteriaName = if (annotations == null) {
             field.name.toTitleCase() + "FieldCriteria"
         } else {
@@ -153,7 +153,7 @@ class JavaBuilder(private val context: CritterContext) {
                 return instance.${field.name}();
             }""".trimIndent())
 
-        val path = """extendPath(path, "${field.name}")"""
+        var path = """extendPath(path, "${field.name}")"""
         addMethods("""
             public ${fieldCriteriaName} ${field.name}() {
                 return new ${fieldCriteriaName}(${path});
@@ -178,5 +178,5 @@ fun String.toTitleCase(): String {
 }
 
 fun String.toMethodCase(): String {
-    return substring(0, 1).lowercase(Locale.getDefault()) + substring(1)
+    return substring(0, 1).toLowerCase() + substring(1)
 }

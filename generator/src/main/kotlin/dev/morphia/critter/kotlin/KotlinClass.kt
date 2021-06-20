@@ -6,14 +6,18 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.morphia.critter.CritterClass
 import java.io.File
 
 @Suppress("UNCHECKED_CAST")
-class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, val file: File) {
-    val name = source.name ?: ""
+class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, file: File) :
+    CritterClass(
+        source.name ?: "",
+        fileSpec.packageName,
+        file
+    ) {
     val annotations = source.annotationSpecs
     val fields by lazy { listProperties() }
-
     private fun listProperties(type: KotlinClass? = this): List<PropertySpec> {
         val list = mutableListOf<PropertySpec>()
         type?.let { current ->
@@ -24,21 +28,19 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
             }
 
             list += current.source.superinterfaces
-                    .map { listProperties(context.resolve(name, it.key.toString())) }
-                    .flatten()
+                .map { listProperties(context.resolve(name, it.key.toString())) }
+                .flatten()
         }
 
         return list
     }
 
     fun isAbstract() = source.isAbstract()
-
     fun isEnum() = source.isEnum
-
     fun lastModified(): Long {
         val sourceMod = fileSpec.toJavaFileObject().lastModified
         val list = listOf(source.superclass) + source.superinterfaces.keys
-                .filter { it != ANY }
+            .filter { it != ANY }
         val max = list
             .mapNotNull { context.resolveFile(it.toString())?.lastModified() }
             .maxOrNull()
