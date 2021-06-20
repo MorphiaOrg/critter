@@ -10,6 +10,8 @@ import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
 import java.io.PrintWriter
+import java.time.Instant
+import java.time.LocalDateTime
 import java.util.Locale
 
 class JavaCriteriaBuilder(private val context: JavaContext): CriteriaBuilder {
@@ -23,8 +25,12 @@ class JavaCriteriaBuilder(private val context: JavaContext): CriteriaBuilder {
                     .setName(source.name + "Criteria")
                     .setFinal(true)
 
-            val filters = File(context.outputDirectory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
-            if (!source.isAbstract() && context.shouldGenerate(source.lastModified(), filters.lastModified())) {
+            val outputFile = File(context.outputDirectory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
+            val sourceTimestamp = source.lastModified()
+            val timestamp = outputFile.lastModified()
+            val sourceInstant = Instant.ofEpochMilli(sourceTimestamp)
+            val outputInstant = Instant.ofEpochMilli(timestamp)
+            if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, timestamp)) {
                 criteriaClass.addField("private static final ${criteriaClass.name}Impl instance = new ${criteriaClass.name}Impl()")
                 val impl = Roaster.create(JavaClassSource::class.java)
                         .setName(source.name + "CriteriaImpl")
@@ -56,7 +62,7 @@ class JavaCriteriaBuilder(private val context: JavaContext): CriteriaBuilder {
                     type.imports.forEach { criteriaClass.addImport(it)}
                 }
 
-                generate(filters, criteriaClass)
+                generate(outputFile, criteriaClass)
             }
         }
     }

@@ -2,12 +2,12 @@ package dev.morphia.critter
 
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
-import dev.morphia.critter.java.JavaCriteriaBuilder
 import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.java.JavaContext
-import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
+import dev.morphia.critter.java.JavaCriteriaBuilder
 import dev.morphia.critter.kotlin.KotlinClass
 import dev.morphia.critter.kotlin.KotlinContext
+import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
 import org.testng.Assert
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -15,9 +15,9 @@ import java.io.File
 
 class CritterContextTest {
     @Test(dataProvider = "forceScenarios")
-    fun force(sourceTimestamp: Long?, outputTimestamp: Long?, force: Boolean, result: Boolean) {
+    fun force(force: Boolean, result: Boolean, sourceTimestamp: Long?, outputTimestamp: Long?) {
         Assert.assertEquals(
-            JavaContext(outputDirectory = File.createTempFile("ddd", "ddd"))
+            JavaContext(outputDirectory = File.createTempFile("ddd", "ddd"), force = force)
                 .shouldGenerate(sourceTimestamp, outputTimestamp), result
         )
     }
@@ -25,18 +25,18 @@ class CritterContextTest {
     @DataProvider(name = "forceScenarios")
     private fun forceScenarios(): Array<Array<out Any?>> {
         return arrayOf(
-            arrayOf(null, null, false, true), // both virtual
-            arrayOf(100L, null, false, true), // new output
-            arrayOf(null, 100L, false, true), // virtual in, existing out
-            arrayOf(100L, 100L, false, true), // same ages
-            arrayOf(100L, 1000L, false, false), // output is newer
-            arrayOf(1000L, 100L, false, true), // input is newer
-            arrayOf(null, null, true, true), // both virtual
-            arrayOf(100L, null, true, true), // new output
-            arrayOf(null, 100L, true, true), // virtual in, existing out
-            arrayOf(100L, 100L, true, true), // same ages
-            arrayOf(100L, 1000L, true, true), // output is newer
-            arrayOf(1000L, 100L, true, true) // input is newer
+            arrayOf(false, true, null, null), // both virtual
+            arrayOf(false, true, 100L, null), // new output
+            arrayOf(false, true, null, 100L), // virtual in, existing out
+            arrayOf(false, true, 100L, 100L), // same ages
+            arrayOf(false, false, 100L, 1000L), // output is newer
+            arrayOf(false, true, 1000L, 100L), // input is newer
+            arrayOf(true, true, null, null), // both virtual
+            arrayOf(true, true, 100L, null), // new output
+            arrayOf(true, true, null, 100L), // virtual in, existing out
+            arrayOf(true, true, 100L, 100L), // same ages
+            arrayOf(true, true, 100L, 1000L), // output is newer
+            arrayOf(true, true, 1000L, 100L) // input is newer
         )
     }
 
@@ -44,7 +44,7 @@ class CritterContextTest {
     fun forceJava() {
         val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
-        val critterContext = JavaContext(outputDirectory = directory)
+        val critterContext = JavaContext(outputDirectory = directory, force = true)
         files.forEach { critterContext.add(JavaClass(critterContext, it)) }
         val builder = JavaCriteriaBuilder(critterContext)
         builder.build()

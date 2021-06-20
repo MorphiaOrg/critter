@@ -6,10 +6,10 @@ open class CritterContext<T : CritterClass>(
     val criteriaPkg: String?,
     var force: Boolean = false,
     val outputDirectory: File) {
-
     val classes: MutableMap<String, T> = mutableMapOf()
-    open fun shouldGenerate(sourceTimestamp: Long?, Timestamp: Long?): Boolean {
-        return force || sourceTimestamp == null || Timestamp == null || Timestamp <= sourceTimestamp
+
+    open fun shouldGenerate(sourceTimestamp: Long?, outputTimestamp: Long?): Boolean {
+        return force || sourceTimestamp == null || outputTimestamp == null || sourceTimestamp >= outputTimestamp
     }
 
     open fun add(klass: T) {
