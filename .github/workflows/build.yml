@@ -6,7 +6,7 @@ name: Tests and Style Checks
 on: [ push, pull_request, workflow_dispatch ]
 
 jobs:
-  kibble:
+  critter:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -48,9 +48,9 @@ jobs:
         run: mvn install -DskipTests
   Snapshots:
     name: Publish Snapshot Artifacts
-    if: "github.repository == 'evanchooly/kibble'"
+    if: "github.repository == 'evanchooly/critter'"
     needs:
-      - Kibble
+      - critter
       - Quality
     runs-on: ubuntu-latest
     steps:
