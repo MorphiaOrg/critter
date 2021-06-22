@@ -1,3 +1,6 @@
+project.version = org.apache.maven.model.io.xpp3.MavenXpp3Reader().read(file("pom.xml").inputStream())
+    .parent.version
+
 plugins {
     id("dev.morphia.critter") version "4.2.0-SNAPSHOT"
 }
