@@ -45,7 +45,7 @@ jobs:
           key: \${{ runner.os }}-m2-\${{ hashFiles('**/pom.xml') }}
           restore-keys: \${{ runner.os }}-m2
       - name: Quality Checks
-        run: mvn verify
+        run: mvn install -DskipTests
   Snapshots:
     name: Publish Snapshot Artifacts
     if: "github.repository == 'evanchooly/kibble'"
