@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ 11 ]
+        java: [ 11, 15, 16 ]
         kotlin: [ 1.5.10, 1.4.32 ]
     name: "Tests on JDK ${{ matrix.java }}, Kotlin: ${{ matrix.kotlin }}"
     steps:
