@@ -27,7 +27,7 @@ object Critter {
 
     fun scan(
         baseDir: File,
-        sourceDirectory: Set<String>,
+        sourceDirectories: Set<String>,
         criteriaPackage: String?,
         force: Boolean,
         outputType: OutputType,
@@ -37,8 +37,11 @@ object Critter {
         kotlinContext = KotlinContext(criteriaPackage, force, outputDirectory)
         this.outputType = outputType
         kotlinParser = KotlinParser(kotlinContext)
-        sourceDirectory
-            .map { File(baseDir, it) }
+        sourceDirectories
+            .map {
+                val file = File(it)
+                if(file.isRooted) file else File(baseDir, it)
+            }
             .filter { it.exists() }
             .forEach {
                 val walker = DirectoryWalker()
@@ -52,6 +55,8 @@ object Critter {
     }
 
     fun generateCriteria() {
+        println("outputType = ${outputType}")
+
         when (outputType) {
             JAVA -> JavaCriteriaBuilder(javaContext).build()
             KOTLIN -> KotlinCriteriaBuilder(kotlinContext).build()

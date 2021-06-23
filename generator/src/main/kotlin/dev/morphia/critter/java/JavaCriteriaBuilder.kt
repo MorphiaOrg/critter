@@ -28,8 +28,6 @@ class JavaCriteriaBuilder(private val context: JavaContext): CriteriaBuilder {
             val outputFile = File(context.outputDirectory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
             val sourceTimestamp = source.lastModified()
             val timestamp = outputFile.lastModified()
-            val sourceInstant = Instant.ofEpochMilli(sourceTimestamp)
-            val outputInstant = Instant.ofEpochMilli(timestamp)
             if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, timestamp)) {
                 criteriaClass.addField("private static final ${criteriaClass.name}Impl instance = new ${criteriaClass.name}Impl()")
                 val impl = Roaster.create(JavaClassSource::class.java)
@@ -159,7 +157,7 @@ class JavaCriteriaBuilder(private val context: JavaContext): CriteriaBuilder {
                 return instance.${field.name}();
             }""".trimIndent())
 
-        var path = """extendPath(path, "${field.name}")"""
+        val path = """extendPath(path, "${field.name}")"""
         addMethods("""
             public ${fieldCriteriaName} ${field.name}() {
                 return new ${fieldCriteriaName}(${path});
