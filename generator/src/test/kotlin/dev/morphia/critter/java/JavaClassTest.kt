@@ -27,7 +27,6 @@ class JavaClassTest {
         context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java")))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
 
-
         JavaCriteriaBuilder(context).build()
 
         val criteriaFiles = list(directory)
@@ -51,6 +50,16 @@ class JavaClassTest {
         val criteriaFiles = list(directory)
 
         validatePersonCriteria(personClass, criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource)
+    }
+
+    @Test
+    fun codecs() {
+        val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
+        val context = JavaContext(force = true, outputDirectory = File("../tests/maven/java/target/generated-sources/critter"))
+
+        files.forEach { context.add(JavaClass(context, it)) }
+        JavaCodecBuilder(context).build()
+
     }
 
     private fun list(directory: File): List<JavaType<*>> {

@@ -1,5 +1,5 @@
 package dev.morphia.critter
 
-interface CriteriaBuilder {
+interface SourceBuilder {
     fun build()
 }

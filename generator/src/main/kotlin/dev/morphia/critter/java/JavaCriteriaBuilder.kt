@@ -1,7 +1,7 @@
 package dev.morphia.critter.java
 
 import dev.morphia.annotations.Reference
-import dev.morphia.critter.CriteriaBuilder
+import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.Critter.addMethods
 import dev.morphia.critter.CritterField
 import dev.morphia.critter.FilterSieve
@@ -10,11 +10,9 @@ import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
 import java.io.PrintWriter
-import java.time.Instant
-import java.time.LocalDateTime
 import java.util.Locale
 
-class JavaCriteriaBuilder(private val context: JavaContext): CriteriaBuilder {
+class JavaCriteriaBuilder(private val context: JavaContext): SourceBuilder {
     private var nested = mutableListOf<JavaClassSource>()
 
     override fun build() {

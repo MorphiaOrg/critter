@@ -24,7 +24,7 @@ import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
-import dev.morphia.critter.CriteriaBuilder
+import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.CritterField
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.UpdateSieve
@@ -36,7 +36,7 @@ import java.io.File
 import java.util.Comparator.comparingInt
 import java.util.ServiceLoader
 
-class KotlinCriteriaBuilder(val context: KotlinContext): CriteriaBuilder {
+class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
     companion object {
         private val STRING = String::class.asClassName()
         private val NULLABLE_STRING = STRING.copy(nullable = true)
