@@ -58,8 +58,7 @@ class JavaClassTest {
         val context = JavaContext(force = true, outputDirectory = File("../tests/maven/java/target/generated-sources/critter"))
 
         files.forEach { context.add(JavaClass(context, it)) }
-        JavaCodecBuilder(context).build()
-
+        JavaCodecsBuilder(context).build()
     }
 
     private fun list(directory: File): List<JavaType<*>> {

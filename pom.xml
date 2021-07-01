@@ -28,6 +28,7 @@
         <bottlerocket.version>0.14</bottlerocket.version>
         <dokka.version>1.4.32</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
+        <javapoet.version>1.13.0</javapoet.version>
         <kibble.version>0.18</kibble.version>
         <kotlin.version>1.5.10</kotlin.version>
         <kotlinpoet.version>1.8.0</kotlinpoet.version>

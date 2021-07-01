@@ -2,6 +2,7 @@ package dev.morphia.critter
 
 import dev.morphia.critter.OutputType.JAVA
 import dev.morphia.critter.OutputType.KOTLIN
+import dev.morphia.critter.java.JavaCodecsBuilder
 import dev.morphia.critter.java.JavaCriteriaBuilder
 import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.java.JavaContext
@@ -65,8 +66,8 @@ object Critter {
 
     fun generateCodecs() {
         when (outputType) {
-            JAVA -> JavaCriteriaBuilder(javaContext).build()
-            KOTLIN -> KotlinCriteriaBuilder(kotlinContext).build()
+            JAVA -> JavaCodecsBuilder(javaContext).build()
+            KOTLIN -> TODO() //KotlinCriteriaBuilder(kotlinContext).build()
         }
     }
 

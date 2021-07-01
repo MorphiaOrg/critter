@@ -99,6 +99,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>${javapoet.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.shyiko</groupId>
             <artifactId>ktlint</artifactId>
         </dependency>
