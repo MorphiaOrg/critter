@@ -12,7 +12,7 @@ import dev.morphia.annotations.LoadOnly
 import dev.morphia.annotations.NotSaved
 import dev.morphia.critter.CritterField
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.JavaCodecsBuilder.Companion.packageName
+import dev.morphia.critter.java.CodecsBuilder.Companion.packageName
 import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.pojo.EntityDecoder
@@ -29,7 +29,7 @@ import javax.lang.model.element.Modifier
 import javax.lang.model.element.Modifier.PROTECTED
 import javax.lang.model.element.Modifier.PUBLIC
 
-class JavaDecoderBuilder(private val context: JavaContext) : SourceBuilder {
+class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
     private lateinit var source: JavaClass
     private lateinit var decoder: TypeSpec.Builder
     private lateinit var decoderName: ClassName

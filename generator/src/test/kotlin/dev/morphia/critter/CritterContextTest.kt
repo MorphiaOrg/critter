@@ -4,7 +4,7 @@ import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
 import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.java.JavaContext
-import dev.morphia.critter.java.JavaCriteriaBuilder
+import dev.morphia.critter.java.CriteriaBuilder
 import dev.morphia.critter.kotlin.KotlinClass
 import dev.morphia.critter.kotlin.KotlinContext
 import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
@@ -46,7 +46,7 @@ class CritterContextTest {
         val directory = File("target/javaClassTest/")
         val critterContext = JavaContext(outputDirectory = directory, force = true)
         files.forEach { critterContext.add(JavaClass(critterContext, it)) }
-        val builder = JavaCriteriaBuilder(critterContext)
+        val builder = CriteriaBuilder(critterContext)
         builder.build()
         val file = File(directory, "dev/morphia/critter/test/criteria/PersonCriteria.java")
         Assert.assertTrue(file.exists())

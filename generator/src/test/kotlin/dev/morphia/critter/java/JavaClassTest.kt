@@ -27,7 +27,7 @@ class JavaClassTest {
         context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java")))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
 
-        JavaCriteriaBuilder(context).build()
+        CriteriaBuilder(context).build()
 
         val criteriaFiles = list(directory)
 
@@ -42,7 +42,7 @@ class JavaClassTest {
         val context = JavaContext(outputDirectory = directory)
 
         files.forEach { context.add(JavaClass(context, it)) }
-        JavaCriteriaBuilder(context).build()
+        CriteriaBuilder(context).build()
 
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
         assertEquals(personClass.fields.size, 4)
@@ -58,7 +58,7 @@ class JavaClassTest {
         val context = JavaContext(force = true, outputDirectory = File("../tests/maven/java/target/generated-sources/critter"))
 
         files.forEach { context.add(JavaClass(context, it)) }
-        JavaCodecsBuilder(context).build()
+        CodecsBuilder(context).build()
     }
 
     private fun list(directory: File): List<JavaType<*>> {

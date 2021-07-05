@@ -2,8 +2,7 @@ package dev.morphia.critter
 
 import dev.morphia.critter.OutputType.JAVA
 import dev.morphia.critter.OutputType.KOTLIN
-import dev.morphia.critter.java.JavaCodecsBuilder
-import dev.morphia.critter.java.JavaCriteriaBuilder
+import dev.morphia.critter.java.CriteriaBuilder as JavaCriteriaBuilder
 import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.java.JavaContext
 import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
@@ -18,6 +17,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Locale
+import dev.morphia.critter.java.CodecsBuilder as JavaCodecsBuilder
 
 object Critter {
     private val LOG: Logger = LoggerFactory.getLogger(Critter::class.java)

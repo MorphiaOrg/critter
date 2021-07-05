@@ -4,6 +4,7 @@ import dev.morphia.critter.CritterAnnotation
 import dev.morphia.critter.CritterClass
 import dev.morphia.critter.CritterField
 import org.jboss.forge.roaster.Roaster.parse
+import org.jboss.forge.roaster.model.Method
 import org.jboss.forge.roaster.model.Visibility.PUBLIC
 import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
@@ -44,7 +45,9 @@ class JavaClass(val context: JavaContext, file: File,
                 .sortedBy(CritterField::name)
                 .toMutableList()
     }
-
+    val constructors: List<Method<*, *>> by lazy {
+        sourceClass.methods.filter { it.isConstructor }
+    }
     val qualifiedName: String by lazy {
         pkgName?.let { "$pkgName.$name" } ?: name
     }

@@ -1,5 +1,6 @@
 package dev.morphia.critter.java
 
+import com.squareup.javapoet.ClassName
 import dev.morphia.annotations.Reference
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.Critter.addMethods
@@ -12,7 +13,7 @@ import java.io.File
 import java.io.PrintWriter
 import java.util.Locale
 
-class JavaCriteriaBuilder(private val context: JavaContext): SourceBuilder {
+class CriteriaBuilder(private val context: JavaContext): SourceBuilder {
     private var nested = mutableListOf<JavaClassSource>()
 
     override fun build() {
@@ -181,4 +182,8 @@ fun String.toTitleCase(): String {
 
 fun String.toMethodCase(): String {
     return substring(0, 1).toLowerCase() + substring(1)
+}
+
+fun String.className(): ClassName {
+    return ClassName.get(substringBeforeLast('.'), substringAfterLast('.'))
 }

@@ -8,7 +8,7 @@ import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeVariableName
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.JavaCodecsBuilder.Companion.packageName
+import dev.morphia.critter.java.CodecsBuilder.Companion.packageName
 import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
@@ -17,7 +17,7 @@ import org.bson.codecs.configuration.CodecRegistry
 import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PUBLIC
 
-class JavaCodecProviderBuilder(val context: JavaContext) : SourceBuilder {
+class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
     private val provider = TypeSpec.classBuilder("CritterCodecProvider")
         .addModifiers(PUBLIC, FINAL)
 
@@ -26,10 +26,9 @@ class JavaCodecProviderBuilder(val context: JavaContext) : SourceBuilder {
 
         buildConstructor()
         buildGet()
-        val file = JavaFile
-            .builder(packageName, provider.build())
 
-        file
+        JavaFile
+            .builder(packageName, provider.build())
             .build()
             .writeTo(context.outputDirectory)
     }
