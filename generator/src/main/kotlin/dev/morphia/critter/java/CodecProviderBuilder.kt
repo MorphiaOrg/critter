@@ -11,6 +11,7 @@ import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.java.CodecsBuilder.Companion.packageName
 import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.MorphiaCodecProvider
+import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import org.bson.codecs.Codec
 import org.bson.codecs.configuration.CodecRegistry
@@ -26,6 +27,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
 
         buildConstructor()
         buildGet()
+        refreshCodecs()
 
         JavaFile
             .builder(packageName, provider.build())
@@ -59,31 +61,13 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                     method.nextControlFlow("else $ifStmt")
                 }
                 method.addStatement("codec.setEncoder((EntityEncoder<T>)new ${javaClass.name}Encoder(codec))")
-                method.addStatement("codec.setDecoder((EntityDecoder<T>)new ${javaClass.name}Decoder(codec))")
+//                method.addStatement("codec.setDecoder((EntityDecoder<T>)new ${javaClass.name}Decoder(codec))")
             }
 
         method.endControlFlow()
         method.endControlFlow()
         method.addStatement("return codec")
         provider.addMethod(method.build())
-        /*
-
-        MorphiaCodec<T> codec = (MorphiaCodec<T>) codecs.get(type);
-        if (codec == null && (mapper.isMapped(type) || mapper.isMappable(type))) {
-            EntityModel model = mapper.getEntityModel(type);
-            codec = new MorphiaCodec<>(datastore, model, propertyCodecProviders, mapper.getDiscriminatorLookup(), registry);
-            if (model.hasLifecycle(PostPersist.class) || model.hasLifecycle(PrePersist.class) || mapper.hasInterceptors()) {
-                codec.setEncoder(new LifecycleEncoder(codec));
-            }
-            if (model.hasLifecycle(PreLoad.class) || model.hasLifecycle(PostLoad.class) || mapper.hasInterceptors()) {
-                codec.setDecoder(new LifecycleDecoder(codec));
-            }
-            codecs.put(type, codec);
-        }
-
-        return codec;
-    }
-         */
     }
 
     private fun buildConstructor() {
@@ -95,5 +79,46 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                 .addStatement("super(mapper, datastore)")
                 .build()
         )
+    }
+
+    private fun refreshCodecs() {
+        val method = MethodSpec.methodBuilder("getRefreshCodec")
+            .addModifiers(PUBLIC)
+            .addTypeVariable(TypeVariableName.get("T"))
+            .addParameter(TypeVariableName.get("T"), "entity")
+            .addParameter(CodecRegistry::class.java, "registry")
+            .returns(ParameterizedTypeName.get(ClassName.get(Codec::class.java), TypeVariableName.get("T")))
+
+        method.addStatement("var type = (Class<T>)entity.getClass()")
+        method.addStatement("var model = getMapper().getEntityModel(entity.getClass())")
+        method.addStatement("MorphiaCodec<T> codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders()," +
+                " getMapper().getDiscriminatorLookup(), registry)")
+        context.classes.values
+            .filter { !it.isAbstract() }
+            .forEachIndexed { index, javaClass ->
+                val ifStmt = "if (type.equals(${"$"}T.class))"
+                if (index == 0) {
+                    method.beginControlFlow(ifStmt, javaClass.qualifiedName.className())
+                } else {
+                    method.nextControlFlow("else $ifStmt", javaClass.qualifiedName.className())
+                }
+                method.addCode("""
+                    codec.setDecoder(new EntityDecoder(codec) {
+                        @Override
+                        protected ${"$"}T getInstanceCreator() {
+                            return new ${javaClass.name}InstanceCreator(codec) {
+                                @Override
+                                public ${javaClass.name} getInstance() {
+                                    return (${javaClass.name})entity;
+                                }
+                            };
+                        }
+                    });
+                """.trimIndent(), MorphiaInstanceCreator::class.java)
+            }
+
+        method.endControlFlow()
+        method.addStatement("return codec")
+        provider.addMethod(method.build())
     }
 }

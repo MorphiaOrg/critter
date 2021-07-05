@@ -31,7 +31,7 @@ class InstanceCreatorBuilder(private val context: JavaContext) : SourceBuilder {
             entityName = ClassName.get(source.pkgName, source.name)
             creatorName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")
             creator = TypeSpec.classBuilder(creatorName)
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addModifiers(Modifier.PUBLIC)
             val sourceTimestamp = source.lastModified()
             val decoderFile = File(context.outputDirectory, creatorName.canonicalName().replace('.', '/') + ".java")
 
