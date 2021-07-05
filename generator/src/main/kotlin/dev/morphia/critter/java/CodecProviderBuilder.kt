@@ -12,6 +12,9 @@ import dev.morphia.critter.java.CodecsBuilder.Companion.packageName
 import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
+import dev.morphia.mapping.codec.pojo.EntityDecoder
+import dev.morphia.mapping.codec.pojo.EntityEncoder
+import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import org.bson.codecs.Codec
 import org.bson.codecs.configuration.CodecRegistry
@@ -45,7 +48,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
             .addStatement("\$T<T> codec = (MorphiaCodec<T>) getCodecs().get(type)", MorphiaCodec::class.java)
 
         method.beginControlFlow("if (codec == null)")
-        method.addStatement("EntityModel model = getMapper().getEntityModel(type)")
+        method.addStatement("\$T model = getMapper().getEntityModel(type)", EntityModel::class.java)
         method.addStatement(
             "codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders(), " +
                 "getMapper().getDiscriminatorLookup(), registry)"
@@ -54,14 +57,13 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
         context.classes.values
             .filter { !it.isAbstract() }
             .forEachIndexed { index, javaClass ->
-                val ifStmt = "if (type.equals(${javaClass.qualifiedName}.class))"
+                val ifStmt = "if (type.equals(\$T.class))"
                 if (index == 0) {
-                    method.beginControlFlow(ifStmt)
+                    method.beginControlFlow(ifStmt, javaClass.qualifiedName.className())
                 } else {
-                    method.nextControlFlow("else $ifStmt")
+                    method.nextControlFlow("else $ifStmt", javaClass.qualifiedName.className())
                 }
-                method.addStatement("codec.setEncoder((EntityEncoder<T>)new ${javaClass.name}Encoder(codec))")
-//                method.addStatement("codec.setDecoder((EntityDecoder<T>)new ${javaClass.name}Decoder(codec))")
+                method.addStatement("codec.setEncoder((${"$"}T<T>)new ${javaClass.name}Encoder(codec))", EntityEncoder::class.java)
             }
 
         method.endControlFlow()
@@ -91,8 +93,10 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
 
         method.addStatement("var type = (Class<T>)entity.getClass()")
         method.addStatement("var model = getMapper().getEntityModel(entity.getClass())")
-        method.addStatement("MorphiaCodec<T> codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders()," +
-                " getMapper().getDiscriminatorLookup(), registry)")
+        method.addStatement(
+            "MorphiaCodec<T> codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders()," +
+                " getMapper().getDiscriminatorLookup(), registry)"
+        )
         context.classes.values
             .filter { !it.isAbstract() }
             .forEachIndexed { index, javaClass ->
@@ -102,8 +106,9 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                 } else {
                     method.nextControlFlow("else $ifStmt", javaClass.qualifiedName.className())
                 }
-                method.addCode("""
-                    codec.setDecoder(new EntityDecoder(codec) {
+                method.addCode(
+                    """
+                    codec.setDecoder(new ${"$"}T(codec) {
                         @Override
                         protected ${"$"}T getInstanceCreator() {
                             return new ${javaClass.name}InstanceCreator(codec) {
@@ -114,7 +119,8 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                             };
                         }
                     });
-                """.trimIndent(), MorphiaInstanceCreator::class.java)
+                """.trimIndent(), EntityDecoder::class.java, MorphiaInstanceCreator::class.java
+                )
             }
 
         method.endControlFlow()

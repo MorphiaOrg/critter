@@ -91,8 +91,10 @@ class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
         var indent = "        ".repeat(3)
         indent = ""
         val lines = mutableListOf<String>()
-        lines += "EntityModel model = getMorphiaCodec().getEntityModel();"
-        lines += "encodeId(writer, instance, encoderContext);"
+        lines += "var model = getMorphiaCodec().getEntityModel();"
+        if(idProperty() != null) {
+            lines += "encodeId(writer, instance, encoderContext);"
+        }
         lines += """
             if (model.useDiscriminator()) {
                 writer.writeString(model.getDiscriminatorKey(), model.getDiscriminator());
@@ -110,12 +112,12 @@ class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
     }
 
     fun encodeId() {
-        val method = MethodSpec.methodBuilder("encodeId")
-            .addModifiers(PROTECTED)
-            .addParameter(BsonWriter::class.java, "writer")
-            .addParameter(ParameterSpec.builder(entityName, "instance").build())
-            .addParameter(EncoderContext::class.java, "encoderContext")
         idProperty()?.let {
+            val method = MethodSpec.methodBuilder("encodeId")
+                .addModifiers(PROTECTED)
+                .addParameter(BsonWriter::class.java, "writer")
+                .addParameter(ParameterSpec.builder(entityName, "instance").build())
+                .addParameter(EncoderContext::class.java, "encoderContext")
             val idType = ClassName.get(it.type.substringBeforeLast('.'), it.type.substringAfterLast('.'))
             method.addCode(
                 """
@@ -130,9 +132,9 @@ class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
                 encodeValue(writer, encoderContext, idModel, instance.${getter(it)});
                 """.trimIndent(), IdGenerator::class.java, idType, PropertyModel::class.java
             )
+            encoder.addMethod(method.build())
         }
 
-        encoder.addMethod(method.build())
     }
 
     private fun idProperty(): CritterField? {

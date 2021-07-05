@@ -1,8 +1,8 @@
 package dev.morphia.critter.java
 
-import dev.morphia.critter.CritterField
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
+import dev.morphia.critter.CritterField
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
@@ -54,10 +54,10 @@ class JavaClassTest {
 
     @Test
     fun codecs() {
-        val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val context = JavaContext(force = true, outputDirectory = File("../tests/maven/java/target/generated-sources/critter"))
-
-        files.forEach { context.add(JavaClass(context, it)) }
+        File("../tests/maven/java/src/main/java/").walkTopDown()
+            .filter { it.name.endsWith(".java") }
+            .forEach { context.add(JavaClass(context, it)) }
         CodecsBuilder(context).build()
     }
 
