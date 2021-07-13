@@ -28,7 +28,7 @@ import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.CritterField
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.UpdateSieve
-import dev.morphia.critter.java.toTitleCase
+import dev.morphia.critter.java.titleCase
 import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.updates.UpdateOperators
 import org.slf4j.LoggerFactory
@@ -150,7 +150,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
         val annotations = context.classes[concreteType.canonicalName]?.annotations
         val none = annotations?.none { it.className.packageName.startsWith("dev.morphia.annotations") } ?: true
         val fieldCriteriaName = if (none) {
-            field.name.toTitleCase() + "FieldCriteria"
+            field.name.titleCase() + "FieldCriteria"
         } else {
             concreteType.simpleName + "Criteria"
         }
@@ -187,7 +187,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
     }
 
     private fun addFieldCriteriaClass(field: PropertySpec, criteriaClass: Builder) {
-        TypeSpec.classBuilder("${field.name.toTitleCase()}FieldCriteria")
+        TypeSpec.classBuilder("${field.name.titleCase()}FieldCriteria")
             .apply {
                 primaryConstructor(
                     FunSpec.constructorBuilder()
@@ -211,7 +211,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
     }
 
     private fun addReferenceCriteria(criteriaClass: Builder, field: PropertySpec) {
-        val fieldCriteriaName = field.name.toTitleCase() + "FieldCriteria"
+        val fieldCriteriaName = field.name.titleCase() + "FieldCriteria"
         criteriaClass.addFunction(
             FunSpec.builder(field.name)
                 .addCode(CodeBlock.of("return ${fieldCriteriaName}(extendPath(path, \"${field.name}\"))"))

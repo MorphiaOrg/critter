@@ -35,7 +35,7 @@
         <ktlint.version>0.31.0</ktlint.version>
         <maven.version>3.6.3</maven.version>
         <morphia.version>2.3.0-SNAPSHOT</morphia.version>
-        <roaster.version>2.21.1.Final</roaster.version>
+        <roaster.version>2.23.0.Final</roaster.version>
         <slf4j.version>1.7.25</slf4j.version>
         <testng.version>7.4.0</testng.version>
     </properties>

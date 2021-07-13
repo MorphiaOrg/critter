@@ -23,6 +23,7 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Invoice {
@@ -34,6 +35,7 @@ public class Invoice {
     @Reference
     private Person person;
 
+    private List<Set<List<Address>>> dummy;
     private List<Address> addresses;
 
     private Double total = 0.0;
@@ -133,6 +135,14 @@ public class Invoice {
             return false;
         }
         return true;
+    }
+
+    public List<Set<List<Address>>> getDummy() {
+        return dummy;
+    }
+
+    public void setDummy(List<Set<List<Address>>> dummy) {
+        this.dummy = dummy;
     }
 
     @Override

@@ -6,6 +6,7 @@ import dev.morphia.critter.CritterField
 import org.jboss.forge.roaster.Roaster.parse
 import org.jboss.forge.roaster.model.Method
 import org.jboss.forge.roaster.model.Visibility.PUBLIC
+import org.jboss.forge.roaster.model.source.AnnotationSource
 import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
@@ -62,9 +63,20 @@ class JavaClass(val context: JavaContext, file: File,
         annotations += sourceClass.annotations.map { ann ->
             CritterAnnotation(ann.qualifiedName, ann.values.map { Pair<String, Any>(it.name, it.stringValue) }
                     .toMap())
+//            ann.toCritter()
         }
         visibility = sourceClass.visibility
     }
+
+/*
+    private fun AnnotationSource<*>.toCritter(): CritterAnnotation {
+        return CritterAnnotation(qualifiedName).also { ann ->
+            values.forEach { value ->
+                ann.values[value.name] = get getAnnotationValue(value.name).toCritter()
+            }
+        }
+    }
+*/
 
     fun isAbstract() = sourceClass.isAbstract
 

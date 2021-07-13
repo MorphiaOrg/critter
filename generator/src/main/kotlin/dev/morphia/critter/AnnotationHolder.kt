@@ -32,4 +32,8 @@ class CritterAnnotation(val name: String, val values: Map<String, Any> = mapOf()
     fun getValue(): String? {
         return values["value"] as String?
     }
+
+    override fun toString(): String {
+        return "CritterAnnotation<${name.substringAfterLast('.')}>"
+    }
 }

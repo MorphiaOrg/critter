@@ -90,7 +90,7 @@ class CriteriaBuilder(private val context: JavaContext): SourceBuilder {
     private fun addFieldCriteriaClass(field: CritterField) {
         addNestedType(Roaster.create(JavaClassSource::class.java))
                 .apply {
-                    name = "${field.name.toTitleCase()}FieldCriteria"
+                    name = "${field.name.titleCase()}FieldCriteria"
                     isStatic = true
                     isFinal = true
                     addField("private String path")
@@ -108,7 +108,7 @@ class CriteriaBuilder(private val context: JavaContext): SourceBuilder {
     }
 
     private fun addReferenceCriteria(criteriaClass: JavaClassSource, impl: JavaClassSource, field: CritterField) {
-        val fieldCriteriaName = field.name.toTitleCase() + "FieldCriteria"
+        val fieldCriteriaName = field.name.titleCase() + "FieldCriteria"
         criteriaClass.addImport(fieldCriteriaName)
         criteriaClass.addMethod("""
             public static ${fieldCriteriaName} ${field.name}() {
@@ -143,7 +143,7 @@ class CriteriaBuilder(private val context: JavaContext): SourceBuilder {
         val concreteType = field.concreteType()
         val annotations = context.classes[concreteType]?.annotations
         val fieldCriteriaName = if (annotations == null) {
-            field.name.toTitleCase() + "FieldCriteria"
+            field.name.titleCase() + "FieldCriteria"
         } else {
             val outer = concreteType.substringAfterLast('.') + "Criteria"
             val impl = concreteType.substringAfterLast('.') + "CriteriaImpl"
@@ -176,11 +176,11 @@ private fun JavaClassSource.attachUpdates(field: CritterField) {
     UpdateSieve.handlers(field, this)
 }
 
-fun String.toTitleCase(): String {
+fun String.titleCase(): String {
     return substring(0, 1).uppercase(Locale.getDefault()) + substring(1)
 }
 
-fun String.toMethodCase(): String {
+fun String.methodCase(): String {
     return substring(0, 1).toLowerCase() + substring(1)
 }
 

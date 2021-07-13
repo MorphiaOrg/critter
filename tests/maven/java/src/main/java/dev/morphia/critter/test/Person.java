@@ -15,11 +15,12 @@
  */
 package dev.morphia.critter.test;
 
+import dev.morphia.annotations.CappedAt;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import org.bson.types.ObjectId;
 
-@Entity
+@Entity(cap = @CappedAt(count = 12))
 public class Person extends AbstractPerson {
   @Id
   private ObjectId id;

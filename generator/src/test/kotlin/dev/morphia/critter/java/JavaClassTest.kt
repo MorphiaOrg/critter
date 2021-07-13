@@ -12,6 +12,7 @@ import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test
 import java.io.File
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class JavaClassTest {
     @BeforeTest
