@@ -57,8 +57,10 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                     .addModifiers(PRIVATE)
                     .addParameter(Datastore::class.java, "datastore")
                     .returns(EntityModel::class.java)
-                    .addStatement("var modelBuilder = new \$T(datastore)", EntityModelBuilder::class.java)
-                    .addStatement("modelBuilder.type(\$T.class)", source.qualifiedName.className())
+
+                builder
+                    .addCode("var modelBuilder = new \$T(datastore)\n", EntityModelBuilder::class.java)
+                    .addCode(".type(\$T.class)\n", source.qualifiedName.className())
 
                 annotations(source, builder)
                 properties(source, builder)
@@ -167,9 +169,9 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         source.annotations.forEach {
             if (it.values.isNotEmpty()) {
                 val methodCase = buildAnnotation(it)
-                builder.addStatement("modelBuilder.annotation($methodCase())")
+                builder.addCode(".annotation($methodCase());\n")
             } else {
-                builder.addStatement("modelBuilder.annotation(\$T.builder())", annotationBuilderName(it))
+                builder.addCode(".annotation(\$T.builder());\n", annotationBuilderName(it))
             }
         }
     }
