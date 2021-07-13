@@ -3,6 +3,7 @@ package dev.morphia.critter.java
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
+import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeSpec.Builder
@@ -31,7 +32,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         importer = TypeSpec.classBuilder(importerName)
             .addModifiers(PUBLIC, Modifier.FINAL)
             .addSuperinterface(EntityModelImporter::class.java)
-        val method = MethodSpec.methodBuilder("importModels")
+        val method = methodBuilder("importModels")
             .addModifiers(PUBLIC)
             .addParameter(Datastore::class.java, "datastore")
             .returns(ParameterizedTypeName.get(List::class.java, EntityModel::class.java))
@@ -52,7 +53,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
             .map { it.sourceClass }
             .forEach { source ->
                 this.source = source
-                val builder = MethodSpec.methodBuilder("build${source.name.titleCase()}Model")
+                val builder = methodBuilder("build${source.name.titleCase()}Model")
                     .addModifiers(PRIVATE)
                     .addParameter(Datastore::class.java, "datastore")
                     .returns(EntityModel::class.java)
@@ -74,59 +75,85 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
     private fun properties(source: JavaClassSource, builder: MethodSpec.Builder) {
         source.properties.forEach { property ->
-            builder.addCode("""
-                var ${property.name} = modelBuilder.addProperty()
-                            .name("${property.name}")
-                            .accessor(new ${"$"}T() {
-                                @Override
-                                public void set(Object instance, Object value) {
-                                    ((${source.name})instance).${property.mutator.name}((${"$"}T)value);
-                                }
-                                
-                                @Override
-                                public Object get(Object instance) {
-                                    return ((${source.name})instance).${property.accessor.name}();
-                                }
-                            });
-                            
-                """.trimIndent(), PropertyAccessor::class.java, property.type.qualifiedName.className())
-            /*
-TypeData<?> typeData = entityModelBuilder.getTypeData(type, TypeData.newInstance(methods.getter),
-methods.getter.getGenericReturnType());
-             */
+            builder.addCode(
+                """
+                modelBuilder.addProperty()
+                    .name("${property.name}")
+                    .accessor(${accessor(property)})
+
+                """.trimIndent()
+            )
             typeData(builder, property)
             discoverAnnotations(property).forEach {
                 if (it.values.isNotEmpty()) {
                     val methodCase = buildAnnotation(it)
-                    builder.addStatement("modelBuilder.annotation($methodCase())")
+                    builder.addCode(".annotation($methodCase())\n")
                 } else {
-                    builder.addStatement("modelBuilder.annotation(${"$"}T.builder())", annotationBuilderName(it))
+                    builder.addCode(".annotation(${"$"}T.builder())\n", annotationBuilderName(it))
                 }
             }
-            builder.addStatement("${property.name}.discoverMappedName()")
+            builder.addCode(".discoverMappedName();\n")
         }
+    }
+
+    private fun accessor(property: PropertySource<JavaClassSource>): String {
+        val name = "accessor${builders.getAndIncrement()}"
+        importer.addMethod(
+            methodBuilder(name)
+                .addModifiers(PRIVATE)
+                .returns(PropertyAccessor::class.java)
+                .addCode(
+                    """
+                    return new ${"$"}T() {
+                        @Override
+                        public void set(Object instance, Object value) {
+                            ((${source.name})instance).${property.mutator.name}((${"$"}T)value);
+                        }
+                        
+                        @Override
+                        public Object get(Object instance) {
+                            return ((${source.name})instance).${property.accessor.name}();
+                        }
+                    };
+                """.trimIndent(), PropertyAccessor::class.java, property.type.qualifiedName.className()
+                )
+                .build()
+        )
+
+        return "$name()"
     }
 
     private fun typeData(builder: MethodSpec.Builder, property: PropertySource<JavaClassSource>) {
         if (!property.type.isParameterized) {
-            builder.addStatement("${property.name}.typeData(\$T.builder(${property.type}.class).build())", TypeData::class.java)
+            builder.addCode(".typeData(\$T.builder(${property.type}.class).build())\n", TypeData::class.java)
         } else {
-            var argument = property.type
-            while (argument.isParameterized) {
-                argument = argument.typeArguments[0]
-            }
-            val varName = "${property.name}Type"
-            builder.addStatement("var $varName = \$T.builder(${argument}.class)", TypeData::class.java)
-            argument = property.type
-            while (argument.isParameterized) {
-                builder.addStatement("$varName.addTypeParameter(TypeData.newInstance(null, \$T.class))",
-                    argument.qualifiedName.className())
-                argument = argument.typeArguments[0]
-            }
-
-            builder.addStatement("${property.name}.typeData($varName.build())")
-
+            builder.addCode(".typeData(${typeDataGenerics(property)})")
         }
+    }
+
+    private fun typeDataGenerics(property: PropertySource<JavaClassSource>): String {
+        val name = "typeData${builders.getAndIncrement()}"
+        val method = methodBuilder(name)
+            .addModifiers(PRIVATE)
+            .returns(TypeData::class.java)
+        var argument = property.type
+        while (argument.isParameterized) {
+            argument = argument.typeArguments[0]
+        }
+        val varName = "${property.name}Type"
+        method.addStatement("var $varName = \$T.builder(${argument}.class)", TypeData::class.java)
+        argument = property.type
+        while (argument.isParameterized) {
+            method.addStatement(
+                "$varName.addTypeParameter(TypeData.builder(\$T.class).build())",
+                argument.qualifiedName.className()
+            )
+            argument = argument.typeArguments[0]
+        }
+        method.addStatement("return $varName.build()")
+
+        importer.addMethod(method.build())
+        return "$name()"
     }
 
     private fun discoverAnnotations(property: PropertySource<JavaClassSource>):
@@ -134,15 +161,15 @@ methods.getter.getGenericReturnType());
         return property.field.annotations +
             listOf(property.accessor, property.mutator)
                 .flatMap { it.annotations }
-        }
+    }
 
     private fun annotations(source: JavaClassSource, builder: MethodSpec.Builder) {
         source.annotations.forEach {
             if (it.values.isNotEmpty()) {
                 val methodCase = buildAnnotation(it)
-                builder.addStatement("${"modelBuilder"}.annotation($methodCase())")
+                builder.addStatement("modelBuilder.annotation($methodCase())")
             } else {
-                builder.addStatement("${"modelBuilder"}.annotation(${"$"}T.builder())", annotationBuilderName(it))
+                builder.addStatement("modelBuilder.annotation(\$T.builder())", annotationBuilderName(it))
             }
         }
     }
@@ -150,7 +177,7 @@ methods.getter.getGenericReturnType());
     private fun buildAnnotation(annotation: AnnotationSource<JavaClassSource>): String {
         val builderName = annotationBuilderName(annotation)
         val methodName = annotation.name.methodCase() + builders.getAndIncrement()
-        val builder = MethodSpec.methodBuilder(methodName)
+        val builder = methodBuilder(methodName)
             .addModifiers(PRIVATE)
             .returns(annotation.qualifiedName.className())
 
