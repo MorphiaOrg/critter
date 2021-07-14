@@ -13,7 +13,7 @@ import java.io.File
 import java.io.PrintWriter
 import java.util.Locale
 
-class CriteriaBuilder(private val context: JavaContext): SourceBuilder {
+class CriteriaBuilder(val context: JavaContext): SourceBuilder {
     private var nested = mutableListOf<JavaClassSource>()
 
     override fun build() {
@@ -181,7 +181,7 @@ fun String.titleCase(): String {
 }
 
 fun String.methodCase(): String {
-    return substring(0, 1).toLowerCase() + substring(1)
+    return substring(0, 1).lowercase(Locale.getDefault()) + substring(1)
 }
 
 fun String.className(): ClassName {

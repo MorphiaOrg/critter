@@ -31,11 +31,12 @@ object Critter {
         sourceDirectories: Set<String>,
         criteriaPackage: String?,
         force: Boolean,
+        format: Boolean,
         outputType: OutputType,
         outputDirectory: File
     ) {
-        javaContext = JavaContext(criteriaPackage, force, outputDirectory)
-        kotlinContext = KotlinContext(criteriaPackage, force, outputDirectory)
+        javaContext = JavaContext(criteriaPackage, force, format, outputDirectory)
+        kotlinContext = KotlinContext(criteriaPackage, force, format, outputDirectory)
         this.outputType = outputType
         kotlinParser = KotlinParser(kotlinContext)
         sourceDirectories

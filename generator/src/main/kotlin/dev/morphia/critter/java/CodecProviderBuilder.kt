@@ -32,10 +32,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
         buildGet()
         refreshCodecs()
 
-        JavaFile
-            .builder(packageName, provider.build())
-            .build()
-            .writeTo(context.outputDirectory)
+        context.buildFile(provider.build())
     }
 
     private fun buildGet() {

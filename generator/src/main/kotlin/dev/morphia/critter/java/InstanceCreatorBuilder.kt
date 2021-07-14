@@ -2,13 +2,11 @@ package dev.morphia.critter.java
 
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.FieldSpec
-import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeSpec
 import dev.morphia.annotations.experimental.Name
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.CodecsBuilder.Companion.packageName
 import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
@@ -16,11 +14,10 @@ import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import org.jboss.forge.roaster.model.Parameter
 import java.io.File
-import javax.lang.model.element.Modifier
 import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PUBLIC
 
-class InstanceCreatorBuilder(private val context: JavaContext) : SourceBuilder {
+class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
     private lateinit var source: JavaClass
     private lateinit var creator: TypeSpec.Builder
     private lateinit var creatorName: ClassName
@@ -31,23 +28,18 @@ class InstanceCreatorBuilder(private val context: JavaContext) : SourceBuilder {
             entityName = ClassName.get(source.pkgName, source.name)
             creatorName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")
             creator = TypeSpec.classBuilder(creatorName)
-                .addModifiers(Modifier.PUBLIC)
+                .addModifiers(PUBLIC)
             val sourceTimestamp = source.lastModified()
             val decoderFile = File(context.outputDirectory, creatorName.canonicalName().replace('.', '/') + ".java")
 
             if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
-//                creator.addSuperinterface(ParameterizedTypeName.get(ClassName.get(MorphiaInstanceCreator::class.java)/*, entityName*/))
                 creator.addSuperinterface(ClassName.get(MorphiaInstanceCreator::class.java))
                 fields()
                 buildConstructor()
                 getInstance()
                 set()
 
-                JavaFile
-                    .builder(packageName, creator.build())
-                    .addStaticImport(Conversions::class.java, "convert")
-                    .build()
-                    .writeTo(context.outputDirectory)
+                context.buildFile(creator.build(), Conversions::class.java to "convert")
             }
         }
     }

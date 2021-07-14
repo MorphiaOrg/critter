@@ -55,8 +55,10 @@ class JavaClassTest {
 
     @Test
     fun codecs() {
-        val context = JavaContext(force = true, outputDirectory = File("../tests/maven/java/target/generated-sources/critter"))
-        File("../tests/maven/java/src/main/java/").walkTopDown()
+        val context = JavaContext(format = true, force = true, outputDirectory = File("." +
+            "./tests/maven/java/target/generated-sources/critter"))
+        File("../tests/maven/java/src/main/java/")
+            .walkTopDown()
             .filter { it.name.endsWith(".java") }
             .forEach { context.add(JavaClass(context, it)) }
         CodecsBuilder(context).build()

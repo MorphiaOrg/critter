@@ -25,7 +25,7 @@ import javax.lang.model.element.Modifier
 import javax.lang.model.element.Modifier.PROTECTED
 import javax.lang.model.element.Modifier.PUBLIC
 
-class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
+class EncoderBuilder(val context: JavaContext) : SourceBuilder {
     private lateinit var source: JavaClass
     private lateinit var encoder: TypeSpec.Builder
     private lateinit var encoderName: ClassName
@@ -37,7 +37,6 @@ class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
             encoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Encoder")
             encoder = TypeSpec.classBuilder(encoderName)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-
             val sourceTimestamp = source.lastModified()
             val encoderFile = File(context.outputDirectory, encoderName.canonicalName().replace('.', '/') + ".java")
 
@@ -55,11 +54,7 @@ class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
         encodeMethod()
         encodeId()
 
-        JavaFile
-            .builder(packageName, encoder.build())
-            .addStaticImport(ExpressionHelper::class.java, "document")
-            .build()
-            .writeTo(context.outputDirectory)
+        context.buildFile(encoder.build(), ExpressionHelper::class.java to "document")
     }
 
     private fun encodeMethod() {
@@ -88,11 +83,9 @@ class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
     }
 
     private fun outputProperties(): String {
-        var indent = "        ".repeat(3)
-        indent = ""
         val lines = mutableListOf<String>()
         lines += "var model = getMorphiaCodec().getEntityModel();"
-        if(idProperty() != null) {
+        if (idProperty() != null) {
             lines += "encodeId(writer, instance, encoderContext);"
         }
         lines += """
@@ -108,7 +101,7 @@ class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
                 lines += "encodeValue(writer, encoderContext, model.getProperty(\"${field.name}\"), instance.${getter(field)});"
             }
         }
-        return lines.joinToString("\n", transform = { s -> indent + s })
+        return lines.joinToString("\n")
     }
 
     fun encodeId() {
@@ -134,7 +127,6 @@ class EncoderBuilder(private val context: JavaContext) : SourceBuilder {
             )
             encoder.addMethod(method.build())
         }
-
     }
 
     private fun idProperty(): CritterField? {

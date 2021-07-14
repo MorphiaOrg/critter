@@ -1,7 +1,6 @@
 package dev.morphia.critter.java
 
 import com.squareup.javapoet.ClassName
-import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.ParameterizedTypeName
@@ -69,22 +68,15 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 importer.addMethod(builder.build())
             }
 
-        JavaFile
-            .builder(CodecsBuilder.packageName, importer.build())
-            .build()
-            .writeTo(context.outputDirectory)
+        context.buildFile(importer.build())
     }
 
     private fun properties(source: JavaClassSource, builder: MethodSpec.Builder) {
         source.properties.forEach { property ->
-            builder.addCode(
-                """
-                modelBuilder.addProperty()
+            builder.addCode("""modelBuilder.addProperty()
                     .name("${property.name}")
                     .accessor(${accessor(property)})
-
-                """.trimIndent()
-            )
+                """)
             typeData(builder, property)
             discoverAnnotations(property).forEach {
                 if (it.values.isNotEmpty()) {
