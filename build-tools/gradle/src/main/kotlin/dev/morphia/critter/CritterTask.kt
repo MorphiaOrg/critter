@@ -22,6 +22,8 @@ open class CritterTask : SourceTask() {
     var outputType: String = "kotlin"
     @Input
     var force = false
+    @Input
+    var format = false
 
     init {
         description = "Processes files for critter."
@@ -29,7 +31,7 @@ open class CritterTask : SourceTask() {
 
     @TaskAction
     fun generate() {
-        scan(project.projectDir, files, criteriaPackage, force, Critter.outputType(outputType), outputDirectory)
+        scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType), outputDirectory)
         generateCriteria()
     }
 }

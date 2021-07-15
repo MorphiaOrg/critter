@@ -57,8 +57,6 @@ object Critter {
     }
 
     fun generateCriteria() {
-        println("outputType = ${outputType}")
-
         when (outputType) {
             JAVA -> JavaCriteriaBuilder(javaContext).build()
             KOTLIN -> KotlinCriteriaBuilder(kotlinContext).build()
@@ -68,7 +66,7 @@ object Critter {
     fun generateCodecs() {
         when (outputType) {
             JAVA -> JavaCodecsBuilder(javaContext).build()
-            KOTLIN -> TODO() //KotlinCriteriaBuilder(kotlinContext).build()
+            KOTLIN -> println("not implemented yet") //KotlinCriteriaBuilder(kotlinContext).build()
         }
     }
 
