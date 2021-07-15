@@ -33,6 +33,9 @@ class CritterMojo : AbstractMojo() {
     @Parameter(property = "critter.force", defaultValue = "false")
     private var force: Boolean = false
 
+    @Parameter(property = "critter.format", defaultValue = "false")
+    private var format: Boolean = false
+
     @Parameter(property = "critter.output.type", name = "outputType", required = true)
     lateinit var outputType: String
 
@@ -40,7 +43,7 @@ class CritterMojo : AbstractMojo() {
     private lateinit var project: MavenProject
     override fun execute() {
         project.addCompileSourceRoot(outputDirectory.path)
-        scan(project.basedir, sourceDirectories, criteriaPackage, force, outputType(outputType), outputDirectory)
+        scan(project.basedir, sourceDirectories, criteriaPackage, force, format, outputType(outputType), outputDirectory)
         generateCriteria()
         if (generateCodecs) {
             generateCodecs()
