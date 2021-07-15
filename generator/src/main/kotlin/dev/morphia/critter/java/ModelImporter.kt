@@ -83,7 +83,8 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                     val methodCase = buildAnnotation(it)
                     builder.addCode(".annotation($methodCase())\n")
                 } else {
-                    builder.addCode(".annotation(${"$"}T.builder())\n", annotationBuilderName(it))
+                    val name = annotationBuilderName(it)
+                    builder.addCode(".annotation(${"$"}T.${name.simpleName().methodCase()}().build())\n", name)
                 }
             }
             builder.addCode(".discoverMappedName();\n")
@@ -163,7 +164,8 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 val methodCase = buildAnnotation(it)
                 builder.addCode(".annotation($methodCase());\n")
             } else {
-                builder.addCode(".annotation(\$T.builder());\n", annotationBuilderName(it))
+                val name = annotationBuilderName(it)
+                builder.addCode(".annotation(\$T.${name.simpleName().methodCase()}().build());\n", annotationBuilderName(it))
             }
         }
     }
@@ -175,7 +177,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
             .addModifiers(PRIVATE)
             .returns(annotation.qualifiedName.className())
 
-        builder.addStatement("var builder = ${"$"}T.builder()", builderName)
+        builder.addStatement("var builder = ${"$"}T.${builderName.simpleName().methodCase()}()", builderName)
 
         annotation.values
             .map { pair -> pair.name }
@@ -187,7 +189,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 builder.addStatement("builder.$name($value)")
             }
 
-        builder.addStatement("return builder")
+        builder.addStatement("return builder.build()")
 
         importer.addMethod(builder.build())
         return methodName
@@ -195,7 +197,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
     private fun annotationBuilderName(it: AnnotationSource<JavaClassSource>): ClassName {
         var name = it.qualifiedName
-        name = name.substringBeforeLast('.') + ".experimental." + name.substringAfterLast('.')
+        name = name.substringBeforeLast('.') + ".builders." + name.substringAfterLast('.')
         return (name + "Builder").className()
     }
 }
