@@ -78,9 +78,9 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
                 builder
                     .addCode("var modelBuilder = new \$T(datastore)\n", EntityModelBuilder::class.java)
-                    .addCode(".type(\$T.class)\n", source.qualifiedName.className())
+                    .addCode(".type(\$T.class)", source.qualifiedName.className())
 
-                annotations(source, builder)
+                annotations(builder)
                 properties(builder)
                 builder.addStatement("return modelBuilder.build()")
 
@@ -188,38 +188,47 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 .flatMap { it.annotations }
     }
 
-    private fun annotations(source: JavaClassSource, builder: MethodSpec.Builder) {
-        source.annotations.forEach {
+    private fun annotations(builder: MethodSpec.Builder) {
+        source.annotations
+            .filter { it.qualifiedName.startsWith("dev.morphia")}
+            .forEach {
             if (it.values.isNotEmpty()) {
-                val methodCase = buildAnnotation(it)
-                builder.addCode(".annotation($methodCase());\n")
+                builder.addCode("\n.annotation(${buildAnnotation(it)}())")
             } else {
                 val name = annotationBuilderName(it)
-                builder.addCode(".annotation(\$T.${name.simpleName().methodCase()}().build());\n", annotationBuilderName(it))
+                builder.addCode("\n.annotation(\$T.${name.simpleName().methodCase()}().build())\n",
+                    annotationBuilderName(it))
             }
         }
+        builder.addCode(";")
+
     }
 
     private fun buildAnnotation(annotation: AnnotationSource<JavaClassSource>): String {
         val builderName = annotationBuilderName(annotation)
-        val methodName = annotation.name.methodCase() + builders.getAndIncrement()
+        val methodName = "annotation${annotation.name.titleCase()}${builders.getAndIncrement()}"
         val builder = methodBuilder(methodName)
             .addModifiers(PRIVATE, STATIC)
             .returns(annotation.qualifiedName.className())
 
-        builder.addStatement("var builder = ${"$"}T.${builderName.simpleName().methodCase()}()", builderName)
-
+        builder.addStatement("var ${annotation.name.methodCase()} = ${"$"}T.${builderName.simpleName().methodCase()}()", builderName)
         annotation.values
-            .map { pair -> pair.name }
-            .forEach { name: String ->
+            .forEach { pair ->
+                val name = pair.name
                 var value = annotation.getLiteralValue(name)
-                if (value.startsWith("@")) {
-                    value = buildAnnotation(annotation.getAnnotationValue(name)) + "()"
+                val arrayValue = annotation.annotationArrayValue
+                val annotationValue = annotation.getAnnotationValue(name)
+                if (annotationValue != null) {
+                    value = buildAnnotation(annotationValue) + "()"
+                } else if (arrayValue != null) {
+                    value = arrayValue.joinToString(", ") {
+                        buildAnnotation(it) + "()"
+                    }
                 }
-                builder.addStatement("builder.$name($value)")
+                builder.addStatement("${annotation.name.methodCase()}.$name($value)")
             }
 
-        builder.addStatement("return builder.build()")
+        builder.addStatement("return ${annotation.name.methodCase()}.build()")
 
         util.addMethod(builder.build())
         return "$utilName.$methodName"

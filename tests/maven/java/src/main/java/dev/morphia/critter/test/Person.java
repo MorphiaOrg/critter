@@ -17,10 +17,17 @@ package dev.morphia.critter.test;
 
 import dev.morphia.annotations.CappedAt;
 import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Field;
 import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Index;
+import dev.morphia.annotations.Indexes;
 import org.bson.types.ObjectId;
 
 @Entity(cap = @CappedAt(count = 12))
+@Indexes({
+    @Index(fields = @Field("1")),
+    @Index(fields = @Field("2")),
+    @Index(fields = @Field("3"))})
 public class Person extends AbstractPerson {
   @Id
   private ObjectId id;
