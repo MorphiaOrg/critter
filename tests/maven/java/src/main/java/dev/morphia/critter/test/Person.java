@@ -23,6 +23,8 @@ import dev.morphia.annotations.Index;
 import dev.morphia.annotations.Indexes;
 import org.bson.types.ObjectId;
 
+import java.util.Objects;
+
 @Entity(cap = @CappedAt(count = 12))
 @Indexes({
     @Index(fields = @Field("1")),
@@ -69,34 +71,20 @@ public class Person extends AbstractPerson {
   }
 
   @Override
-  public boolean equals(final Object o) {
+  public boolean equals(Object o) {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof Person)) {
       return false;
     }
-
-    final Person person = (Person) o;
-
-    if (firstName != null ? !firstName.equals(person.firstName) : person.firstName != null) {
-      return false;
-    }
-    if (id != null ? !id.equals(person.id) : person.id != null) {
-      return false;
-    }
-    if (lastName != null ? !lastName.equals(person.lastName) : person.lastName != null) {
-      return false;
-    }
-
-    return true;
+    Person person = (Person) o;
+    return Objects.equals(id, person.id) && Objects.equals(firstName, person.firstName) &&
+           Objects.equals(lastName, person.lastName);
   }
 
   @Override
   public int hashCode() {
-    int result = id != null ? id.hashCode() : 0;
-    result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
-    result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
-    return result;
+    return Objects.hash(id, firstName, lastName);
   }
 }

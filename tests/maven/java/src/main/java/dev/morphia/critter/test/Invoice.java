@@ -22,7 +22,9 @@ import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -65,6 +67,10 @@ public class Invoice {
     public void add(Address address) {
         if (addresses == null) {
             addresses = new ArrayList<>();
+            dummy = new ArrayList<>();
+            Set<List<Address>> set = new LinkedHashSet<>();
+            dummy.add(set);
+            set.add(addresses);
         }
         addresses.add(address);
     }
@@ -118,23 +124,33 @@ public class Invoice {
     }
 
     @Override
-    public int hashCode() {
-        return id.hashCode();
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof Invoice)) {
             return false;
         }
         Invoice invoice = (Invoice) o;
-        if (!id.equals(invoice.id)) {
-            return false;
-        }
-        return true;
+        boolean equals = Objects.equals(id, invoice.id);
+        boolean equals1 = Objects.equals(orderDate, invoice.orderDate);
+        boolean equals2 = Objects.equals(person, invoice.person);
+        boolean equals3 = Objects.equals(dummy, invoice.dummy);
+        boolean equals4 = Objects.equals(addresses, invoice.addresses);
+        boolean equals5 = Objects.equals(total, invoice.total);
+        boolean equals6 = Objects.equals(items, invoice.items);
+        return equals
+               && equals1
+               && equals2
+               && equals3
+               && equals4
+               && equals5
+               && equals6;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, orderDate, person, dummy, addresses, total, items);
     }
 
     public List<Set<List<Address>>> getDummy() {
