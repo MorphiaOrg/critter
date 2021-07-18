@@ -21,8 +21,11 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.lang.model.element.Modifier
 import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PUBLIC
+import javax.lang.model.element.Modifier.STATIC
 
 class ModelImporter(val context: JavaContext) : SourceBuilder {
+    private lateinit var utilName: String
+    private lateinit var util: Builder
     private lateinit var source: JavaClassSource
     private lateinit var properties: List<PropertySource<JavaClassSource>>
     private lateinit var importer: Builder
@@ -65,6 +68,9 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
             .forEach { source ->
                 this.source = source
                 this.properties = discoverProperties()
+                this.utilName = "${source.name}Util"
+                this.util = TypeSpec.classBuilder(utilName)
+                    .addModifiers(PRIVATE, STATIC)
                 val builder = methodBuilder("build${source.name.titleCase()}Model")
                     .addModifiers(PRIVATE)
                     .addParameter(Datastore::class.java, "datastore")
@@ -75,10 +81,11 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                     .addCode(".type(\$T.class)\n", source.qualifiedName.className())
 
                 annotations(source, builder)
-                properties(source, builder)
+                properties(builder)
                 builder.addStatement("return modelBuilder.build()")
 
                 importer.addMethod(builder.build())
+                importer.addType(util.build())
             }
 
         context.buildFile(importer.build())
@@ -96,7 +103,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         return props(source)
     }
 
-    private fun properties(source: JavaClassSource, builder: MethodSpec.Builder) {
+    private fun properties(builder: MethodSpec.Builder) {
         properties.forEach { property ->
             builder.addCode("""modelBuilder.addProperty()
                     .name("${property.name}")
@@ -105,8 +112,8 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
             typeData(builder, property)
             discoverAnnotations(property).forEach {
                 if (it.values.isNotEmpty()) {
-                    val methodCase = buildAnnotation(it)
-                    builder.addCode(".annotation($methodCase())\n")
+                    val name = buildAnnotation(it)
+                    builder.addCode(".annotation($name())\n")
                 } else {
                     val name = annotationBuilderName(it)
                     builder.addCode(".annotation(${"$"}T.${name.simpleName().methodCase()}().build())\n", name)
@@ -117,10 +124,10 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     }
 
     private fun accessor(property: PropertySource<JavaClassSource>): String {
-        val name = "accessor${builders.getAndIncrement()}"
-        importer.addMethod(
+        val name = "${methodName(property)}Accessor"
+        util.addMethod(
             methodBuilder(name)
-                .addModifiers(PRIVATE)
+                .addModifiers(PRIVATE, STATIC)
                 .returns(PropertyAccessor::class.java)
                 .addCode(
                     """
@@ -140,8 +147,11 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 .build()
         )
 
-        return "$name()"
+        return "$utilName.$name()"
     }
+
+    private fun methodName(property: PropertySource<JavaClassSource>) =
+        (property.name).methodCase()
 
     private fun typeData(builder: MethodSpec.Builder, property: PropertySource<JavaClassSource>) {
         if (!property.type.isParameterized) {
@@ -152,9 +162,9 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     }
 
     private fun typeDataGenerics(property: PropertySource<JavaClassSource>): String {
-        val name = "typeData${builders.getAndIncrement()}"
+        val name = "${methodName(property)}TypeData"
         val method = methodBuilder(name)
-            .addModifiers(PRIVATE)
+            .addModifiers(PRIVATE, STATIC)
             .returns(TypeData::class.java)
         val argument = property.field.type
         val varName = "${property.name}Type"
@@ -167,8 +177,8 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         }
         method.addStatement("return $varName.build()")
 
-        importer.addMethod(method.build())
-        return "$name()"
+        util.addMethod(method.build())
+        return "$utilName.$name()"
     }
 
     private fun discoverAnnotations(property: PropertySource<JavaClassSource>):
@@ -194,7 +204,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         val builderName = annotationBuilderName(annotation)
         val methodName = annotation.name.methodCase() + builders.getAndIncrement()
         val builder = methodBuilder(methodName)
-            .addModifiers(PRIVATE)
+            .addModifiers(PRIVATE, STATIC)
             .returns(annotation.qualifiedName.className())
 
         builder.addStatement("var builder = ${"$"}T.${builderName.simpleName().methodCase()}()", builderName)
@@ -211,8 +221,8 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
         builder.addStatement("return builder.build()")
 
-        importer.addMethod(builder.build())
-        return methodName
+        util.addMethod(builder.build())
+        return "$utilName.$methodName"
     }
 
     private fun annotationBuilderName(it: AnnotationSource<JavaClassSource>): ClassName {
