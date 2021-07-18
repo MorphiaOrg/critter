@@ -45,11 +45,6 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
             .addStatement("\$T<T> codec = (MorphiaCodec<T>) getCodecs().get(type)", MorphiaCodec::class.java)
 
         method.beginControlFlow("if (codec == null)")
-        method.addStatement("\$T model = getMapper().getEntityModel(type)", EntityModel::class.java)
-        method.addStatement(
-            "codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders(), " +
-                "getMapper().getDiscriminatorLookup(), registry)"
-        )
 
         context.classes.values
             .filter { !it.isAbstract() }
@@ -60,6 +55,11 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                 } else {
                     method.nextControlFlow("else $ifStmt", javaClass.qualifiedName.className())
                 }
+                method.addStatement("\$T model = getMapper().getEntityModel(type)", EntityModel::class.java)
+                method.addStatement(
+                    "codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders(), " +
+                        "getMapper().getDiscriminatorLookup(), registry)"
+                )
                 method.addStatement("codec.setEncoder((${"$"}T<T>)new ${javaClass.name}Encoder(codec))", EntityEncoder::class.java)
             }
 

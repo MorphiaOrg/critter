@@ -28,6 +28,7 @@
                 </executions>
                 <configuration>
                     <force>true</force>
+                    <format>true</format>
                     <outputType>java</outputType>
                 </configuration>
             </plugin>

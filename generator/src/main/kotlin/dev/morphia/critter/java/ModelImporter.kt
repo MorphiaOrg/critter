@@ -8,6 +8,7 @@ import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeSpec.Builder
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.EntityModelBuilder
 import dev.morphia.mapping.codec.pojo.TypeData
@@ -23,6 +24,7 @@ import javax.lang.model.element.Modifier.PUBLIC
 
 class ModelImporter(val context: JavaContext) : SourceBuilder {
     private lateinit var source: JavaClassSource
+    private lateinit var properties: List<PropertySource<JavaClassSource>>
     private lateinit var importer: Builder
     private lateinit var importerName: ClassName
     private val builders = AtomicInteger(1)
@@ -47,11 +49,22 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         method.addCode(");")
         importer.addMethod(method.build())
 
+        importer.addMethod(methodBuilder("importCodecProvider")
+            .addModifiers(PUBLIC)
+            .addParameter(Datastore::class.java, "datastore")
+            .addCode("""
+                        ${"$"}T mapper = datastore.getMapper();
+                        mapper.register(new CritterCodecProvider(mapper, datastore));
+                        datastore.updateDatabaseWithRegistry();
+                    """.trimIndent(), Mapper::class.java)
+            .build())
+
         context.classes.values
             .filter { !it.isAbstract() }
             .map { it.sourceClass }
             .forEach { source ->
                 this.source = source
+                this.properties = discoverProperties()
                 val builder = methodBuilder("build${source.name.titleCase()}Model")
                     .addModifiers(PRIVATE)
                     .addParameter(Datastore::class.java, "datastore")
@@ -71,8 +84,20 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         context.buildFile(importer.build())
     }
 
+    private fun discoverProperties(): List<PropertySource<JavaClassSource>> {
+        fun props(type: JavaClassSource): List<PropertySource<JavaClassSource>> {
+            val parent = context.resolve(name = type.superType)
+            val list = parent?.let {
+                props(it.sourceClass)
+            } ?: emptyList()
+
+            return list + type.properties
+        }
+        return props(source)
+    }
+
     private fun properties(source: JavaClassSource, builder: MethodSpec.Builder) {
-        source.properties.forEach { property ->
+        properties.forEach { property ->
             builder.addCode("""modelBuilder.addProperty()
                     .name("${property.name}")
                     .accessor(${accessor(property)})
@@ -131,19 +156,14 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         val method = methodBuilder(name)
             .addModifiers(PRIVATE)
             .returns(TypeData::class.java)
-        var argument = property.type
-        while (argument.isParameterized) {
-            argument = argument.typeArguments[0]
-        }
+        val argument = property.field.type
         val varName = "${property.name}Type"
-        method.addStatement("var $varName = \$T.builder(${argument}.class)", TypeData::class.java)
-        argument = property.type
-        while (argument.isParameterized) {
+        method.addStatement("var $varName = \$T.builder(\$T.class)", TypeData::class.java, argument.qualifiedName.className())
+        argument.typeArguments.forEach {
             method.addStatement(
                 "$varName.addTypeParameter(TypeData.builder(\$T.class).build())",
-                argument.qualifiedName.className()
+                it.qualifiedName.className()
             )
-            argument = argument.typeArguments[0]
         }
         method.addStatement("return $varName.build()")
 

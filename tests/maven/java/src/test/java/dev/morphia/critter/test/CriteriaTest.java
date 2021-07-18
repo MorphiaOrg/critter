@@ -26,6 +26,7 @@ import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.Morphia;
 import dev.morphia.UpdateOptions;
+import dev.morphia.critter.codec.CritterModelImporter;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
 import dev.morphia.query.FindOptions;
@@ -263,7 +264,7 @@ public class CriteriaTest extends BottleRocketTest {
             MongoDatabase critter = getDatabase();
             critter.drop();
             datastore = Morphia.createDatastore(mongo, getDatabase().getName());
-            datastore.getMapper().mapPackage("dev.morphia");
+            datastore.getMapper().importModels(new CritterModelImporter());
         }
         return datastore;
     }
