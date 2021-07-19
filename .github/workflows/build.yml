@@ -42,7 +42,7 @@ jobs:
         run: mvn install -DskipTests
   Snapshots:
     name: Publish Snapshot Artifacts
-    if: "github.repository == 'MorphiaOrg/critter'"
+    if: ${{ github.repository == 'MorphiaOrg/critter' && github.ref == 'refs/heads/master' }}
     needs:
       - critter
       - Quality
