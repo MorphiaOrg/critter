@@ -2,9 +2,9 @@ package dev.morphia.critter
 
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
+import dev.morphia.critter.java.CriteriaBuilder
 import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.java.JavaContext
-import dev.morphia.critter.java.CriteriaBuilder
 import dev.morphia.critter.kotlin.KotlinClass
 import dev.morphia.critter.kotlin.KotlinContext
 import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
@@ -95,7 +95,7 @@ class CritterContextTest {
         file.writeText("test update")
         Assert.assertTrue(file.readLines().contains("test update"))
         kotlinBuilder.build()
-        Assert.assertFalse(file.readLines().contains("test update"))
+        Assert.assertTrue(file.readLines().contains("test update"))
 
         context.force = true
         kotlinBuilder.build()

@@ -26,12 +26,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <bottlerocket.version>0.14</bottlerocket.version>
-        <dokka.version>1.4.32</dokka.version>
+        <dokka.version>1.5.0</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
         <kibble.version>0.18</kibble.version>
-        <kotlin.version>1.5.10</kotlin.version>
-        <kotlinpoet.version>1.8.0</kotlinpoet.version>
+        <kotlin.version>1.5.20</kotlin.version>
+        <kotlinpoet.version>1.9.0</kotlinpoet.version>
         <ktlint.version>0.31.0</ktlint.version>
         <maven.version>3.6.3</maven.version>
         <morphia.version>2.3.0-SNAPSHOT</morphia.version>
@@ -65,7 +65,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.0</version>
+                    <version>3.8.1</version>
                     <configuration>
                         <source>11</source>
                         <target>11</target>
