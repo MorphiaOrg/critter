@@ -74,7 +74,7 @@ class CritterContextTest {
         val directory = File("target/kotlinClassTest/")
         val context = KotlinContext(force = true, outputDirectory = directory)
         files.forEach { file ->
-            Kibble.parse(files).forEach { fileSpec ->
+            Kibble.parse(listOf(file)).forEach { fileSpec ->
                 fileSpec.classes.forEach {
                     context.add(KotlinClass(context, fileSpec, it, file))
                 }

@@ -11,11 +11,8 @@ import java.io.File
 
 @Suppress("UNCHECKED_CAST")
 class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, file: File) :
-    CritterClass(
-        source.name ?: "",
-        fileSpec.packageName,
-        file
-    ) {
+    CritterClass(source.name ?: "", fileSpec.packageName, file) {
+
     val annotations = source.annotationSpecs
     val fields by lazy { listProperties() }
     private fun listProperties(type: KotlinClass? = this): List<PropertySpec> {
@@ -38,7 +35,7 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
     fun isAbstract() = source.isAbstract()
     fun isEnum() = source.isEnum
     fun lastModified(): Long {
-        val sourceMod = fileSpec.toJavaFileObject().lastModified
+        val sourceMod = file.lastModified()
         val list = listOf(source.superclass) + source.superinterfaces.keys
             .filter { it != ANY }
         val max = list
