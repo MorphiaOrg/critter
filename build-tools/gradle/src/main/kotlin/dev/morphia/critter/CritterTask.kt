@@ -23,9 +23,6 @@ open class CritterTask : SourceTask() {
     @Input
     var force = false
 
-    @Input
-    var format = false
-
     init {
         description = "Processes files for critter."
     }
@@ -37,7 +34,6 @@ open class CritterTask : SourceTask() {
             files,
             criteriaPackage,
             force,
-            format,
             Critter.outputType(outputType),
             outputDirectory
         )
