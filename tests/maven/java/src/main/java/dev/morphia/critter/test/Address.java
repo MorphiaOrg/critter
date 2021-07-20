@@ -54,8 +54,11 @@ public class Address {
       return false;
     }
     Address address = (Address) o;
-    return Objects.equals(city, address.city) && Objects.equals(state, address.state) &&
-           Objects.equals(zip, address.zip);
+    boolean equals = Objects.equals(city, address.city);
+    boolean equals1 = Objects.equals(state, address.state);
+    boolean equals2 = Objects.equals(zip, address.zip);
+    return equals && equals1 &&
+           equals2;
   }
 
   @Override

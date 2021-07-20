@@ -40,6 +40,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.mongodb.WriteConcern.MAJORITY;
 import static dev.morphia.query.Sort.ascending;
@@ -117,7 +118,9 @@ public class CriteriaTest extends BottleRocketTest {
                                                     .filter(InvoiceCriteria.orderDate().lte(LocalDateTime.now().plusDays(5)))
                                                     .iterator(new FindOptions()
                                                                   .sort(ascending(InvoiceCriteria.addresses().city().path())));
-        Assert.assertEquals(criteria1.toList().get(0).getAddresses().get(0).getCity(), "NYC");
+        List<Invoice> list = criteria1.toList();
+        Assert.assertEquals(list.get(0).getAddresses().get(0).getCity(), "NYC");
+        Assert.assertEquals(list.get(0), invoice);
 
         MorphiaCursor<Invoice> criteria2 = datastore.find(Invoice.class)
                                                     .iterator(new FindOptions()

@@ -59,6 +59,9 @@ open class Person : AbstractPerson {
         result = 31 * result + (last?.hashCode() ?: 0)
         return result
     }
+    override fun toString(): String {
+        return "Person(id=$id, first=$first, last=$last, ssn=$ssn)"
+    }
 }
 
 @Entity

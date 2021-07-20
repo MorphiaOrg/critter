@@ -24,6 +24,7 @@ import dev.morphia.annotations.Indexes;
 import org.bson.types.ObjectId;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 @Entity(cap = @CappedAt(count = 12))
 @Indexes({
@@ -86,5 +87,15 @@ public class Person extends AbstractPerson {
   @Override
   public int hashCode() {
     return Objects.hash(id, firstName, lastName);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", Person.class.getSimpleName() + "[", "]")
+               .add("age=" + getAge())
+               .add("id=" + id)
+               .add("firstName='" + firstName + "'")
+               .add("lastName='" + lastName + "'")
+               .toString();
   }
 }
