@@ -1,10 +1,6 @@
 package dev.morphia.critter
 
 import dev.morphia.critter.Critter.scan
-import dev.morphia.critter.CritterPlugin.Companion
-import org.gradle.api.file.FileTree
-import org.gradle.api.logging.LogLevel.INFO
-import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask
@@ -17,9 +13,18 @@ open class CritterTask : SourceTask() {
 
     @OutputDirectory
     var outputDirectory = File("build/generated/critter")
+
+    @Input
     var criteriaPackage: String? = null
+
+    @Input
     var outputType: String = "kotlin"
+
+    @Input
     var force = false
+
+    @Input
+    var format = false
 
     init {
         description = "Processes files for critter."
@@ -32,6 +37,7 @@ open class CritterTask : SourceTask() {
             files,
             criteriaPackage,
             force,
+            format,
             Critter.outputType(outputType),
             outputDirectory
         )
