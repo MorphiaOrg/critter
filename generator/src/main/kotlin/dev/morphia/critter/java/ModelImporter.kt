@@ -14,6 +14,7 @@ import dev.morphia.mapping.codec.pojo.EntityModelBuilder
 import dev.morphia.mapping.codec.pojo.TypeData
 import dev.morphia.mapping.codec.pojo.experimental.EntityModelImporter
 import org.bson.codecs.pojo.PropertyAccessor
+import org.jboss.forge.roaster.model.Type
 import org.jboss.forge.roaster.model.source.AnnotationSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.PropertySource
@@ -169,7 +170,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         val argument = property.field.type
         val varName = "${property.name}Type"
         method.addStatement("var $varName = \$T.builder(\$T.class)", TypeData::class.java, argument.qualifiedName.className())
-        argument.typeArguments.forEach {
+        typeArguments(argument).forEach {
             method.addStatement(
                 "$varName.addTypeParameter(TypeData.builder(\$T.class).build())",
                 it.qualifiedName.className()
@@ -179,6 +180,18 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
         util.addMethod(method.build())
         return "$utilName.$name()"
+    }
+
+    private fun typeArguments(argument: Type<JavaClassSource>): List<Type<JavaClassSource>> {
+        val args = mutableListOf<Type<JavaClassSource>>()
+
+        var type = argument.typeArguments.lastOrNull()
+        while(type != null) {
+            args += type
+            type = type.typeArguments.lastOrNull()
+        }
+
+        return args
     }
 
     private fun discoverAnnotations(property: PropertySource<JavaClassSource>):

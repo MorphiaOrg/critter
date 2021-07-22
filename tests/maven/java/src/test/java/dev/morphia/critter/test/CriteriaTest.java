@@ -37,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
@@ -96,23 +97,36 @@ public class CriteriaTest extends BottleRocketTest {
         datastore = null;
     }
 
-    public void embeds() {
+    @DataProvider(name = "datastores")
+    public Object[][] datastores() {
+        Datastore datastore = datastore();
+        Datastore datastore1 = datastore();
+        datastore1.getMapper().importModels(new CritterModelImporter());
+
+        return new Object[][]{
+            new Object[]{"Standard codecs", datastore},
+            new Object[]{"Critter codecs", datastore1},
+            };
+    }
+
+    @Test(dataProvider = "datastores")
+    public void embeds(String state, Datastore datastore) {
         Invoice invoice = new Invoice();
         invoice.setOrderDate(LocalDateTime.now());
         Person person = new Person("Mike", "Bloomberg");
-        getDatastore().save(person);
+        datastore.save(person);
         invoice.setPerson(person);
         invoice.add(new Address("New York City", "NY", "10036"));
-        getDatastore().save(invoice);
+        datastore.save(invoice);
 
         invoice = new Invoice();
         invoice.setOrderDate(LocalDateTime.now());
         person = new Person("Andy", "Warhol");
-        getDatastore().save(person);
+        datastore.save(person);
 
         invoice.setPerson(person);
         invoice.add(new Address("NYC", "NY", "10018"));
-        getDatastore().save(invoice);
+        datastore.save(invoice);
 
         MorphiaCursor<Invoice> criteria1 = datastore.find(Invoice.class)
                                                     .filter(InvoiceCriteria.orderDate().lte(LocalDateTime.now().plusDays(5)))
@@ -263,12 +277,15 @@ public class CriteriaTest extends BottleRocketTest {
 
     private Datastore getDatastore() {
         if (datastore == null) {
-            MongoClient mongo = getMongoClient();
-            MongoDatabase critter = getDatabase();
-            critter.drop();
-            datastore = Morphia.createDatastore(mongo, getDatabase().getName());
-            datastore.getMapper().importModels(new CritterModelImporter());
+            datastore = datastore();
         }
         return datastore;
+    }
+
+    private Datastore datastore() {
+        MongoClient mongo = getMongoClient();
+        MongoDatabase critter = getDatabase();
+        critter.drop();
+        return Morphia.createDatastore(mongo, getDatabase().getName());
     }
 }

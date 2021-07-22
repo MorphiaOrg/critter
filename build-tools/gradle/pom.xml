@@ -76,42 +76,6 @@
                 <version>3.0.0</version>
                 <executions>
                     <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>java</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                            <arguments>
-                                <argument>-cp</argument>
-                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
-                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
-                                <argument>classes</argument>
-                            </arguments>
-                            <useMavenLogger>true</useMavenLogger>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>java</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                            <arguments>
-                                <argument>-cp</argument>
-                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
-                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
-                                <argument>classes</argument>
-                            </arguments>
-                            <useMavenLogger>true</useMavenLogger>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>clean</id>
                         <phase>clean</phase>
                         <goals>

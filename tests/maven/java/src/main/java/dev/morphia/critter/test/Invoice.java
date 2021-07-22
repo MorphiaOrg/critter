@@ -23,11 +23,10 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.StringJoiner;
 
 @Entity
 public class Invoice {
@@ -39,9 +38,9 @@ public class Invoice {
     @Reference
     private Person person;
 
-    private List<Set<List<Address>>> listSetList;
+    private List<List<List<Address>>> listListList;
     private List<Address> addresses;
-    private Map<Integer, List<Address>> mapList;
+    private Map<String, List<Address>> mapList;
 
     private Double total = 0.0;
 
@@ -70,14 +69,14 @@ public class Invoice {
     public void add(Address address) {
         if (addresses == null) {
             addresses = new ArrayList<>();
-            listSetList = new ArrayList<>();
+            listListList = new ArrayList<>();
             mapList = new LinkedHashMap<>();
-            Set<List<Address>> set = new LinkedHashSet<>();
-            listSetList.add(set);
-            set.add(addresses);
+            List<List<Address>> list = new ArrayList<>();
+            listListList.add(list);
+            list.add(addresses);
         }
         addresses.add(address);
-        mapList.put(addresses.size(), new ArrayList<>(addresses));
+        mapList.put(addresses.size() + "", new ArrayList<>(addresses));
     }
 
     public List<Address> getAddresses() {
@@ -104,19 +103,19 @@ public class Invoice {
         this.items = items;
     }
 
-    public List<Set<List<Address>>> getListSetList() {
-        return listSetList;
+    public List<List<List<Address>>> getListListList() {
+        return listListList;
     }
 
-    public void setListSetList(List<Set<List<Address>>> listSetList) {
-        this.listSetList = listSetList;
+    public void setListListList(List<List<List<Address>>> listListList) {
+        this.listListList = listListList;
     }
 
-    public Map<Integer, List<Address>> getMapList() {
+    public Map<String, List<Address>> getMapList() {
         return mapList;
     }
 
-    public void setMapList(Map<Integer, List<Address>> mapList) {
+    public void setMapList(Map<String, List<Address>> mapList) {
         this.mapList = mapList;
     }
 
@@ -145,6 +144,20 @@ public class Invoice {
     }
 
     @Override
+    public String toString() {
+        return new StringJoiner(", ", Invoice.class.getSimpleName() + "[", "]")
+                   .add("id=" + id)
+                   .add("orderDate=" + orderDate)
+                   .add("person=" + person)
+                   .add("listListList=" + listListList)
+                   .add("addresses=" + addresses)
+                   .add("mapList=" + mapList)
+                   .add("total=" + total)
+                   .add("items=" + items)
+                   .toString();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -153,34 +166,14 @@ public class Invoice {
             return false;
         }
         Invoice invoice = (Invoice) o;
-        boolean equals = Objects.equals(id, invoice.id);
-        boolean equals1 = Objects.equals(orderDate, invoice.orderDate);
-        boolean equals2 = Objects.equals(person, invoice.person);
-        boolean equals3 = Objects.equals(listSetList, invoice.listSetList);
-        boolean equals4 = Objects.equals(addresses, invoice.addresses);
-        boolean equals5 = Objects.equals(mapList, invoice.mapList);
-        boolean equals6 = Objects.equals(total, invoice.total);
-        boolean equals7 = Objects.equals(items, invoice.items);
-        return equals && equals1 &&
-               equals2 && equals3 &&
-               equals4 && equals5 &&
-               equals6 && equals7;
-    }   
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, orderDate, person, listSetList, addresses, mapList, total, items);
+        return Objects.equals(id, invoice.id) && Objects.equals(orderDate, invoice.orderDate) &&
+               Objects.equals(person, invoice.person) && Objects.equals(listListList, invoice.listListList) &&
+               Objects.equals(addresses, invoice.addresses) && Objects.equals(mapList, invoice.mapList) &&
+               Objects.equals(total, invoice.total) && Objects.equals(items, invoice.items);
     }
 
     @Override
-    public String toString() {
-        return "Invoice{" +
-               "id=" + id +
-               ", date=" + orderDate +
-               ", person=" + person +
-               ", addresses=" + addresses +
-               ", total=" + total +
-               ", items=" + items +
-               '}';
+    public int hashCode() {
+        return Objects.hash(id, orderDate, person, listListList, addresses, mapList, total, items);
     }
 }

@@ -41,6 +41,7 @@ class CritterMojo : AbstractMojo() {
 
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
     private lateinit var project: MavenProject
+
     override fun execute() {
         project.addCompileSourceRoot(outputDirectory.path)
         scan(project.basedir, sourceDirectories, criteriaPackage, force, format, outputType(outputType), outputDirectory)

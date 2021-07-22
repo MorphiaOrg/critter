@@ -4,6 +4,7 @@ import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 @Embedded
 public class Address {
@@ -68,10 +69,10 @@ public class Address {
 
   @Override
   public String toString() {
-    return "Address{" +
-               "city='" + city + '\'' +
-               ", state='" + state + '\'' +
-               ", zip='" + zip + '\'' +
-               '}';
+    return new StringJoiner(", ", Address.class.getSimpleName() + "[", "]")
+               .add("city='" + city + "'")
+               .add("state='" + state + "'")
+               .add("zip='" + zip + "'")
+               .toString();
   }
 }
