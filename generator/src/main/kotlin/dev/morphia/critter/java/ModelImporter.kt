@@ -3,7 +3,6 @@ package dev.morphia.critter.java
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
-import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeSpec.Builder
@@ -56,15 +55,19 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
         typeData()
 
-        importer.addMethod(methodBuilder("importCodecProvider")
-            .addModifiers(PUBLIC)
-            .addParameter(Datastore::class.java, "datastore")
-            .addCode("""
+        importer.addMethod(
+            methodBuilder("importCodecProvider")
+                .addModifiers(PUBLIC)
+                .addParameter(Datastore::class.java, "datastore")
+                .addCode(
+                    """
                         ${"$"}T mapper = datastore.getMapper();
                         mapper.register(new CritterCodecProvider(mapper, datastore));
                         datastore.updateDatabaseWithRegistry();
-                    """.trimIndent(), Mapper::class.java)
-            .build())
+                    """.trimIndent(), Mapper::class.java
+                )
+                .build()
+        )
 
         context.classes.values
             .filter { !it.isAbstract() }
@@ -105,7 +108,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
         method.addStatement("var builder = \$T.builder(type)", TypeData::class.java)
         method.beginControlFlow("for(TypeData argument: arguments)")
-            method.addStatement("builder.addTypeParameter(argument)", TypeData::class.java)
+        method.addStatement("builder.addTypeParameter(argument)", TypeData::class.java)
         method.endControlFlow()
         method.addStatement("return builder.build()")
 
@@ -126,10 +129,12 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
     private fun properties(builder: MethodSpec.Builder) {
         properties.forEach { property ->
-            builder.addCode("""modelBuilder.addProperty()
+            builder.addCode(
+                """modelBuilder.addProperty()
                     .name("${property.name}")
                     .accessor(${accessor(property)})
-                """)
+                """
+            )
             typeData(builder, property)
             discoverAnnotations(property).forEach {
                 if (it.values.isNotEmpty()) {
@@ -201,38 +206,11 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     private fun emitTypeData(method: MethodSpec.Builder, typeCount: AtomicInteger, type: Type<JavaClassSource>) {
         method.addCode("typeData(\$T.class", type.qualifiedName.className())
 
-        val arguments = type.typeArguments.forEachIndexed { i, it ->
+        type.typeArguments.forEach {
             method.addCode(", ")
             emitTypeData(method, typeCount, it)
         }
         method.addCode(")")
-    }
-    private fun emitTypeData2(method: MethodSpec.Builder, typeCount: AtomicInteger, type: Type<JavaClassSource>): String {
-        val varName = "type${typeCount.getAndIncrement()}"
-
-        val arguments = type.typeArguments.map {
-            emitTypeData(method, typeCount, it)
-        }
-
-        method.addCode("var $varName = \$T.builder(\$T.class)", TypeData::class.java, type.qualifiedName.className())
-        arguments.forEach {
-            method.addCode(".addTypeParameter($it)")
-        }
-        method.addCode(".build();")
-
-        return varName
-    }
-
-    private fun typeArguments(argument: Type<JavaClassSource>): List<Type<JavaClassSource>> {
-        val args = mutableListOf<Type<JavaClassSource>>()
-
-        var type = argument.typeArguments.lastOrNull()
-        while(type != null) {
-            args += type
-            type = type.typeArguments.lastOrNull()
-        }
-
-        return args
     }
 
     private fun discoverAnnotations(property: PropertySource<JavaClassSource>):
@@ -244,18 +222,19 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
     private fun annotations(builder: MethodSpec.Builder) {
         source.annotations
-            .filter { it.qualifiedName.startsWith("dev.morphia")}
+            .filter { it.qualifiedName.startsWith("dev.morphia") }
             .forEach {
-            if (it.values.isNotEmpty()) {
-                builder.addCode("\n.annotation(${buildAnnotation(it)}())")
-            } else {
-                val name = annotationBuilderName(it)
-                builder.addCode("\n.annotation(\$T.${name.simpleName().methodCase()}().build())\n",
-                    annotationBuilderName(it))
+                if (it.values.isNotEmpty()) {
+                    builder.addCode("\n.annotation(${buildAnnotation(it)}())")
+                } else {
+                    val name = annotationBuilderName(it)
+                    builder.addCode(
+                        "\n.annotation(\$T.${name.simpleName().methodCase()}().build())\n",
+                        annotationBuilderName(it)
+                    )
+                }
             }
-        }
         builder.addCode(";")
-
     }
 
     private fun buildAnnotation(annotation: AnnotationSource<JavaClassSource>): String {

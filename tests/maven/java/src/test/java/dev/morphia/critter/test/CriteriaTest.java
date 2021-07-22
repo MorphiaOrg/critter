@@ -18,8 +18,6 @@ package dev.morphia.critter.test;
 import com.antwerkz.bottlerocket.BottleRocket;
 import com.antwerkz.bottlerocket.BottleRocketTest;
 import com.github.zafarkhaja.semver.Version;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import dev.morphia.Datastore;
