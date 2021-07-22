@@ -94,6 +94,7 @@ public class CriteriaTest extends BottleRocketTest {
 
     @AfterMethod
     public void clean() {
+        getDatabase().drop();
         datastore = null;
     }
 
@@ -111,6 +112,7 @@ public class CriteriaTest extends BottleRocketTest {
 
     @Test(dataProvider = "datastores")
     public void embeds(String state, Datastore datastore) {
+        this.datastore = datastore;
         Invoice invoice = new Invoice();
         invoice.setOrderDate(LocalDateTime.now());
         Person person = new Person("Mike", "Bloomberg");
@@ -283,9 +285,6 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     private Datastore datastore() {
-        MongoClient mongo = getMongoClient();
-        MongoDatabase critter = getDatabase();
-        critter.drop();
-        return Morphia.createDatastore(mongo, getDatabase().getName());
+        return Morphia.createDatastore(getMongoClient(), getDatabase().getName());
     }
 }

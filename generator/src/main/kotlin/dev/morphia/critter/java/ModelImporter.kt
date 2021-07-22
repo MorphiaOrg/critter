@@ -3,6 +3,7 @@ package dev.morphia.critter.java
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
+import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeSpec.Builder
@@ -53,6 +54,8 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         method.addCode(");")
         importer.addMethod(method.build())
 
+        typeData()
+
         importer.addMethod(methodBuilder("importCodecProvider")
             .addModifiers(PUBLIC)
             .addParameter(Datastore::class.java, "datastore")
@@ -90,6 +93,23 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
             }
 
         context.buildFile(importer.build())
+    }
+
+    private fun typeData() {
+        val method = methodBuilder("typeData")
+            .addModifiers(PRIVATE, STATIC)
+            .addParameter(Class::class.java, "type")
+            .addParameter(arrayOf<TypeData<*>>()::class.java, "arguments")
+            .varargs(true)
+            .returns(TypeData::class.java)
+
+        method.addStatement("var builder = \$T.builder(type)", TypeData::class.java)
+        method.beginControlFlow("for(TypeData argument: arguments)")
+            method.addStatement("builder.addTypeParameter(argument)", TypeData::class.java)
+        method.endControlFlow()
+        method.addStatement("return builder.build()")
+
+        importer.addMethod(method.build())
     }
 
     private fun discoverProperties(): List<PropertySource<JavaClassSource>> {
@@ -167,19 +187,40 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         val method = methodBuilder(name)
             .addModifiers(PRIVATE, STATIC)
             .returns(TypeData::class.java)
+        val typeCount = AtomicInteger(0)
         val argument = property.field.type
-        val varName = "${property.name}Type"
-        method.addStatement("var $varName = \$T.builder(\$T.class)", TypeData::class.java, argument.qualifiedName.className())
-        typeArguments(argument).forEach {
-            method.addStatement(
-                "$varName.addTypeParameter(TypeData.builder(\$T.class).build())",
-                it.qualifiedName.className()
-            )
-        }
-        method.addStatement("return $varName.build()")
+
+        method.addCode("return ")
+        emitTypeData(method, typeCount, argument)
+        method.addCode(";")
 
         util.addMethod(method.build())
         return "$utilName.$name()"
+    }
+
+    private fun emitTypeData(method: MethodSpec.Builder, typeCount: AtomicInteger, type: Type<JavaClassSource>) {
+        method.addCode("typeData(\$T.class", type.qualifiedName.className())
+
+        val arguments = type.typeArguments.forEachIndexed { i, it ->
+            method.addCode(", ")
+            emitTypeData(method, typeCount, it)
+        }
+        method.addCode(")")
+    }
+    private fun emitTypeData2(method: MethodSpec.Builder, typeCount: AtomicInteger, type: Type<JavaClassSource>): String {
+        val varName = "type${typeCount.getAndIncrement()}"
+
+        val arguments = type.typeArguments.map {
+            emitTypeData(method, typeCount, it)
+        }
+
+        method.addCode("var $varName = \$T.builder(\$T.class)", TypeData::class.java, type.qualifiedName.className())
+        arguments.forEach {
+            method.addCode(".addTypeParameter($it)")
+        }
+        method.addCode(".build();")
+
+        return varName
     }
 
     private fun typeArguments(argument: Type<JavaClassSource>): List<Type<JavaClassSource>> {
