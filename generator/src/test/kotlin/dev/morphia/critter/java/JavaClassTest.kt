@@ -15,10 +15,6 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class JavaClassTest {
-    @BeforeTest
-    fun scan() {
-    }
-
     @Test
     fun parents() {
         val directory = File("target/parentTest/")
