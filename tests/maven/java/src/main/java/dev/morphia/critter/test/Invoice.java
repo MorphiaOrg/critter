@@ -17,6 +17,10 @@ package dev.morphia.critter.test;
 
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
+import dev.morphia.annotations.PostLoad;
+import dev.morphia.annotations.PostPersist;
+import dev.morphia.annotations.PreLoad;
+import dev.morphia.annotations.PrePersist;
 import dev.morphia.annotations.Reference;
 import org.bson.types.ObjectId;
 
@@ -45,6 +49,10 @@ public class Invoice {
     private Double total = 0.0;
 
     private List<Item> items;
+    private transient boolean postLoad;
+    private transient boolean preLoad;
+    private transient boolean prePersist;
+    private transient boolean postPersist;
 
     public Invoice() {
     }
@@ -144,17 +152,8 @@ public class Invoice {
     }
 
     @Override
-    public String toString() {
-        return new StringJoiner(", ", Invoice.class.getSimpleName() + "[", "]")
-                   .add("id=" + id)
-                   .add("orderDate=" + orderDate)
-                   .add("person=" + person)
-                   .add("listListList=" + listListList)
-                   .add("addresses=" + addresses)
-                   .add("mapList=" + mapList)
-                   .add("total=" + total)
-                   .add("items=" + items)
-                   .toString();
+    public int hashCode() {
+        return Objects.hash(id, orderDate, person, listListList, addresses, mapList, total, items);
     }
 
     @Override
@@ -181,7 +180,52 @@ public class Invoice {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id, orderDate, person, listListList, addresses, mapList, total, items);
+    public String toString() {
+        return new StringJoiner(", ", Invoice.class.getSimpleName() + "[", "]")
+                   .add("id=" + id)
+                   .add("orderDate=" + orderDate)
+                   .add("person=" + person)
+                   .add("listListList=" + listListList)
+                   .add("addresses=" + addresses)
+                   .add("mapList=" + mapList)
+                   .add("total=" + total)
+                   .add("items=" + items)
+                   .toString();
+    }
+
+    public boolean isPostLoad() {
+        return postLoad;
+    }
+
+    public boolean isPostPersist() {
+        return postPersist;
+    }
+
+    public boolean isPreLoad() {
+        return preLoad;
+    }
+
+    public boolean isPrePersist() {
+        return prePersist;
+    }
+
+    @PostLoad
+    public void postLoad() {
+        postLoad = true;
+    }
+
+    @PostPersist
+    public void postPersist() {
+        postPersist = true;
+    }
+
+    @PreLoad
+    public void preLoad() {
+        preLoad = true;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        prePersist = true;
     }
 }

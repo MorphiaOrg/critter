@@ -1,7 +1,6 @@
 package dev.morphia.critter.java
 
 import com.squareup.javapoet.ClassName
-import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
@@ -10,10 +9,8 @@ import dev.morphia.aggregation.experimental.codecs.ExpressionHelper
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.LoadOnly
 import dev.morphia.annotations.NotSaved
-import dev.morphia.critter.CritterField
+import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.CodecsBuilder.Companion.packageName
-import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
@@ -22,6 +19,8 @@ import org.bson.codecs.EncoderContext
 import org.bson.codecs.IdGenerator
 import java.io.File
 import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.FINAL
+import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PROTECTED
 import javax.lang.model.element.Modifier.PUBLIC
 
@@ -36,7 +35,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
             entityName = ClassName.get(source.pkgName, source.name)
             encoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Encoder")
             encoder = TypeSpec.classBuilder(encoderName)
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addModifiers(PUBLIC, FINAL)
             val sourceTimestamp = source.lastModified()
             val encoderFile = File(context.outputDirectory, encoderName.canonicalName().replace('.', '/') + ".java")
 
@@ -68,17 +67,28 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
                 .addCode(
                     """
                 if (areEquivalentTypes(instance.getClass(), ${source.name}.class)) {
-                    document(writer, () -> {
-                        ${outputProperties()}
-                    });
+                    encodeProperties(writer, instance, encoderContext);
                 } else {
                     getMorphiaCodec().getRegistry()
                                 .get((Class) instance.getClass())
                                 .encode(writer, instance, encoderContext);
                 }
                 """.trimIndent()
-                )
-                .build()
+                ).build()
+        )
+        encoder.addMethod(
+            MethodSpec.methodBuilder("encodeProperties")
+                .addModifiers(PRIVATE)
+                .addParameter(BsonWriter::class.java, "writer")
+                .addParameter(ParameterSpec.builder(entityName, "instance").build())
+                .addParameter(EncoderContext::class.java, "encoderContext")
+                .addCode(
+                    """
+                         document(writer, () -> {
+                                    ${outputProperties()}
+                                });
+                    """.trimIndent()
+                ).build()
         )
     }
 
@@ -93,7 +103,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
                 writer.writeString(model.getDiscriminatorKey(), model.getDiscriminator());
             }
         """.trimIndent()
-        source.fields.forEach { field ->
+        source.properties.forEach { field ->
             if (!(field.hasAnnotation(Id::class.java)
                     || field.hasAnnotation(LoadOnly::class.java)
                     || field.hasAnnotation(NotSaved::class.java))
@@ -111,7 +121,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
                 .addParameter(BsonWriter::class.java, "writer")
                 .addParameter(ParameterSpec.builder(entityName, "instance").build())
                 .addParameter(EncoderContext::class.java, "encoderContext")
-            val idType = ClassName.get(it.type.substringBeforeLast('.'), it.type.substringAfterLast('.'))
+            val idType = ClassName.get(it.type.name.substringBeforeLast('.'), it.type.name.substringAfterLast('.'))
             method.addCode(
                 """
                 Object id = instance.${getter(it)};
@@ -129,22 +139,22 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         }
     }
 
-    private fun idProperty(): CritterField? {
-        return source.fields
+    private fun idProperty(): CritterProperty? {
+        return source.properties
             .filter { it.hasAnnotation(Id::class.java) }
             .firstOrNull()
     }
 
-    private fun getter(field: CritterField): String {
-        val name = field.name
+    private fun getter(property: CritterProperty): String {
+        val name = property.name
         val ending = name.nameCase() + "()"
-        val methodName = if (field.type.equals("boolean", true)) "is${ending}" else "get${ending}"
+        val methodName = if (property.type.name.equals("boolean", true)) "is${ending}" else "get${ending}"
 
         return methodName
     }
 
-    private fun setter(field: CritterField): String {
-        return "set${field.name.nameCase()}"
+    private fun setter(property: CritterProperty): String {
+        return "set${property.name.nameCase()}"
     }
 
     private fun encoderClassMethod() {

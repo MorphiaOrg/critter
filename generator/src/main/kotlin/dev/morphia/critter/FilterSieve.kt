@@ -33,22 +33,22 @@ object FilterSieve {
         .filter { Filter::class.createType().isSupertypeOf(it.returnType) }
         .filter { it.name !in setOf("and", "or", "nor", "expr", "where", "uniqueDocs", "text", "comment") }
 
-    fun handlers(field: CritterField, target: JavaClassSource) {
+    fun handlers(property: CritterProperty, target: JavaClassSource) {
         val handlers = TreeSet(Handler.common())
-        if (field.isNumeric()) {
+        if (property.type.isNumeric()) {
             handlers.addAll(Handler.numerics())
         }
-        if (field.isText()) {
+        if (property.type.isText()) {
             handlers.addAll(Handler.strings())
         }
-        if (field.isContainer()) {
+        if (property.type.isContainer()) {
             handlers.addAll(Handler.containers())
         }
-        if (field.isGeoCompatible()) {
+        if (property.type.isGeoCompatible()) {
             handlers.addAll(Handler.geoFilters())
         }
         handlers.forEach {
-            it.handle(target, field)
+            it.handle(target, property)
         }
     }
 
@@ -93,7 +93,7 @@ enum class Handler : OperationGenerator {
     },
     eq,
     exists {
-        override fun handle(target: JavaClassSource, field: CritterField) {
+        override fun handle(target: JavaClassSource, property: CritterProperty) {
             target.addMethod(
                 """
                 public ${Filter::class.java.name} exists() {
@@ -118,7 +118,6 @@ enum class Handler : OperationGenerator {
     gte,
     `in` {
         override fun handle(field: PropertySpec, target: Builder) {
-            val typeOf = typeOf(Iterable::class.java, KTypeProjection.invariant(Any::class.createType()))
             target.addFunction(
                 FunSpec
                     .builder(name)
@@ -130,7 +129,7 @@ enum class Handler : OperationGenerator {
     },
     jsonSchema {
         override fun handle(field: PropertySpec, target: Builder) {}
-        override fun handle(target: JavaClassSource, field: CritterField) {}
+        override fun handle(target: JavaClassSource, property: CritterProperty) {}
     },
     lt,
     lte,
@@ -143,7 +142,7 @@ enum class Handler : OperationGenerator {
     nin,
     polygon,
     regex {
-        override fun handle(target: JavaClassSource, field: CritterField) {
+        override fun handle(target: JavaClassSource, property: CritterProperty) {
             target.addMethod(
                 """
             public ${RegexFilter::class.java.name} regex() {
@@ -178,8 +177,8 @@ enum class Handler : OperationGenerator {
         fun common() = values().toList() - numerics() - strings() - containers() - geoFilters()
     }
 
-    open fun handle(target: JavaClassSource, field: CritterField) {
-        handle(target, field, name, FilterSieve.functions, "Filters")
+    open fun handle(target: JavaClassSource, property: CritterProperty) {
+        handle(target, property, name, FilterSieve.functions, "Filters")
     }
 
     open fun handle(field: PropertySpec, target: Builder) {

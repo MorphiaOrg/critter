@@ -15,7 +15,7 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.javaType
 
 interface OperationGenerator {
-    fun handle(target: JavaClassSource, field: CritterField, name: String, functions: Map<String, KFunction<*>>, functionSource: String) {
+    fun handle(target: JavaClassSource, property: CritterProperty, name: String, functions: Map<String, KFunction<*>>, functionSource: String) {
         target.addImport(Filters::class.java)
         target.addImport(Filter::class.java)
         target.addImport(UpdateOperators::class.java.name)

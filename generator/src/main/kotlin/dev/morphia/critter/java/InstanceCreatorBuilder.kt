@@ -7,7 +7,6 @@ import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeSpec
 import dev.morphia.annotations.experimental.Name
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
@@ -45,8 +44,8 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
     }
 
     private fun fields() {
-        source.fields.forEach {
-            creator.addField(FieldSpec.builder(it.type.className(), it.name, PRIVATE).build())
+        source.properties.forEach {
+            creator.addField(FieldSpec.builder(it.type.name.className(), it.name, PRIVATE).build())
         }
     }
 
@@ -70,10 +69,10 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
     }
 
     private fun createAndPopulate(): String {
-        val fields = source.fields.map { it.name }
+        val fields = source.properties.map { it.name }
             .toMutableList()
         val ctor = source.constructors
-            .sortedBy { it.getParameters().size }
+            .sortedBy { it.parameters.size }
             .reversed()
             .find {
                 it.parameters
@@ -101,14 +100,14 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
             .addParameter(Object::class.java, "value")
             .addParameter(PropertyModel::class.java, "model")
 
-        source.fields.forEachIndexed { index, field ->
+        source.properties.forEachIndexed { index, field ->
             val ifStmt = "if (\"${field.name}\".equals(model.getName()))"
             if (index == 0) {
                 method.beginControlFlow(ifStmt)
             } else {
                 method.nextControlFlow("else $ifStmt")
             }
-            method.addStatement("${field.name} = (\$T)value", field.type.className())
+            method.addStatement("${field.name} = (\$T)value", field.type.name.className())
         }
         method.endControlFlow()
 

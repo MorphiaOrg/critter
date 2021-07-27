@@ -24,8 +24,11 @@ import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
+import dev.morphia.critter.CritterAnnotation
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.CritterField
+import dev.morphia.critter.CritterProperty
+import dev.morphia.critter.CritterType
+import dev.morphia.critter.CritterType.Companion.isNumeric
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.UpdateSieve
 import dev.morphia.critter.java.titleCase
@@ -240,9 +243,9 @@ private fun TypeName.concreteType(): ClassName {
     }
 }
 
-fun PropertySpec.isContainer() = type.toString().substringBefore("<") in CritterField.CONTAINER_TYPES
-fun PropertySpec.isNumeric() = CritterField.isNumeric(type.toString())
-fun PropertySpec.isText() = CritterField.TEXT_TYPES.contains(type.toString())
+fun PropertySpec.isContainer() = type.toString().substringBefore("<") in CritterType.CONTAINER_TYPES
+fun PropertySpec.isNumeric() = isNumeric(type.toString())
+fun PropertySpec.isText() = CritterType.TEXT_TYPES.contains(type.toString())
 fun <T : Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
     return annotations.firstOrNull { it.className == annotation.asTypeName() }
 }

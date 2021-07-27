@@ -1,14 +1,12 @@
 package dev.morphia.critter.java
 
 import com.squareup.javapoet.ClassName
-import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeVariableName
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.CodecsBuilder.Companion.packageName
 import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
@@ -42,30 +40,26 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
             .addParameter(ParameterizedTypeName.get(ClassName.get(Class::class.java), TypeVariableName.get("T")), "type")
             .addParameter(CodecRegistry::class.java, "registry")
             .returns(ParameterizedTypeName.get(ClassName.get(Codec::class.java), TypeVariableName.get("T")))
-            .addStatement("\$T<T> codec = (MorphiaCodec<T>) getCodecs().get(type)", MorphiaCodec::class.java)
+            .addStatement("\$T<T> found = (MorphiaCodec<T>) getCodecs().get(type)", MorphiaCodec::class.java)
 
-        method.beginControlFlow("if (codec == null)")
+        method.beginControlFlow("if (found != null)")
+        method.addStatement("return found")
 
         context.classes.values
             .filter { !it.isAbstract() }
             .forEachIndexed { index, javaClass ->
-                val ifStmt = "if (type.equals(\$T.class))"
-                if (index == 0) {
-                    method.beginControlFlow(ifStmt, javaClass.qualifiedName.className())
-                } else {
-                    method.nextControlFlow("else $ifStmt", javaClass.qualifiedName.className())
-                }
+                method.nextControlFlow("else if (type.equals(\$T.class))", javaClass.qualifiedName.className())
                 method.addStatement("\$T model = getMapper().getEntityModel(type)", EntityModel::class.java)
                 method.addStatement(
-                    "codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders(), " +
-                        "getMapper().getDiscriminatorLookup(), registry)"
-                )
-                method.addStatement("codec.setEncoder((${"$"}T<T>)new ${javaClass.name}Encoder(codec))", EntityEncoder::class.java)
+                    "MorphiaCodec<\$T> codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders(), " +
+                        "getMapper().getDiscriminatorLookup(), registry)", javaClass.qualifiedName.className())
+                method.addStatement("codec.setEncoder(new ${javaClass.name}Encoder(codec))", EntityEncoder::class.java)
+//                method.addStatement("codec.setDecoder(new ${javaClass.name}Decoder(codec))", EntityDecoder::class.java)
+                method.addStatement("return (MorphiaCodec<T>)codec")
             }
+        method.endControlFlow()
+        method.addStatement("return null")
 
-        method.endControlFlow()
-        method.endControlFlow()
-        method.addStatement("return codec")
         provider.addMethod(method.build())
     }
 

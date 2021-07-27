@@ -4,7 +4,7 @@ import com.squareup.javapoet.ClassName
 import dev.morphia.annotations.Reference
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.Critter.addMethods
-import dev.morphia.critter.CritterField
+import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.UpdateSieve
 import org.jboss.forge.roaster.Roaster
@@ -65,7 +65,7 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
     }
 
     private fun processFields(source: JavaClass, criteriaClass: JavaClassSource, impl: JavaClassSource) {
-        source.fields.forEach { field ->
+        source.properties.forEach { field ->
             criteriaClass.addField("public static final String ${field.name} = ${field.mappedName()}; ")
             addField(criteriaClass, impl, field)
         }
@@ -76,21 +76,21 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
 
     }
 
-    private fun addField(criteriaClass: JavaClassSource, impl: JavaClassSource, field: CritterField) {
-        if (field.hasAnnotation(Reference::class.java)) {
-            addReferenceCriteria(criteriaClass, impl, field)
+    private fun addField(criteriaClass: JavaClassSource, impl: JavaClassSource, property: CritterProperty) {
+        if (property.hasAnnotation(Reference::class.java)) {
+            addReferenceCriteria(criteriaClass, impl, property)
         } else {
-            impl.addFieldCriteriaMethod(criteriaClass, field)
-            if (!field.isMappedType()) {
-                addFieldCriteriaClass(field)
+            impl.addFieldCriteriaMethod(criteriaClass, property)
+            if (!property.isMappedType()) {
+                addFieldCriteriaClass(property)
             }
         }
     }
 
-    private fun addFieldCriteriaClass(field: CritterField) {
+    private fun addFieldCriteriaClass(property: CritterProperty) {
         addNestedType(Roaster.create(JavaClassSource::class.java))
                 .apply {
-                    name = "${field.name.titleCase()}FieldCriteria"
+                    name = "${property.name.titleCase()}FieldCriteria"
                     isStatic = true
                     isFinal = true
                     addField("private String path")
@@ -98,8 +98,8 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
                     addMethod("""${name}(String path) {
                         |this.path = path;
                         |}""".trimMargin()).isConstructor = true
-                    attachFilters(field)
-                    attachUpdates(field)
+                    attachFilters(property)
+                    attachUpdates(property)
                     addMethod("""
                         public String path() {
                             return path;
@@ -107,18 +107,18 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
                 }
     }
 
-    private fun addReferenceCriteria(criteriaClass: JavaClassSource, impl: JavaClassSource, field: CritterField) {
-        val fieldCriteriaName = field.name.titleCase() + "FieldCriteria"
+    private fun addReferenceCriteria(criteriaClass: JavaClassSource, impl: JavaClassSource, property: CritterProperty) {
+        val fieldCriteriaName = property.name.titleCase() + "FieldCriteria"
         criteriaClass.addImport(fieldCriteriaName)
         criteriaClass.addMethod("""
-            public static ${fieldCriteriaName} ${field.name}() {
-                return instance.${field.name}();
+            public static ${fieldCriteriaName} ${property.name}() {
+                return instance.${property.name}();
             }""")
         impl.addMethod("""
-            public ${fieldCriteriaName} ${field.name}() {
-                return new ${fieldCriteriaName}(extendPath(path, "${field.name}"));
+            public ${fieldCriteriaName} ${property.name}() {
+                return new ${fieldCriteriaName}(extendPath(path, "${property.name}"));
             }""")
-        addFieldCriteriaClass(field)
+        addFieldCriteriaClass(property)
     }
 
     private fun addNestedType(nestedClass: JavaClassSource): JavaClassSource {
@@ -131,19 +131,19 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
         PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toString()) }
     }
 
-    fun CritterField.mappedType(): JavaClass? {
-        return context.classes[concreteType()]
+    fun CritterProperty.mappedType(): JavaClass? {
+        return context.classes[type.concreteType()]
     }
 
-    fun CritterField.isMappedType(): Boolean {
+    fun CritterProperty.isMappedType(): Boolean {
         return mappedType() != null
     }
 
-    private fun JavaClassSource.addFieldCriteriaMethod(criteriaClass: JavaClassSource, field: CritterField) {
-        val concreteType = field.concreteType()
+    private fun JavaClassSource.addFieldCriteriaMethod(criteriaClass: JavaClassSource, property: CritterProperty) {
+        val concreteType = property.type.concreteType()
         val annotations = context.classes[concreteType]?.annotations
         val fieldCriteriaName = if (annotations == null) {
-            field.name.titleCase() + "FieldCriteria"
+            property.name.titleCase() + "FieldCriteria"
         } else {
             val outer = concreteType.substringAfterLast('.') + "Criteria"
             val impl = concreteType.substringAfterLast('.') + "CriteriaImpl"
@@ -152,13 +152,13 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
             impl
         }
         criteriaClass.addMethods("""
-            public static ${fieldCriteriaName} ${field.name}() {
-                return instance.${field.name}();
+            public static ${fieldCriteriaName} ${property.name}() {
+                return instance.${property.name}();
             }""".trimIndent())
 
-        val path = """extendPath(path, "${field.name}")"""
+        val path = """extendPath(path, "${property.name}")"""
         addMethods("""
-            public ${fieldCriteriaName} ${field.name}() {
+            public ${fieldCriteriaName} ${property.name}() {
                 return new ${fieldCriteriaName}(${path});
             }""".trimIndent())
 
@@ -166,22 +166,24 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
 
 }
 
-fun CritterField.concreteType() = if(fullParameterTypes.isNotEmpty()) fullParameterTypes.last() else type
-
-private fun JavaClassSource.attachFilters(field: CritterField) {
-    FilterSieve.handlers(field, this)
+private fun JavaClassSource.attachFilters(property: CritterProperty) {
+    FilterSieve.handlers(property, this)
 }
 
-private fun JavaClassSource.attachUpdates(field: CritterField) {
-    UpdateSieve.handlers(field, this)
+private fun JavaClassSource.attachUpdates(property: CritterProperty) {
+    UpdateSieve.handlers(property, this)
+}
+
+fun String.nameCase(): String {
+    return first().uppercase(Locale.getDefault()) + substring(1)
 }
 
 fun String.titleCase(): String {
-    return substring(0, 1).uppercase(Locale.getDefault()) + substring(1)
+    return first().uppercase(Locale.getDefault()) + substring(1)
 }
 
 fun String.methodCase(): String {
-    return substring(0, 1).lowercase(Locale.getDefault()) + substring(1)
+    return first().lowercase(Locale.getDefault()) + substring(1)
 }
 
 fun String.className(): ClassName {

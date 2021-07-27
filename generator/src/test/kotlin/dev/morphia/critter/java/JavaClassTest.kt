@@ -2,17 +2,15 @@ package dev.morphia.critter.java
 
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
-import dev.morphia.critter.CritterField
+import dev.morphia.critter.CritterProperty
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.MethodSource
 import org.testng.Assert.assertEquals
-import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test
 import java.io.File
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 class JavaClassTest {
     @Test
@@ -42,7 +40,7 @@ class JavaClassTest {
         CriteriaBuilder(context).build()
 
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
-        assertEquals(personClass.fields.size, 4)
+        assertEquals(personClass.properties.size, 4)
 
         val criteriaFiles = list(directory)
 
@@ -65,7 +63,7 @@ class JavaClassTest {
     }
 
     private fun validatePersonCriteria(personClass: JavaClass, personCriteria: JavaClassSource) {
-        val origFields = personClass.fields
+        val origFields = personClass.properties
         val criteriaFields = personCriteria.fields.filter { it.isStatic && it.name != "instance" }
         assertEquals(criteriaFields.size, origFields.size, "Criteria fields: $criteriaFields.\n " +
                 "person fields: ${origFields.joinToString("\n")}")
@@ -88,11 +86,11 @@ class JavaClassTest {
         assertTrue(imports.any { it.qualifiedName == type }, "Should find an import for $type in ${name}")
     }
 
-    private fun extractName(property: CritterField): String {
+    private fun extractName(property: CritterProperty): String {
         return if (property.hasAnnotation(Id::class.java)) {
             "_id"
         } else {
-            property.getValue(Property::class.java, property.name).replace("\"", "")
+            (property.getAnnotation(Property::class.java)?.literalValue("value") ?: property.name)?.replace("\"", "")
         }
     }
 
