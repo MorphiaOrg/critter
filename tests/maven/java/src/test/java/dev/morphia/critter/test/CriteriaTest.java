@@ -54,8 +54,7 @@ import static org.testng.Assert.assertTrue;
 public class CriteriaTest extends BottleRocketTest {
 
     @Test(dataProvider = "datastores")
-    public void andQueries(String state, boolean useGenerated) {
-        Datastore datastore = getDatastore(useGenerated);
+    public void andQueries(String state, Datastore datastore) {
         datastore.save(new Person("Mike", "Bloomberg"));
         datastore.save(new Person("Mike", "Tyson"));
 
@@ -92,14 +91,13 @@ public class CriteriaTest extends BottleRocketTest {
     @DataProvider(name = "datastores")
     public Object[][] datastores() {
         return new Object[][]{
-            new Object[]{"Critter codecs", true},
-            new Object[]{"Standard codecs", false},
+            new Object[]{"Critter codecs", getDatastore(true)},
+            new Object[]{"Standard codecs", getDatastore(false)},
             };
     }
 
     @Test(dataProvider = "datastores")
-    public void embeds(String state, boolean useGenerated) {
-        var datastore = getDatastore(useGenerated);
+    public void embeds(String state, Datastore datastore) {
         Invoice invoice = new Invoice();
         invoice.setOrderDate(LocalDateTime.now());
         Person person = new Person("Mike", "Bloomberg");
@@ -132,8 +130,7 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     @Test(dataProvider = "datastores")
-    public void invoice(String state, boolean useGenerated) {
-        Datastore ds = getDatastore(useGenerated);
+    public void invoice(String state, Datastore ds) {
         Person john = new Person("John", "Doe");
         ds.save(john);
         ds.save(new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john, new Address("New York City", "NY", "10000"),
@@ -186,8 +183,7 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     @Test(dataProvider = "datastores")
-    public void orQueries(String state, boolean useGenerated) {
-        Datastore datastore = getDatastore(useGenerated);
+    public void orQueries(String state, Datastore datastore) {
         datastore.save(new Person("Mike", "Bloomberg"));
         datastore.save(new Person("Mike", "Tyson"));
 
@@ -211,8 +207,7 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     @Test(dataProvider = "datastores")
-    public void removes(String state, boolean useGenerated) {
-        Datastore datastore = getDatastore(useGenerated);
+    public void removes(String state, Datastore datastore) {
         for (int i = 0; i < 100; i++) {
             datastore.save(new Person("First" + i, "Last" + i));
         }
@@ -239,8 +234,7 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     @Test(dataProvider = "datastores")
-    public void updateFirst(String state, boolean useGenerated) {
-        Datastore datastore = getDatastore(useGenerated);
+    public void updateFirst(String state, Datastore datastore) {
         for (int i = 0; i < 100; i++) {
             datastore.save(new Person("First" + i, "Last" + i));
         }
@@ -258,8 +252,7 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     @Test(dataProvider = "datastores")
-    public void updates(String state, boolean useGenerated) {
-        Datastore datastore = getDatastore(useGenerated);
+    public void updates(String state, Datastore datastore) {
         Query<Person> query = datastore.find(Person.class);
         query.delete();
 
