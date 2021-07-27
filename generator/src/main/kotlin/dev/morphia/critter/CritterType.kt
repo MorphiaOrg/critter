@@ -1,12 +1,18 @@
 package dev.morphia.critter
 
 import com.mongodb.client.model.geojson.Geometry
+import dev.morphia.Datastore
+import dev.morphia.mapping.Mapper
+import org.bson.Document
 import org.jboss.forge.roaster.model.Type
 import java.time.temporal.Temporal
 import java.util.Date
 
-class CritterType(val name: String, val typeParameters: List<CritterType>) {
+data class CritterType(val name: String, val typeParameters: List<CritterType> = listOf()) {
     companion object {
+        val DOCUMENT = CritterType(Document::class.java.name)
+        val MAPPER = CritterType(Mapper::class.java.name)
+
         internal val CONTAINER_TYPES = listOf("List", "Set")
             .map { listOf(it, "java.util.$it", "Mutable$it") }
             .flatten()
@@ -53,9 +59,6 @@ class CritterType(val name: String, val typeParameters: List<CritterType>) {
     fun concreteType() = typeParameters.lastOrNull()?.name ?: name
     fun isParameterized(): Boolean {
         return typeParameters.isNotEmpty()
-    }
-    override fun toString(): String {
-        return "CritterType(name='$name', typeParameters=$typeParameters)"
     }
 }
 

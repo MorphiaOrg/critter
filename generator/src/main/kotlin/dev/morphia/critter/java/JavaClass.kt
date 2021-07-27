@@ -2,6 +2,7 @@ package dev.morphia.critter.java
 
 import dev.morphia.critter.CritterAnnotation
 import dev.morphia.critter.CritterClass
+import dev.morphia.critter.CritterMethod
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.toCritter
 import org.jboss.forge.roaster.Roaster.parse
@@ -93,16 +94,8 @@ class JavaClass(
         visibility = sourceClass.visibility
     }
 
-    /*
-        private fun AnnotationSource<*>.toCritter(): CritterAnnotation {
-            return CritterAnnotation(qualifiedName).also { ann ->
-                values.forEach { value ->
-                    ann.values[value.name] = get getAnnotationValue(value.name).toCritter()
-                }
-            }
-        }
-    */
     fun isAbstract() = sourceClass.isAbstract
+
     fun lastModified(): Long {
         return Math.min(file.lastModified(), superClass?.lastModified() ?: Long.MAX_VALUE)
     }
@@ -113,5 +106,11 @@ class JavaClass(
 
     override fun toString(): String {
         return "JavaClass<$name>"
+    }
+
+    fun methods(annotation: Class<out Annotation>): List<CritterMethod> {
+        return sourceClass.methods
+            .filter { it.hasAnnotation(annotation) }
+            .map { it.toCritter() }
     }
 }

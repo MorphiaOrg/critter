@@ -1,5 +1,7 @@
 package dev.morphia.critter
 
+import dev.morphia.critter.CritterType.Companion.DOCUMENT
+import dev.morphia.critter.CritterType.Companion.MAPPER
 import org.jboss.forge.roaster.model.source.MethodSource
 
 class CritterMethod(val name: String, val parameters: List<CritterType>, val returnType: CritterType) {
@@ -7,6 +9,15 @@ class CritterMethod(val name: String, val parameters: List<CritterType>, val ret
 
     override fun toString(): String {
         return "CritterMethod(name='$name', parameters=$parameters, returnType=$returnType, annotations=$annotations)"
+    }
+    fun parameterNames(): List<String> {
+        return parameters.map {
+            when (it) {
+                DOCUMENT -> "document"
+                MAPPER -> "mapper"
+                else -> "instance"
+            }
+        }
     }
 }
 

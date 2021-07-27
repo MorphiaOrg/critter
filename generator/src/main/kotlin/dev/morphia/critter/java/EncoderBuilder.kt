@@ -5,20 +5,26 @@ import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
+import dev.morphia.EntityInterceptor
 import dev.morphia.aggregation.experimental.codecs.ExpressionHelper
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.LoadOnly
 import dev.morphia.annotations.NotSaved
+import dev.morphia.annotations.PostPersist
+import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.pojo.EntityEncoder
+import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
+import dev.morphia.mapping.codec.writer.DocumentWriter
 import org.bson.BsonWriter
+import org.bson.Document
 import org.bson.codecs.EncoderContext
 import org.bson.codecs.IdGenerator
 import java.io.File
-import javax.lang.model.element.Modifier
 import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PROTECTED
@@ -57,25 +63,34 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
     }
 
     private fun encodeMethod() {
-        encoder.addMethod(
-            MethodSpec.methodBuilder("encode")
-                .addModifiers(PUBLIC)
-                .addAnnotation(Override::class.java)
-                .addParameter(BsonWriter::class.java, "writer")
-                .addParameter(ParameterSpec.builder(entityName, "instance").build())
-                .addParameter(EncoderContext::class.java, "encoderContext")
-                .addCode(
-                    """
-                if (areEquivalentTypes(instance.getClass(), ${source.name}.class)) {
-                    encodeProperties(writer, instance, encoderContext);
-                } else {
-                    getMorphiaCodec().getRegistry()
-                                .get((Class) instance.getClass())
-                                .encode(writer, instance, encoderContext);
-                }
-                """.trimIndent()
-                ).build()
-        )
+        val builder = MethodSpec.methodBuilder("encode")
+            .addModifiers(PUBLIC)
+            .addAnnotation(Override::class.java)
+            .addParameter(BsonWriter::class.java, "writer")
+            .addParameter(ParameterSpec.builder(entityName, "instance").build())
+            .addParameter(EncoderContext::class.java, "encoderContext")
+        builder.beginControlFlow("if (areEquivalentTypes(instance.getClass(), \$T.class))", source.qualifiedName.className())
+        val eventMethods = source.methods(PrePersist::class.java) + source.methods(PostPersist::class.java)
+        val hasEvents = eventMethods.isNotEmpty()
+        if (hasEvents) {
+            builder.addStatement("lifecycle(writer, instance, encoderContext)")
+        } else {
+            builder.beginControlFlow("if (getMorphiaCodec().getMapper().hasInterceptors())")
+            builder.addStatement("lifecycle(writer, instance, encoderContext)")
+            builder.nextControlFlow(" else ")
+            builder.addStatement("encodeProperties(writer, instance, encoderContext)")
+            builder.endControlFlow()
+        }
+        builder.nextControlFlow(" else ")
+        builder.addStatement("getMorphiaCodec().getRegistry().get((Class) instance.getClass()).encode(writer, instance, encoderContext)")
+        builder.endControlFlow()
+
+        encoder.addMethod(builder.build())
+        encodeProperties()
+        lifecycle()
+    }
+
+    private fun encodeProperties() {
         encoder.addMethod(
             MethodSpec.methodBuilder("encodeProperties")
                 .addModifiers(PRIVATE)
@@ -84,12 +99,52 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
                 .addParameter(EncoderContext::class.java, "encoderContext")
                 .addCode(
                     """
-                         document(writer, () -> {
-                                    ${outputProperties()}
-                                });
-                    """.trimIndent()
+                             document(writer, () -> {
+                                        ${outputProperties()}
+                                    });
+                        """.trimIndent()
                 ).build()
         )
+    }
+
+    private fun lifecycle() {
+        val builder = MethodSpec.methodBuilder("lifecycle")
+            .addModifiers(PRIVATE)
+            .addParameter(BsonWriter::class.java, "writer")
+            .addParameter(ParameterSpec.builder(entityName, "instance").build())
+            .addParameter(EncoderContext::class.java, "encoderContext")
+        builder.addStatement("var codec = getMorphiaCodec()")
+        builder.addStatement("var model = codec.getEntityModel()")
+        builder.addStatement("var mapper = codec.getMapper()")
+        builder.addStatement("var document = new \$T()", Document::class.java)
+        builder.addCode("// call PrePersist methods\n")
+        source.methods(PrePersist::class.java).forEach {
+            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
+            builder.addStatement("instance.${it.name}${params}\n")
+        }
+        builder.beginControlFlow("for (\$T ei : mapper.getInterceptors())", EntityInterceptor::class.java)
+        builder.addStatement("ei.prePersist(instance, document, mapper)")
+        builder.endControlFlow()
+        builder.addStatement("var documentWriter = new \$T(document)", DocumentWriter::class.java)
+        builder.addStatement("encodeProperties(documentWriter, instance, encoderContext)")
+        builder.addStatement("document = documentWriter.getDocument()")
+        builder.addCode("// call PostPersist methods\n")
+        source.methods(PostPersist::class.java).forEach {
+            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
+            builder.addStatement("instance.${it.name}${params}\n")
+        }
+
+        builder.beginControlFlow("for (\$T ei : mapper.getInterceptors())", EntityInterceptor::class.java)
+        builder.addStatement("ei.postPersist(instance, document, mapper)")
+        builder.endControlFlow()
+        builder.addStatement("codec.getRegistry().get(Document.class).encode(writer, document, encoderContext)")
+
+
+        //          ;
+
+        //        ;
+
+        encoder.addMethod(builder.build())
     }
 
     private fun outputProperties(): String {
