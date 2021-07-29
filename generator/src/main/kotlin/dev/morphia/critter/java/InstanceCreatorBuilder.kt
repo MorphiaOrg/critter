@@ -2,16 +2,12 @@ package dev.morphia.critter.java
 
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.FieldSpec
-import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeSpec
-import dev.morphia.annotations.experimental.Name
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
-import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
-import org.jboss.forge.roaster.model.Parameter
 import java.io.File
 import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PUBLIC
@@ -34,7 +30,6 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
             if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
                 creator.addSuperinterface(ClassName.get(MorphiaInstanceCreator::class.java))
                 fields()
-                buildConstructor()
                 getInstance()
                 set()
 
@@ -51,47 +46,24 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
 
     private fun getInstance() {
         creator.addField(FieldSpec.builder(entityName, "instance", PRIVATE).build())
-        creator.addMethod(
-            methodBuilder("getInstance")
-                .addModifiers(PUBLIC)
-                .addCode(
-                    """
-                    if (instance == null) {
-                        ${createAndPopulate()}
-                    }
-                    
-                    return instance;
-                """.trimIndent()
-                )
-                .returns(entityName)
-                .build()
-        )
-    }
-
-    private fun createAndPopulate(): String {
-        val fields = source.properties.map { it.name }
+        val ctor = source.bestConstructor()
+        val params = ctor?.parameters?.map { it.name } ?: emptyList()
+        val properties = source.properties
             .toMutableList()
-        val ctor = source.constructors
-            .sortedBy { it.parameters.size }
-            .reversed()
-            .find {
-                it.parameters
-                    .map { it.name() in fields }
-                    .all { it }
+        properties.removeIf { it.name in params }
+        val method = methodBuilder("getInstance")
+            .addModifiers(PUBLIC)
+            .returns(entityName)
+            .beginControlFlow("if (instance == null)")
+            .addStatement("instance = new ${entityName.simpleName()}(${params.joinToString()})")
+        properties.forEach { property ->
+            property.mutator?.let {
+                method.addStatement("instance.${it.name}(${property.name})")
             }
-        val params = ctor?.parameters?.map { it.name() } ?: emptyList()
-        fields.removeAll(params)
-        var body = """
-            instance = new ${entityName.simpleName()}(${params.joinToString()});
-        """.trimIndent()
-        fields.forEach {
-            body += "\ninstance.set${it.nameCase()}(${it});"
         }
-        return body
-    }
+        method.endControlFlow()
 
-    private fun Parameter<*>.name(): String {
-        return (getAnnotation(Name::class.java) as Name?)?.value ?: getName()
+        creator.addMethod(method.addStatement("return instance").build())
     }
 
     private fun set() {
@@ -100,33 +72,23 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
             .addParameter(Object::class.java, "value")
             .addParameter(PropertyModel::class.java, "model")
 
-        source.properties.forEachIndexed { index, field ->
-            val ifStmt = "if (\"${field.name}\".equals(model.getName()))"
+        source.properties.forEachIndexed { index, property ->
+            val ifStmt = "if (\"${property.name}\".equals(model.getName()))"
             if (index == 0) {
                 method.beginControlFlow(ifStmt)
             } else {
                 method.nextControlFlow("else $ifStmt")
             }
-            method.addStatement("${field.name} = (\$T)value", field.type.name.className())
+            method.addStatement("${property.name} = (\$T)value", property.type.name.className())
+            property.mutator?.let {
+                method.beginControlFlow("if(instance != null)")
+                method.addStatement("instance.${it.name}(${property.name})")
+                method.endControlFlow()
+            }
         }
         method.endControlFlow()
 
 
         creator.addMethod(method.build())
-    }
-
-    private fun buildConstructor() {
-        creator.addField(FieldSpec.builder(MorphiaCodec::class.java, "codec", PRIVATE).build())
-        creator.addMethod(
-            MethodSpec.constructorBuilder()
-                .addModifiers(PUBLIC)
-                .addParameter(MorphiaCodec::class.java, "codec")
-                .addCode(
-                    """
-                    this.codec = codec;
-                """.trimIndent()
-                )
-                .build()
-        )
     }
 }

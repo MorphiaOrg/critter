@@ -14,9 +14,7 @@ import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.pojo.EntityEncoder
-import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import dev.morphia.mapping.codec.writer.DocumentWriter
@@ -71,8 +69,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
             .addParameter(EncoderContext::class.java, "encoderContext")
         builder.beginControlFlow("if (areEquivalentTypes(instance.getClass(), \$T.class))", source.qualifiedName.className())
         val eventMethods = source.methods(PrePersist::class.java) + source.methods(PostPersist::class.java)
-        val hasEvents = eventMethods.isNotEmpty()
-        if (hasEvents) {
+        if (eventMethods.isNotEmpty()) {
             builder.addStatement("lifecycle(writer, instance, encoderContext)")
         } else {
             builder.beginControlFlow("if (getMorphiaCodec().getMapper().hasInterceptors())")

@@ -54,7 +54,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                     "MorphiaCodec<\$T> codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders(), " +
                         "getMapper().getDiscriminatorLookup(), registry)", javaClass.qualifiedName.className())
                 method.addStatement("codec.setEncoder(new ${javaClass.name}Encoder(codec))", EntityEncoder::class.java)
-//                method.addStatement("codec.setDecoder(new ${javaClass.name}Decoder(codec))", EntityDecoder::class.java)
+                method.addStatement("codec.setDecoder(new ${javaClass.name}Decoder(codec))", EntityDecoder::class.java)
                 method.addStatement("return (MorphiaCodec<T>)codec")
             }
         method.endControlFlow()
@@ -102,7 +102,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                     codec.setDecoder(new ${"$"}T(codec) {
                         @Override
                         protected ${"$"}T getInstanceCreator() {
-                            return new ${javaClass.name}InstanceCreator(codec) {
+                            return new ${javaClass.name}InstanceCreator() {
                                 @Override
                                 public ${javaClass.name} getInstance() {
                                     return (${javaClass.name})entity;

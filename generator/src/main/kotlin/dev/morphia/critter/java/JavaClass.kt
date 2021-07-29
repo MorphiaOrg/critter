@@ -6,13 +6,13 @@ import dev.morphia.critter.CritterMethod
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.toCritter
 import org.jboss.forge.roaster.Roaster.parse
-import org.jboss.forge.roaster.model.Method
 import org.jboss.forge.roaster.model.Visibility.PUBLIC
 import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.MethodSource
 import org.jboss.forge.roaster.model.source.PropertySource
 import java.io.File
+import java.util.TreeMap
 
 class JavaClass(
     val context: JavaContext, file: File,
@@ -73,9 +73,12 @@ class JavaClass(
             parameters.size == 1 && parameters[0].type.qualifiedName == field.type.qualifiedName
     }
 
-    val constructors: List<Method<*, *>> by lazy {
-        sourceClass.methods.filter { it.isConstructor }
+    val constructors: List<CritterMethod> by lazy {
+        sourceClass.methods
+            .filter { it.isConstructor }
+            .map { it.toCritter() }
     }
+
     val qualifiedName: String by lazy {
         pkgName?.let { "$pkgName.$name" } ?: name
     }
@@ -112,5 +115,18 @@ class JavaClass(
         return sourceClass.methods
             .filter { it.hasAnnotation(annotation) }
             .map { it.toCritter() }
+    }
+    fun bestConstructor(): CritterMethod? {
+        val propertyMap = properties
+            .map { it.name to it.type }
+            .toMap(TreeMap())
+        val matches = constructors
+            .filter { it.parameters.all { param -> propertyMap[param.name] == param.type } }
+            .map { it to it.parameters.size }
+            .sortedBy { it.second }
+            .reversed()
+
+        return matches.firstOrNull()?.first
+
     }
 }

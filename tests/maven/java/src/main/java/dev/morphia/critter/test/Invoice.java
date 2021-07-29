@@ -22,7 +22,6 @@ import dev.morphia.annotations.PostPersist;
 import dev.morphia.annotations.PreLoad;
 import dev.morphia.annotations.PrePersist;
 import dev.morphia.annotations.Reference;
-import dev.morphia.mapping.Mapper;
 import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
@@ -33,23 +32,20 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import static java.util.Arrays.asList;
+
 @Entity
 public class Invoice {
     @Id
     private ObjectId id = new ObjectId();
-
     private LocalDateTime orderDate;
-
     @Reference
     private Person person;
-
-    private List<List<List<Address>>> listListList;
-    private List<Address> addresses;
-    private Map<String, List<Address>> mapList;
-
+    private List<List<List<Address>>> listListList = new ArrayList<>();
+    private List<Address> addresses = new ArrayList<>();
+    private Map<String, List<Address>> mapList = new LinkedHashMap<>();
     private Double total = 0.0;
-
-    private List<Item> items;
+    private List<Item> items = new ArrayList<>();
     private transient boolean postLoad;
     private transient boolean preLoad;
     private transient boolean prePersist;
@@ -58,12 +54,25 @@ public class Invoice {
     public Invoice() {
     }
 
-    public Invoice(LocalDateTime orderDate, Person person, Address address, Item... items) {
-        this.orderDate = orderDate;
+    public Invoice(LocalDateTime orderDate, Person person, Address addresses, Item... items) {
+        this.orderDate = orderDate.withNano(0);
         this.person = person;
-        add(address);
-        for (Item item : items) {
-            add(item);
+        if (addresses != null) {
+            this.addresses.add(addresses);
+            mapList.put("1", this.addresses);
+            listListList = List.of(List.of(this.addresses));
+        }
+        this.items.addAll(asList(items));
+    }
+
+    public Invoice(LocalDateTime orderDate, Person person, List<Address> addresses, List<Item> items) {
+        setOrderDate(orderDate);
+        this.person = person;
+        if (addresses != null) {
+            this.addresses.addAll(addresses);
+        }
+        if (items != null) {
+            this.items.addAll(items);
         }
     }
 
@@ -73,19 +82,6 @@ public class Invoice {
         }
         items.add(item);
         total += item.getPrice();
-    }
-
-    public void add(Address address) {
-        if (addresses == null) {
-            addresses = new ArrayList<>();
-            listListList = new ArrayList<>();
-            mapList = new LinkedHashMap<>();
-            List<List<Address>> list = new ArrayList<>();
-            listListList.add(list);
-            list.add(addresses);
-        }
-        addresses.add(address);
-        mapList.put(addresses.size() + "", new ArrayList<>(addresses));
     }
 
     public List<Address> getAddresses() {
@@ -133,7 +129,7 @@ public class Invoice {
     }
 
     public void setOrderDate(LocalDateTime orderDate) {
-        this.orderDate = orderDate.withNano(0);
+        this.orderDate = orderDate != null ? orderDate.withNano(0) : null;
     }
 
     public Person getPerson() {
@@ -166,32 +162,24 @@ public class Invoice {
             return false;
         }
         Invoice invoice = (Invoice) o;
-        boolean equals = Objects.equals(mapList, invoice.mapList);
-        boolean equals1 = Objects.equals(id, invoice.id);
-        boolean equals2 = Objects.equals(orderDate, invoice.orderDate);
-        boolean equals3 = Objects.equals(person, invoice.person);
-        boolean equals4 = Objects.equals(listListList, invoice.listListList);
-        boolean equals5 = Objects.equals(addresses, invoice.addresses);
-        boolean equals6 = Objects.equals(total, invoice.total);
-        boolean equals7 = Objects.equals(items, invoice.items);
-        return equals1 && equals2 &&
-               equals3 && equals4 &&
-               equals5 && equals &&
-               equals6 && equals7;
+        return Objects.equals(id, invoice.id) && Objects.equals(orderDate, invoice.orderDate) &&
+               Objects.equals(person, invoice.person) && Objects.equals(listListList, invoice.listListList) &&
+               Objects.equals(addresses, invoice.addresses) && Objects.equals(mapList, invoice.mapList) &&
+               Objects.equals(total, invoice.total) && Objects.equals(items, invoice.items);
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", Invoice.class.getSimpleName() + "[", "]")
-                   .add("id=" + id)
-                   .add("orderDate=" + orderDate)
-                   .add("person=" + person)
-                   .add("listListList=" + listListList)
-                   .add("addresses=" + addresses)
-                   .add("mapList=" + mapList)
-                   .add("total=" + total)
-                   .add("items=" + items)
-                   .toString();
+            .add("id=" + id)
+            .add("orderDate=" + orderDate)
+            .add("person=" + person)
+            .add("listListList=" + listListList)
+            .add("addresses=" + addresses)
+            .add("mapList=" + mapList)
+            .add("total=" + total)
+            .add("items=" + items)
+            .toString();
     }
 
     public boolean isPostLoad() {

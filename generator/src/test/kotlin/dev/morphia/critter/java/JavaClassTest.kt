@@ -10,7 +10,6 @@ import org.jboss.forge.roaster.model.source.MethodSource
 import org.testng.Assert.assertEquals
 import org.testng.annotations.Test
 import java.io.File
-import kotlin.test.assertTrue
 
 class JavaClassTest {
     @Test
@@ -26,7 +25,7 @@ class JavaClassTest {
 
         val criteriaFiles = list(directory)
 
-        validatePersonCriteria(personClass, criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource)
+        validatePersonCriteria(personClass, criteriaFiles.find { it.name == "PersonCriteria" } as JavaClassSource)
     }
 
     @Test
@@ -44,7 +43,7 @@ class JavaClassTest {
 
         val criteriaFiles = list(directory)
 
-        validatePersonCriteria(personClass, criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource)
+        validatePersonCriteria(personClass, criteriaFiles.find { it.name == "PersonCriteria" } as JavaClassSource)
     }
 
     @Test
@@ -82,15 +81,11 @@ class JavaClassTest {
         }
     }
 
-    private fun JavaClassSource.shouldImport(type: String) {
-        assertTrue(imports.any { it.qualifiedName == type }, "Should find an import for $type in ${name}")
-    }
-
     private fun extractName(property: CritterProperty): String {
         return if (property.hasAnnotation(Id::class.java)) {
             "_id"
         } else {
-            (property.getAnnotation(Property::class.java)?.literalValue("value") ?: property.name)?.replace("\"", "")
+            (property.getAnnotation(Property::class.java)?.literalValue("value") ?: property.name).replace("\"", "")
         }
     }
 

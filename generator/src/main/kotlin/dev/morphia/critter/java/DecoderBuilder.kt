@@ -5,24 +5,21 @@ import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
-import com.squareup.javapoet.TypeVariableName
-import dev.morphia.annotations.Id
-import dev.morphia.annotations.LoadOnly
-import dev.morphia.annotations.NotSaved
-import dev.morphia.critter.CritterProperty
+import dev.morphia.annotations.PostLoad
+import dev.morphia.annotations.PreLoad
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.mapping.codec.Conversions
+import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.EntityDecoder
 import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
-import dev.morphia.mapping.codec.pojo.PropertyModel
-import org.bson.BsonInvalidOperationException
+import dev.morphia.mapping.codec.reader.DocumentReader
 import org.bson.BsonReader
-import org.bson.BsonReaderMark
-import org.bson.BsonType
+import org.bson.Document
 import org.bson.codecs.DecoderContext
 import java.io.File
-import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.FINAL
+import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PROTECTED
 import javax.lang.model.element.Modifier.PUBLIC
 
@@ -37,7 +34,7 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
             entityName = ClassName.get(source.pkgName, source.name)
             decoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Decoder")
             decoder = TypeSpec.classBuilder(decoderName)
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addModifiers(PUBLIC, FINAL)
             val sourceTimestamp = source.lastModified()
             val decoderFile = File(context.outputDirectory, decoderName.canonicalName().replace('.', '/') + ".java")
 
@@ -45,159 +42,95 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
                 decoder.superclass(ParameterizedTypeName.get(ClassName.get(EntityDecoder::class.java), entityName))
                 buildConstructor()
                 decodeMethod()
-                decodeProperties()
-                decodeModel()
-
+                getInstanceCreator()
+                lifecycle()
                 context.buildFile(decoder.build(), Conversions::class.java to "convert")
             }
         }
     }
 
+    private fun lifecycle() {
+        val method = methodBuilder("lifecycle")
+            .addModifiers(PRIVATE)
+            .addParameter(BsonReader::class.java, "reader")
+            .addParameter(EntityModel::class.java, "model")
+            .addParameter(DecoderContext::class.java, "decoderContext")
+            .returns(entityName)
+            .addStatement("var codec = getMorphiaCodec()")
+            .addStatement("var mapper = codec.getMapper()")
+            .addStatement("var document = codec.getRegistry().get(\$T.class).decode(reader, decoderContext)",
+                Document::class.java
+            )
+            .addStatement("var instanceCreator = new ${entityName.simpleName().titleCase()}InstanceCreator()")
+            .addStatement("var instance = instanceCreator.getInstance()")
+        source.methods(PreLoad::class.java).forEach {
+            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
+            method.addStatement("instance.${it.name}${params}\n")
+        }
+        method.beginControlFlow("for (var ei : mapper.getInterceptors())")
+        method.addStatement("ei.preLoad(instance, document, mapper)")
+        method.endControlFlow()
+
+        method
+            .addStatement(
+                "decodeProperties(new \$T(document), decoderContext, instanceCreator, model)",
+                DocumentReader::class.java
+            )
+        source.methods(PostLoad::class.java).forEach {
+            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
+            method.addStatement("instance.${it.name}${params}\n")
+        }
+        method.beginControlFlow("for (var ei : mapper.getInterceptors())")
+        method.addStatement("ei.postLoad(instance, document, mapper)")
+        method.endControlFlow()
+
+        method.addStatement("return instanceCreator.getInstance()")
+        decoder.addMethod(method.build())
+    }
+
     private fun decodeMethod() {
-        decoder.addMethod(
-            methodBuilder("decode")
-                .addModifiers(PUBLIC)
-                .addAnnotation(Override::class.java)
-                .addParameter(BsonReader::class.java, "reader")
-                .addParameter(DecoderContext::class.java, "decoderContext")
-                .returns(entityName)
-                .addCode(
-                    """
-                        EntityModel classModel = getMorphiaCodec().getEntityModel();
-                        if (!decoderContext.hasCheckedDiscriminator()) {
-                            MorphiaCodec<${entityName.simpleName()}> morphiaCodec = getMorphiaCodec();
-                            return getCodecFromDocument(reader, classModel.useDiscriminator(), classModel.getDiscriminatorKey(),
+        val eventMethods = source.methods(PreLoad::class.java) + source.methods(PostLoad::class.java)
+        val method = methodBuilder("decode")
+            .addModifiers(PUBLIC)
+            .addAnnotation(Override::class.java)
+            .addParameter(BsonReader::class.java, "reader")
+            .addParameter(DecoderContext::class.java, "decoderContext")
+            .returns(entityName)
+            .addStatement("var model = getMorphiaCodec().getEntityModel()")
+
+
+        method.beginControlFlow("if (decoderContext.hasCheckedDiscriminator())")
+        if (eventMethods.isNotEmpty()) {
+            method.addStatement("return lifecycle(reader, model, decoderContext)")
+        } else {
+            method.beginControlFlow("if (getMorphiaCodec().getMapper().hasInterceptors())")
+                .addStatement("return lifecycle(reader, model, decoderContext)")
+                .nextControlFlow(" else ")
+                .addStatement("var instanceCreator = new ${entityName.simpleName().titleCase()}InstanceCreator()")
+                .addStatement("decodeProperties(reader, decoderContext, instanceCreator, model)")
+                .addStatement("return instanceCreator.getInstance()")
+                .endControlFlow()
+        }
+        method.nextControlFlow("else")
+            .addStatement("var morphiaCodec = getMorphiaCodec()")
+            .addStatement(
+                """return getCodecFromDocument(reader, model.useDiscriminator(), model.getDiscriminatorKey(),
                                 morphiaCodec.getRegistry(), morphiaCodec.getDiscriminatorLookup(), morphiaCodec)
-                                     .decode(reader, DecoderContext.builder().checkedDiscriminator(true).build());
-                        }
-                        return decodeProperties(reader, decoderContext, classModel);
-                    """.trimIndent()
-                )
+                                     .decode(reader, DecoderContext.builder().checkedDiscriminator(true).build())""")
+            .endControlFlow()
+
+        decoder.addMethod(method.build())
+    }
+
+    private fun getInstanceCreator() {
+        decoder.addMethod(
+            methodBuilder("getInstanceCreator")
+                .addModifiers(PROTECTED)
+                .addAnnotation(Override::class.java)
+                .returns(MorphiaInstanceCreator::class.java)
+                .addStatement("return  new ${entityName.simpleName().titleCase()}InstanceCreator()")
                 .build()
         )
-    }
-
-    private fun decodeProperties() {
-        fun ifLadder(): String {
-            var body = "" //""switch(model.getName()) {\n"
-            source.properties.forEachIndexed { index, it ->
-                if(index != 0) {
-                    body += " else "
-                }
-                body += """
-                    if("${it.name}".equals(model.getName())) ${it.name} = decodeModel(reader, decoderContext, model);
-                """.trimIndent()
-            }
-//            body += "}"
-            return body
-        }
-
-        val method = methodBuilder("decodeProperties")
-            .addModifiers(PROTECTED)
-            .addParameter(BsonReader::class.java, "reader")
-            .addParameter(DecoderContext::class.java, "decoderContext")
-            .addParameter(EntityModel::class.java, "classModel")
-            .returns(entityName)
-
-        source.properties.forEach {
-            method.addStatement("\$T ${it.name}", it.type.name.className());
-        }
-        method.addCode(
-            """
-                
-        ${entityName.simpleName()} entity = null;
-        reader.readStartDocument();
-        while (reader.readBsonType() != ${"$"}T.END_OF_DOCUMENT) {
-            String _docFieldName = reader.readName();
-            if (classModel.useDiscriminator() && classModel.getDiscriminatorKey().equals(_docFieldName)) {
-                reader.readString();
-            } else {
-                PropertyModel model = classModel.getProperty(_docFieldName);
-                ${ifLadder()}
-            }
-        }
-        reader.readEndDocument();
-
-        return entity;
-        """.trimIndent(), BsonType::class.java
-        )
-
-        decoder.addMethod(method.build())
-    }
-
-    private fun decodeModel() {
-        val method = methodBuilder("decodeModel")
-            .addModifiers(PROTECTED)
-            .addTypeVariable(TypeVariableName.get("T"))
-            .returns(TypeVariableName.get("T"))
-            .addParameter(BsonReader::class.java, "reader")
-            .addParameter(DecoderContext::class.java, "decoderContext")
-            .addParameter(PropertyModel::class.java, "model")
-            .addCode(
-                """
-        if (model != null) {
-            final ${"$"}T mark = reader.getMark();
-            Object value = null;
-            try {
-                if (reader.getCurrentBsonType() == BsonType.NULL) {
-                    reader.readNull();
-                } else {
-                    value = decoderContext.decodeWithChildContext(model.getCachedCodec(), reader);
-                }
-            } catch (${"$"}T e) {
-                mark.reset();
-                value = getMorphiaCodec().getMapper().getCodecRegistry().get(Object.class).decode(reader, decoderContext);
-                value = convert(value, model.getTypeData().getType());
-            }
-            return (T)value;
-        } else {
-            reader.skipValue();
-            return null;
-        }
-        """.trimIndent(), BsonReaderMark::class.java, BsonInvalidOperationException::class.java
-            )
-
-        decoder.addMethod(method.build())
-    }
-
-    private fun outputProperties(): String {
-        var indent = "        ".repeat(3)
-        indent = ""
-        val lines = mutableListOf<String>()
-        lines += "EntityModel model = getMorphiaCodec().getEntityModel();"
-        lines += "decodeId(writer, instance, decoderContext);"
-        lines += """
-            if (model.useDiscriminator()) {
-                writer.writeString(model.getDiscriminatorKey(), model.getDiscriminator());
-            }
-        """.trimIndent()
-        source.properties.forEach { field ->
-            if (!(field.hasAnnotation(Id::class.java)
-                    || field.hasAnnotation(LoadOnly::class.java)
-                    || field.hasAnnotation(NotSaved::class.java))
-            ) {
-                lines += "decodeValue(writer, decoderContext, model.getProperty(\"${field.name}\"), instance.${getter(field)});"
-            }
-        }
-        return lines.joinToString("\n", transform = { s -> indent + s })
-    }
-
-    private fun idProperty(): CritterProperty? {
-        return source.properties
-            .filter { it.hasAnnotation(Id::class.java) }
-            .firstOrNull()
-    }
-
-    private fun getter(property: CritterProperty): String {
-        val name = property.name
-        val ending = name.nameCase() + "()"
-        val methodName = if (property.type.name.equals("boolean", true)) "is${ending}" else "get${ending}"
-
-        return methodName
-    }
-
-    private fun setter(property: CritterProperty): String {
-        return "set${property.name.nameCase()}"
     }
 
     private fun buildConstructor() {

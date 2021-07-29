@@ -98,21 +98,16 @@ public class CriteriaTest extends BottleRocketTest {
 
     @Test(dataProvider = "datastores")
     public void embeds(String state, Datastore datastore) {
-        Invoice invoice = new Invoice();
-        invoice.setOrderDate(LocalDateTime.now());
         Person person = new Person("Mike", "Bloomberg");
         datastore.save(person);
-        invoice.setPerson(person);
-        invoice.add(new Address("New York City", "NY", "10036"));
+        Invoice invoice = new Invoice(LocalDateTime.now(), person, new Address("New York City", "NY", "10036"));
         datastore.save(invoice);
 
-        invoice = new Invoice();
-        invoice.setOrderDate(LocalDateTime.now());
         person = new Person("Andy", "Warhol");
         datastore.save(person);
 
-        invoice.setPerson(person);
-        invoice.add(new Address("NYC", "NY", "10018"));
+        invoice = new Invoice(LocalDateTime.now(), person, new Address("NYC", "NY", "10018"));
+
         datastore.save(invoice);
 
         MorphiaCursor<Invoice> criteria1 = datastore.find(Invoice.class)
@@ -133,7 +128,8 @@ public class CriteriaTest extends BottleRocketTest {
     public void invoice(String state, Datastore ds) {
         Person john = new Person("John", "Doe");
         ds.save(john);
-        ds.save(new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john, new Address("New York City", "NY", "10000"),
+        ds.save(new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john,
+            new Address("New York City", "NY", "10000"),
             new Item("ball", 5.0), new Item("skateboard", 17.35)));
         Person jeff = new Person("Jeff", "Johnson");
         ds.save(jeff);
@@ -167,8 +163,9 @@ public class CriteriaTest extends BottleRocketTest {
         assertNotNull(critter);
         assertEquals(critter, invoice);
 
-        Invoice created = new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john, new Address("New York City", "NY", "10000"),
-            new Item("ball", 5.0), new Item("skateboard", 17.35));
+        Invoice created = new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john,
+            List.of(new Address("New York City", "NY", "10000")),
+            List.of(new Item("ball", 5.0), new Item("skateboard", 17.35)));
         ds.save(created);
         assertTrue(created.isPrePersist());
         assertTrue(created.isPostPersist());

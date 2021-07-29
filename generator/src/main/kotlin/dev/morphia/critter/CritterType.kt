@@ -1,7 +1,6 @@
 package dev.morphia.critter
 
 import com.mongodb.client.model.geojson.Geometry
-import dev.morphia.Datastore
 import dev.morphia.mapping.Mapper
 import org.bson.Document
 import org.jboss.forge.roaster.model.Type
@@ -12,7 +11,6 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
     companion object {
         val DOCUMENT = CritterType(Document::class.java.name)
         val MAPPER = CritterType(Mapper::class.java.name)
-
         internal val CONTAINER_TYPES = listOf("List", "Set")
             .map { listOf(it, "java.util.$it", "Mutable$it") }
             .flatten()
@@ -20,10 +18,9 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
         internal val NUMERIC_TYPES = listOf("Float", "Double", "Long", "Int", "Integer", "Byte", "Short", "Number").explodeTypes()
         internal val TEXT_TYPES = listOf("String").explodeTypes()
         private fun List<String>.explodeTypes(): List<String> {
-            return map {
+            return flatMap {
                 listOf(it, "$it?", "java.lang.$it", "java.lang.$it?", "kotlin.$it", "kotlin.$it?")
             }
-                .flatMap { it }
         }
 
         fun isNumeric(type: String): Boolean {
@@ -47,10 +44,10 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
     }
     fun isContainer() = name in CONTAINER_TYPES
     fun isGeoCompatible(): Boolean {
-        return name in GEO_TYPES || try {
-            return Geometry::class.java.isAssignableFrom(Class.forName(name))
+        return name in GEO_TYPES || return try {
+            Geometry::class.java.isAssignableFrom(Class.forName(name))
         } catch (_: Exception) {
-            return false
+            false
         }
     }
 
@@ -60,9 +57,13 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
     fun isParameterized(): Boolean {
         return typeParameters.isNotEmpty()
     }
+
+    override fun toString(): String {
+        return name + (if (typeParameters.isNotEmpty()) typeParameters.joinToString(", ", "<", ">") else "")
+    }
 }
 
-fun Type<*>.toCritter():CritterType {
-    val name = if(name != "void") qualifiedName else name
+fun Type<*>.toCritter(): CritterType {
+    val name = if (name != "void") qualifiedName else name
     return CritterType(name, typeArguments.map { it.toCritter() })
 }
