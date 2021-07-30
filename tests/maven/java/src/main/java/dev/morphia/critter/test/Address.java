@@ -9,12 +9,10 @@ import java.util.StringJoiner;
 @Embedded
 public class Address {
   @Property("c")
-  private String city;
-  private String state;
-  private String zip;
+  private final String city;
+  private final String state;
+  private final String zip;
 
-  public Address() {
-  }
 
   public Address(final String city, final String state, final String zip) {
     this.city = city;
@@ -26,24 +24,12 @@ public class Address {
     return city;
   }
 
-  public void setCity(final String city) {
-    this.city = city;
-  }
-
   public String getState() {
     return state;
   }
 
-  public void setState(final String state) {
-    this.state = state;
-  }
-
   public String getZip() {
     return zip;
-  }
-
-  public void setZip(final String zip) {
-    this.zip = zip;
   }
 
   @Override

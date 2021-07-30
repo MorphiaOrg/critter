@@ -80,11 +80,16 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
                 method.nextControlFlow("else $ifStmt")
             }
             method.addStatement("${property.name} = (\$T)value", property.type.name.className())
-            property.mutator?.let {
-                method.beginControlFlow("if(instance != null)")
-                method.addStatement("instance.${it.name}(${property.name})")
-                method.endControlFlow()
+            method.beginControlFlow("if(instance != null)")
+            val mutator = property.mutator
+            if (mutator != null) {
+                method.addStatement("instance.${mutator.name}(${property.name})")
+            } else {
+                method.addStatement("throw new \$T(\"An instance has already been created and can not be updated because ${property
+                    .name} does not have a set method.\")",
+                    IllegalStateException::class.java)
             }
+            method.endControlFlow()
         }
         method.endControlFlow()
 

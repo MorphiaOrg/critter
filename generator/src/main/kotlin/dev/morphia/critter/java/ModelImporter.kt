@@ -17,8 +17,6 @@ import dev.morphia.mapping.codec.pojo.EntityModelBuilder
 import dev.morphia.mapping.codec.pojo.TypeData
 import dev.morphia.mapping.codec.pojo.experimental.EntityModelImporter
 import org.bson.codecs.pojo.PropertyAccessor
-import org.jboss.forge.roaster.model.source.AnnotationSource
-import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.concurrent.atomic.AtomicInteger
 import javax.lang.model.element.Modifier
 import javax.lang.model.element.Modifier.PRIVATE
