@@ -14,10 +14,11 @@ class CritterPlugin : Plugin<Project> {
         val outputDirectory = File("${project.buildDir}/generated/critter/")
         outputDirectory.mkdirs()
 
+        val directories = mainSourceSet.java.srcDirs
+        println("mainSourceSet.java.srcDirs = ${mainSourceSet.java.srcDirs}")
         mainSourceSet.java.srcDirs(mainSourceSet.java.srcDirs + setOf(outputDirectory))
 
         project.tasks.create(NAME, CritterTask::class.java) { task ->
-            val directories = mainSourceSet.allJava.sourceDirectories.files
             val rootPath = project.rootDir.absolutePath + "/"
             task.files = directories.map { it.toPath().toString().removePrefix(rootPath) }.toSet()
             task.source(task.files)

@@ -22,10 +22,14 @@ open class CritterContext<T : CritterClass>(
             builder.addStaticImport(it.first, it.second)
         }
         val javaFile = builder.build()
-        javaFile.writeTo(outputDirectory)
+        try {
+            javaFile.writeTo(outputDirectory)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Failed generating ${typeSpec.name}", e)
+        }
 
         if (format) {
-            var pkgDir = File(outputDirectory, packageName.replace('.', '/'))
+            val pkgDir = File(outputDirectory, packageName.replace('.', '/'))
             formatSource(File(pkgDir, typeSpec.name + ".java"))
         }
     }

@@ -18,14 +18,13 @@ package dev.morphia.critter.test;
 import com.antwerkz.bottlerocket.BottleRocket;
 import com.antwerkz.bottlerocket.BottleRocketTest;
 import com.github.zafarkhaja.semver.Version;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.Morphia;
 import dev.morphia.UpdateOptions;
+import dev.morphia.critter.codec.CritterModelImporter;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
 import dev.morphia.query.FindOptions;
@@ -34,22 +33,48 @@ import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.mongodb.WriteConcern.MAJORITY;
 import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.filters.Filters.or;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 @Test
 public class CriteriaTest extends BottleRocketTest {
 
-    private Datastore datastore;
+    @Test(dataProvider = "datastores")
+    public void andQueries(String state, Datastore datastore) {
+        datastore.save(new Person("Mike", "Bloomberg"));
+        datastore.save(new Person("Mike", "Tyson"));
+
+        final Query<Person> query1 = datastore.find(Person.class)
+                                              .filter(Filters.and(
+                                                  PersonCriteria.firstName().eq("Mike"),
+                                                  PersonCriteria.lastName().eq("Tyson")));
+
+        final Query<Person> query2 = datastore.find(Person.class)
+                                              .filter(
+                                                  eq("firstName", "Mike"),
+                                                  eq("lastName", "Tyson"));
+        assertEquals(query2.iterator().toList().size(), 1);
+        assertEquals(query1.iterator().toList(), query2.iterator().toList());
+    }
+
+    @BeforeMethod
+    public void clean() {
+        getDatabase().drop();
+    }
 
     @NotNull
     @Override
@@ -63,72 +88,48 @@ public class CriteriaTest extends BottleRocketTest {
         return BottleRocket.DEFAULT_VERSION;
     }
 
-    public void paths() {
-        Assert.assertEquals(
-            InvoiceCriteria.addresses().city().path(),
-            "addresses.city");
-        Assert.assertEquals(
-            InvoiceCriteria.orderDate().path(),
-            "orderDate");
+    @DataProvider(name = "datastores")
+    public Object[][] datastores() {
+        return new Object[][]{
+            new Object[]{"Critter codecs", getDatastore(true)},
+            new Object[]{"Standard codecs", getDatastore(false)},
+            };
     }
 
-    public void andQueries() {
-        getDatastore().save(new Person("Mike", "Bloomberg"));
-        getDatastore().save(new Person("Mike", "Tyson"));
-
-        final Query<Person> query1 = getDatastore().find(Person.class)
-                                                   .filter(Filters.and(
-                                                       PersonCriteria.firstName().eq("Mike"),
-                                                       PersonCriteria.lastName().eq("Tyson")));
-
-        final Query<Person> query2 = getDatastore().find(Person.class)
-                                                   .filter(
-                                                       eq("firstName", "Mike"),
-                                                       eq("lastName", "Tyson"));
-        Assert.assertEquals(query2.iterator().toList().size(), 1);
-        Assert.assertEquals(query1.iterator().toList(), query2.iterator().toList());
-    }
-
-    @AfterMethod
-    public void clean() {
-        datastore = null;
-    }
-
-    public void embeds() {
-        Invoice invoice = new Invoice();
-        invoice.setOrderDate(LocalDateTime.now());
+    @Test(dataProvider = "datastores")
+    public void embeds(String state, Datastore datastore) {
         Person person = new Person("Mike", "Bloomberg");
-        getDatastore().save(person);
-        invoice.setPerson(person);
-        invoice.add(new Address("New York City", "NY", "10036"));
-        getDatastore().save(invoice);
+        datastore.save(person);
+        Invoice invoice = new Invoice(LocalDateTime.now(), person, new Address("New York City", "NY", "10036"));
+        datastore.save(invoice);
 
-        invoice = new Invoice();
-        invoice.setOrderDate(LocalDateTime.now());
         person = new Person("Andy", "Warhol");
-        getDatastore().save(person);
+        datastore.save(person);
 
-        invoice.setPerson(person);
-        invoice.add(new Address("NYC", "NY", "10018"));
-        getDatastore().save(invoice);
+        invoice = new Invoice(LocalDateTime.now(), person, new Address("NYC", "NY", "10018"));
+
+        datastore.save(invoice);
 
         MorphiaCursor<Invoice> criteria1 = datastore.find(Invoice.class)
                                                     .filter(InvoiceCriteria.orderDate().lte(LocalDateTime.now().plusDays(5)))
                                                     .iterator(new FindOptions()
                                                                   .sort(ascending(InvoiceCriteria.addresses().city().path())));
-        Assert.assertEquals(criteria1.toList().get(0).getAddresses().get(0).getCity(), "NYC");
+        List<Invoice> list = criteria1.toList();
+        assertEquals(list.get(0).getAddresses().get(0).getCity(), "NYC");
+        assertEquals(list.get(0), invoice);
 
         MorphiaCursor<Invoice> criteria2 = datastore.find(Invoice.class)
                                                     .iterator(new FindOptions()
                                                                   .sort(descending(InvoiceCriteria.addresses().city().path())));
-        Assert.assertEquals(criteria2.toList().get(0).getAddresses().get(0).getCity(), "New York City");
+        assertEquals(criteria2.toList().get(0).getAddresses().get(0).getCity(), "New York City");
     }
 
-    public void invoice() {
-        Datastore ds = getDatastore();
+    @Test(dataProvider = "datastores")
+    public void invoice(String state, Datastore ds) {
         Person john = new Person("John", "Doe");
         ds.save(john);
-        ds.save(new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john, new Address("New York City", "NY", "10000"),
+        ds.save(new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john,
+            new Address("New York City", "NY", "10000"),
             new Item("ball", 5.0), new Item("skateboard", 17.35)));
         Person jeff = new Person("Jeff", "Johnson");
         ds.save(jeff);
@@ -145,57 +146,78 @@ public class CriteriaTest extends BottleRocketTest {
                         .filter(eq("person", john))
                         .first();
 
-        Assert.assertNotNull(doe);
-        Assert.assertEquals(invoice, doe);
-        Assert.assertEquals(doe.getPerson().getLastName(), "Doe");
+        assertNotNull(doe);
+        assertEquals(invoice, doe);
+        assertEquals(doe.getPerson().getLastName(), "Doe");
 
-        Assert.assertNotNull(invoice);
-        Assert.assertNotNull(invoice.getPerson());
-        Assert.assertEquals(invoice.getPerson().getLastName(), "Doe");
+        assertNotNull(invoice);
+        assertNotNull(invoice.getPerson());
+        assertEquals(invoice.getPerson().getLastName(), "Doe");
         invoice = ds.find(Invoice.class)
                     .filter(eq("addresses.city", "Chicago"))
                     .first();
-        Assert.assertNotNull(invoice);
+        assertNotNull(invoice);
         Invoice critter = ds.find(Invoice.class)
                             .filter(InvoiceCriteria.addresses().city().eq("Chicago"))
                             .first();
-        Assert.assertNotNull(critter);
-        Assert.assertEquals(critter, invoice);
+        assertNotNull(critter);
+        assertEquals(critter, invoice);
+
+        Invoice created = new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john,
+            List.of(new Address("New York City", "NY", "10000")),
+            List.of(new Item("ball", 5.0), new Item("skateboard", 17.35)));
+        ds.save(created);
+        assertTrue(created.isPrePersist());
+        assertTrue(created.isPostPersist());
+        assertFalse(created.isPreLoad());
+        assertFalse(created.isPostLoad());
+
+        Invoice loaded = ds.find(Invoice.class).filter(eq(InvoiceCriteria.id, created.getId())).first();
+        assertFalse(loaded.isPrePersist());
+        assertFalse(loaded.isPostPersist());
+        assertTrue(loaded.isPreLoad());
+        assertTrue(loaded.isPostLoad());
     }
 
-    public void orQueries() {
-        getDatastore().save(new Person("Mike", "Bloomberg"));
-        getDatastore().save(new Person("Mike", "Tyson"));
+    @Test(dataProvider = "datastores")
+    public void orQueries(String state, Datastore datastore) {
+        datastore.save(new Person("Mike", "Bloomberg"));
+        datastore.save(new Person("Mike", "Tyson"));
 
-        final Query<Person> query = getDatastore().find(Person.class)
-                                                  .filter(or(
-                                                          eq("lastName", "Bloomberg"),
-                                                          eq("lastName", "Tyson")));
+        final Query<Person> query = datastore.find(Person.class)
+                                             .filter(or(
+                                                 eq("lastName", "Bloomberg"),
+                                                 eq("lastName", "Tyson")));
 
-        final Query<Person> criteria = getDatastore().find(Person.class)
-                                                     .filter(or(
-                                                         PersonCriteria.lastName().eq("Bloomberg"),
-                                                         PersonCriteria.lastName().eq("Tyson")));
+        final Query<Person> criteria = datastore.find(Person.class)
+                                                .filter(or(
+                                                    PersonCriteria.lastName().eq("Bloomberg"),
+                                                    PersonCriteria.lastName().eq("Tyson")));
 
-        Assert.assertEquals(criteria.count(), 2);
-        Assert.assertEquals(query.iterator().toList(), criteria.iterator().toList());
+        assertEquals(criteria.count(), 2);
+        assertEquals(query.iterator().toList(), criteria.iterator().toList());
     }
 
-    @Test
-    public void removes() {
+    public void paths() {
+        assertEquals(InvoiceCriteria.addresses().city().path(), "addresses.city");
+        assertEquals(InvoiceCriteria.orderDate().path(), "orderDate");
+    }
+
+    @Test(dataProvider = "datastores")
+    public void removes(String state, Datastore datastore) {
         for (int i = 0; i < 100; i++) {
-            getDatastore().save(new Person("First" + i, "Last" + i));
+            datastore.save(new Person("First" + i, "Last" + i));
         }
         Query<Person> criteria = datastore.find(Person.class)
                                           .filter(PersonCriteria.lastName().regex()
                                                                 .pattern("Last2"));
         DeleteResult result = criteria.delete(new DeleteOptions()
-                                             .multi(true));
-        Assert.assertEquals(result.getDeletedCount(), 11);
-        Assert.assertEquals(criteria.count(), 0);
+                                                  .multi(true));
+        assertEquals(result.getDeletedCount(), 11);
+        assertEquals(criteria.count(), 0);
 
         criteria = datastore.find(Person.class);
-        Assert.assertEquals(criteria.count(), 89);
+        assertEquals(criteria.count(), 89);
 
         criteria = datastore.find(Person.class)
                             .filter(PersonCriteria.lastName().regex()
@@ -203,15 +225,15 @@ public class CriteriaTest extends BottleRocketTest {
         result = criteria.delete(new DeleteOptions()
                                      .multi(true)
                                      .writeConcern(MAJORITY));
-        Assert.assertEquals(result.getDeletedCount(), 11);
+        assertEquals(result.getDeletedCount(), 11);
 
-        Assert.assertEquals(criteria.count(), 0);
+        assertEquals(criteria.count(), 0);
     }
 
-    @Test
-    public void updateFirst() {
+    @Test(dataProvider = "datastores")
+    public void updateFirst(String state, Datastore datastore) {
         for (int i = 0; i < 100; i++) {
-            getDatastore().save(new Person("First" + i, "Last" + i));
+            datastore.save(new Person("First" + i, "Last" + i));
         }
         Query<Person> query = datastore.find(Person.class)
                                        .filter(PersonCriteria.lastName().regex()
@@ -223,12 +245,11 @@ public class CriteriaTest extends BottleRocketTest {
         query = datastore.find(Person.class)
                          .filter(PersonCriteria.age().eq(1000L));
 
-        Assert.assertEquals(query.count(), 1L);
+        assertEquals(query.count(), 1L);
     }
 
-    @Test
-    public void updates() {
-        Datastore datastore = getDatastore();
+    @Test(dataProvider = "datastores")
+    public void updates(String state, Datastore datastore) {
         Query<Person> query = datastore.find(Person.class);
         query.delete();
 
@@ -236,34 +257,31 @@ public class CriteriaTest extends BottleRocketTest {
             PersonCriteria.firstName().eq("Jim"),
             PersonCriteria.lastName().eq("Beam"));
 
-        Assert.assertEquals(query.update(
+        assertEquals(query.update(
             PersonCriteria.age().set(30L))
-                                 .execute(new UpdateOptions().multi(true))
-                                 .getModifiedCount(), 0);
+                          .execute(new UpdateOptions().multi(true))
+                          .getModifiedCount(), 0);
 
-        Assert.assertNotNull(query.update(PersonCriteria.age().set(30L))
-                                  .execute(new UpdateOptions().upsert(true))
-                                  .getUpsertedId());
+        assertNotNull(query.update(PersonCriteria.age().set(30L))
+                           .execute(new UpdateOptions().upsert(true))
+                           .getUpsertedId());
 
         final UpdateResult update = query.update(PersonCriteria.age().inc())
                                          .execute(new UpdateOptions().multi(true));
-        Assert.assertEquals(update.getModifiedCount(), 1);
-        Assert.assertEquals(datastore.find(Person.class)
-                                     .first().getAge().longValue(), 31L);
+        assertEquals(update.getModifiedCount(), 1);
+        assertEquals(datastore.find(Person.class)
+                              .first().getAge().longValue(), 31L);
 
-        Assert.assertNotNull(datastore.find(Person.class).first().getFirstName());
+        assertNotNull(datastore.find(Person.class).first().getFirstName());
 
         DeleteResult delete = datastore.find(Person.class).delete();
-        Assert.assertEquals(delete.getDeletedCount(), 1);
+        assertEquals(delete.getDeletedCount(), 1);
     }
 
-    private Datastore getDatastore() {
-        if (datastore == null) {
-            MongoClient mongo = getMongoClient();
-            MongoDatabase critter = getDatabase();
-            critter.drop();
-            datastore = Morphia.createDatastore(mongo, getDatabase().getName());
-            datastore.getMapper().mapPackage("dev.morphia");
+    private Datastore getDatastore(boolean useGenerated) {
+        var datastore = Morphia.createDatastore(getMongoClient(), getDatabase().getName());
+        if (useGenerated) {
+            datastore.getMapper().importModels(new CritterModelImporter());
         }
         return datastore;
     }

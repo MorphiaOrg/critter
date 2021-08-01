@@ -39,12 +39,14 @@ import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.mongodb.WriteConcern.MAJORITY;
 import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.filters.Filters.or;
+import static java.lang.Thread.sleep;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -91,18 +93,19 @@ public class CriteriaTest extends BottleRocketTest {
     @DataProvider(name = "datastores")
     public Object[][] datastores() {
         return new Object[][]{
-            new Object[]{"Critter codecs", getDatastore(true)},
             new Object[]{"Standard codecs", getDatastore(false)},
-            };
+            new Object[]{"Critter codecs", getDatastore(true)}
+        };
     }
 
     @Test(dataProvider = "datastores")
-    public void embeds(String state, Datastore datastore) {
+    public void embeds(String state, Datastore datastore) throws InterruptedException {
         Person person = new Person("Mike", "Bloomberg");
         datastore.save(person);
         Invoice invoice = new Invoice(LocalDateTime.now(), person, new Address("New York City", "NY", "10036"));
         datastore.save(invoice);
 
+        sleep(1000);
         person = new Person("Andy", "Warhol");
         datastore.save(person);
 
@@ -115,8 +118,12 @@ public class CriteriaTest extends BottleRocketTest {
                                                     .iterator(new FindOptions()
                                                                   .sort(ascending(InvoiceCriteria.addresses().city().path())));
         List<Invoice> list = criteria1.toList();
-        assertEquals(list.get(0).getAddresses().get(0).getCity(), "NYC");
-        assertEquals(list.get(0), invoice);
+        System.out.println("invoice     = " + invoice);
+        System.out.println("list.get(0) = " + list.get(0));
+        System.out.println("list.get(1) = " + list.get(1));
+        assertEquals(list.get(0).getAddresses().get(0).getCity(), "New York City", list.stream().map(Invoice::getId).collect(
+            Collectors.toList()).toString());
+        assertEquals(list.get(0), invoice, list.stream().map(Invoice::getId).collect(Collectors.toList()).toString());
 
         MorphiaCursor<Invoice> criteria2 = datastore.find(Invoice.class)
                                                     .iterator(new FindOptions()

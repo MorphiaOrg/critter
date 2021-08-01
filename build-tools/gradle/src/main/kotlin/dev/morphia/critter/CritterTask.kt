@@ -1,5 +1,6 @@
 package dev.morphia.critter
 
+import dev.morphia.critter.Critter.generateCodecs
 import dev.morphia.critter.Critter.generateCriteria
 import dev.morphia.critter.Critter.scan
 import org.gradle.api.tasks.Input
@@ -24,6 +25,8 @@ open class CritterTask : SourceTask() {
     var force = false
     @Input
     var format = false
+    @Input
+    var generateCodecs: Boolean = true
 
     init {
         description = "Processes files for critter."
@@ -33,5 +36,8 @@ open class CritterTask : SourceTask() {
     fun generate() {
         scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType), outputDirectory)
         generateCriteria()
+        if (generateCodecs) {
+            generateCodecs()
+        }
     }
 }

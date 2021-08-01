@@ -153,27 +153,31 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     private fun accessor(property: CritterProperty): String {
         val name = "${property.name.methodCase()}Accessor"
         try {
-            util.addMethod(
-                methodBuilder(name)
-                    .addModifiers(PRIVATE, STATIC)
-                    .returns(PropertyAccessor::class.java)
-                    .addCode(
-                        """
+            val method = methodBuilder(name)
+                .addModifiers(PRIVATE, STATIC)
+                .returns(PropertyAccessor::class.java)
+                .addCode(
+                    """
                         return new ${"$"}T() {
                             @Override
                             public void set(Object instance, Object value) {
-                                ((${source.name})instance).${property.mutator?.name}((${"$"}T)value);
-                            }
-                            
-                            @Override
-                            public Object get(Object instance) {
-                                return ((${source.name})instance).${property.accessor?.name}();
-                            }
-                        };
-                    """.trimIndent(), PropertyAccessor::class.java, property.type.name.className()
-                    )
-                    .build()
+                    """.trimIndent(), PropertyAccessor::class.java)
+            property.mutator?.let {
+                method.addCode("((${source.name})instance).${it.name}((${"$"}T)value);", property.type.name.className())
+            } ?: run {
+                method.addStatement("throw new \$T(\"${property.name} does not have a set method.\")", IllegalStateException::class.java)
+            }
+            method.addCode(
+                """
+                    }
+                        @Override
+                        public Object get(Object instance) {
+                            return ((${source.name})instance).${property.accessor?.name}();
+                        }
+                    };
+                """.trimIndent()
             )
+            util.addMethod(method.build())
         } catch (e: NullPointerException) {
             println("property = [${property}]")
             throw e
