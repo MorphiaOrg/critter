@@ -17,8 +17,6 @@ package dev.morphia.critter.test;
 
 import dev.morphia.annotations.Embedded;
 
-import java.util.Objects;
-
 @Embedded
 public class Item {
   private String name;
@@ -46,22 +44,5 @@ public class Item {
 
   public void setPrice(Double price) {
     this.price = price;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof Item)) {
-      return false;
-    }
-    Item item = (Item) o;
-    return Objects.equals(name, item.name) && Objects.equals(price, item.price);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(name, price);
   }
 }

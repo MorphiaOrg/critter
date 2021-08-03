@@ -31,6 +31,7 @@ import dev.morphia.query.FindOptions;
 import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
+import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.testng.annotations.BeforeMethod;
@@ -38,6 +39,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,7 +48,6 @@ import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.filters.Filters.or;
-import static java.lang.Thread.sleep;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -94,18 +95,17 @@ public class CriteriaTest extends BottleRocketTest {
     public Object[][] datastores() {
         return new Object[][]{
             new Object[]{"Standard codecs", getDatastore(false)},
-            new Object[]{"Critter codecs", getDatastore(true)}
-        };
+            new Object[]{"Critter codecs", getDatastore(true)},
+            };
     }
 
     @Test(dataProvider = "datastores")
-    public void embeds(String state, Datastore datastore) throws InterruptedException {
+    public void embeds(String state, Datastore datastore) {
         Person person = new Person("Mike", "Bloomberg");
         datastore.save(person);
         Invoice invoice = new Invoice(LocalDateTime.now(), person, new Address("New York City", "NY", "10036"));
         datastore.save(invoice);
 
-        sleep(1000);
         person = new Person("Andy", "Warhol");
         datastore.save(person);
 
@@ -118,10 +118,8 @@ public class CriteriaTest extends BottleRocketTest {
                                                     .iterator(new FindOptions()
                                                                   .sort(ascending(InvoiceCriteria.addresses().city().path())));
         List<Invoice> list = criteria1.toList();
-        System.out.println("invoice     = " + invoice);
-        System.out.println("list.get(0) = " + list.get(0));
-        System.out.println("list.get(1) = " + list.get(1));
-        assertEquals(list.get(0).getAddresses().get(0).getCity(), "New York City", list.stream().map(Invoice::getId).collect(
+        debug(state, datastore);
+        assertEquals(list.get(0).getAddresses().get(0).getCity(), "NYC", list.stream().map(Invoice::getId).collect(
             Collectors.toList()).toString());
         assertEquals(list.get(0), invoice, list.stream().map(Invoice::getId).collect(Collectors.toList()).toString());
 
@@ -129,6 +127,22 @@ public class CriteriaTest extends BottleRocketTest {
                                                     .iterator(new FindOptions()
                                                                   .sort(descending(InvoiceCriteria.addresses().city().path())));
         assertEquals(criteria2.toList().get(0).getAddresses().get(0).getCity(), "New York City");
+    }
+
+    private void debug(String state, Datastore datastore) {
+        System.out.println("state = " + state);
+        System.out.println("**** immutable");
+        System.out.println("documents = ");
+        datastore.getMapper().getCollection(Invoice.class)
+                 .withDocumentClass(Document.class)
+                 .find()
+                 .into(new ArrayList<>())
+                 .forEach(System.out::println);
+        System.out.println("invoices = ");
+        datastore.getMapper().getCollection(Invoice.class)
+                 .find()
+                 .into(new ArrayList<>())
+                 .forEach(System.out::println);
     }
 
     @Test(dataProvider = "datastores")

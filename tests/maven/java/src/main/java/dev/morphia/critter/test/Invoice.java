@@ -159,18 +159,10 @@ public class Invoice {
             return false;
         }
         Invoice invoice = (Invoice) o;
-        boolean equals = Objects.equals(id, invoice.id);
-        boolean equals1 = Objects.equals(orderDate, invoice.orderDate);
-        boolean equals2 = Objects.equals(person, invoice.person);
-        boolean equals3 = Objects.equals(listListList, invoice.listListList);
-        boolean equals4 = Objects.equals(addresses, invoice.addresses);
-        boolean equals5 = Objects.equals(mapList, invoice.mapList);
-        boolean equals6 = Objects.equals(total, invoice.total);
-        boolean equals7 = Objects.equals(items, invoice.items);
-        return equals && equals1 &&
-               equals2 && equals3 &&
-               equals4 && equals5 &&
-               equals6 && equals7;
+        return Objects.equals(id, invoice.id) && Objects.equals(orderDate, invoice.orderDate) &&
+               Objects.equals(person, invoice.person) && Objects.equals(listListList, invoice.listListList) &&
+               Objects.equals(addresses, invoice.addresses) && Objects.equals(mapList, invoice.mapList) &&
+               Objects.equals(total, invoice.total) && Objects.equals(items, invoice.items);
     }
 
     @Override
