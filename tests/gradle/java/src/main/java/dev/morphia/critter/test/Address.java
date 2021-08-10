@@ -56,9 +56,9 @@ public class Address {
   @Override
   public String toString() {
     return new StringJoiner(", ", Address.class.getSimpleName() + "[", "]")
-               .add("city='" + city + "'")
-               .add("state='" + state + "'")
-               .add("zip='" + zip + "'")
-               .toString();
+        .add("city='" + city + "'")
+        .add("state='" + state + "'")
+        .add("zip='" + zip + "'")
+        .toString();
   }
 }

@@ -35,6 +35,8 @@ object Critter {
         outputType: OutputType,
         outputDirectory: File
     ) {
+        println("********** baseDir = [${baseDir}], sourceDirectories = [${sourceDirectories}], criteriaPackage = [${criteriaPackage}], " +
+            "force = [${force}], format = [${format}], outputType = [${outputType}], outputDirectory = [${outputDirectory}]")
         javaContext = JavaContext(criteriaPackage, force, format, outputDirectory)
         kotlinContext = KotlinContext(criteriaPackage, force, format, outputDirectory)
         this.outputType = outputType
@@ -44,7 +46,9 @@ object Critter {
                 val file = File(it)
                 if(file.isRooted) file else File(baseDir, it)
             }
-            .filter { it.exists() }
+            .filter {
+                it.exists()
+            }
             .forEach {
                 val walker = DirectoryWalker()
                 walker.baseDir = it

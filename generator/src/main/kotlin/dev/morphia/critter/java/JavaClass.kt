@@ -122,11 +122,10 @@ class JavaClass(
             .toMap(TreeMap())
         val matches = constructors
             .filter { it.parameters.all { param -> propertyMap[param.name] == param.type } }
-            .map { it to it.parameters.size }
-            .sortedBy { it.second }
+            .sortedBy { it.parameters.size }
             .reversed()
 
-        return matches.firstOrNull()?.first
+        return matches.firstOrNull()
 
     }
 }

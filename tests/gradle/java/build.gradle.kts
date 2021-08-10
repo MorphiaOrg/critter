@@ -1,3 +1,5 @@
+import org.gradle.internal.impldep.org.fusesource.jansi.AnsiRenderer.test
+
 project.version = org.apache.maven.model.io.xpp3.MavenXpp3Reader().read(file("pom.xml").inputStream())
     .parent.version
 
@@ -21,7 +23,7 @@ dependencies {
 }
 
 tasks {
-    test {
+   test {
         useTestNG()
     }
 
@@ -29,4 +31,9 @@ tasks {
         force = true
         outputType = "java"
     }
+}
+
+tasks.withType(JavaCompile::class.java) {
+    options.compilerArgs = listOf("-parameters")
+    options.forkOptions.executable = "javac"
 }
