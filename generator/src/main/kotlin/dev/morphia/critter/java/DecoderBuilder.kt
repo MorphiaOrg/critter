@@ -8,6 +8,7 @@ import com.squareup.javapoet.TypeSpec
 import dev.morphia.annotations.PostLoad
 import dev.morphia.annotations.PreLoad
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.titleCase
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.EntityDecoder

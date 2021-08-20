@@ -14,6 +14,7 @@ import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel

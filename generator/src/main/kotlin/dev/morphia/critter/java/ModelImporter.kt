@@ -11,6 +11,8 @@ import dev.morphia.critter.CritterAnnotation
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.CritterType
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.methodCase
+import dev.morphia.critter.titleCase
 import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.EntityModelBuilder

@@ -4,6 +4,7 @@ import dev.morphia.critter.CritterAnnotation
 import dev.morphia.critter.CritterClass
 import dev.morphia.critter.CritterMethod
 import dev.morphia.critter.CritterProperty
+import dev.morphia.critter.titleCase
 import dev.morphia.critter.toCritter
 import org.jboss.forge.roaster.Roaster.parse
 import org.jboss.forge.roaster.model.Visibility.PUBLIC
@@ -41,7 +42,6 @@ class JavaClass(
                     javaField.type.toCritter(),
                     javaField.annotations.map { it.toCritter() },
                     javaField.isFinal,
-                    javaField.visibility,
                     javaField.literalInitializer,
                 ).also {
                     it.accessor = sourceClass.methods.firstOrNull { isGetter(it, javaField) }
@@ -116,6 +116,7 @@ class JavaClass(
             .filter { it.hasAnnotation(annotation) }
             .map { it.toCritter() }
     }
+
     fun bestConstructor(): CritterMethod? {
         val propertyMap = properties
             .map { it.name to it.type }

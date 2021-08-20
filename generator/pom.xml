@@ -104,7 +104,7 @@
             <version>${javapoet.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.shyiko</groupId>
+            <groupId>com.pinterest</groupId>
             <artifactId>ktlint</artifactId>
         </dependency>
         <dependency>

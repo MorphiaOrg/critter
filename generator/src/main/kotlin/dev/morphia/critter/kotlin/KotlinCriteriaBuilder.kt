@@ -1,9 +1,5 @@
 package dev.morphia.critter.kotlin
 
-import com.github.shyiko.ktlint.core.KtLint
-import com.github.shyiko.ktlint.core.LintError
-import com.github.shyiko.ktlint.core.RuleSet
-import com.github.shyiko.ktlint.core.RuleSetProvider
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -24,22 +20,18 @@ import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
-import dev.morphia.critter.CritterAnnotation
-import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.CritterType
 import dev.morphia.critter.CritterType.Companion.isNumeric
 import dev.morphia.critter.FilterSieve
+import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.UpdateSieve
-import dev.morphia.critter.java.titleCase
+import dev.morphia.critter.titleCase
 import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.updates.UpdateOperators
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.Comparator.comparingInt
-import java.util.ServiceLoader
 
-class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
+class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     companion object {
         private val STRING = String::class.asClassName()
         private val NULLABLE_STRING = STRING.copy(nullable = true)
@@ -50,11 +42,6 @@ class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
         context.classes.values.forEach {
             build(context.outputDirectory, it)
         }
-    }
-
-    private val ruleSets: List<RuleSet> by lazy {
-        ServiceLoader.load(RuleSetProvider::class.java).map<RuleSetProvider, RuleSet> { it.get() }
-            .sortedWith(comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }.thenComparing(RuleSet::id))
     }
 
     private fun build(directory: File, source: KotlinClass) {
@@ -101,7 +88,6 @@ class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
                     .addImport(UpdateOperators::class.java.packageName, "UpdateOperators", "UpdateOperator")
                     .build()
                 fileSpec.writeTo(directory)
-
 //                formatOutput(directory, fileSpec)
             }
         } catch (e: Exception) {
@@ -165,6 +151,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
         )
     }
 
+/*
     private fun formatOutput(directory: File, fileSpec: FileSpec) {
         val path = fileSpec.toJavaFileObject().toUri().path
         val file = File(directory, path)
@@ -176,6 +163,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext): SourceBuilder {
         LOG.debug("Formatting generated file: $file")
         file.writeText(KtLint.format(file.readText(), ruleSets, mapOf(), cb))
     }
+*/
 
     private fun addField(criteriaClass: Builder, field: PropertySpec) {
         if (field.hasAnnotation(Reference::class.java)) {
@@ -276,3 +264,6 @@ private fun Builder.attachUpdates(field: PropertySpec) {
     UpdateSieve.handlers(field, this)
 }
 
+fun String.className(): ClassName {
+    return ClassName.bestGuess(this)
+}

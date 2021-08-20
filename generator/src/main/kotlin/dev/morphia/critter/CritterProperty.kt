@@ -10,7 +10,6 @@ class CritterProperty(
     val name: String, var type: CritterType,
     val annotations: List<CritterAnnotation>,
     var isFinal: Boolean = false,
-    var visibility: Visibility = PUBLIC,
     var stringLiteralInitializer: String? = null
 ) {
     var accessor: CritterMethod? = null
@@ -34,7 +33,7 @@ class CritterProperty(
         }
     }
     override fun toString(): String {
-        return "CritterProperty(name='$name', type=$type, isFinal=$isFinal, visibility=$visibility, " +
-            "stringLiteralInitializer=$stringLiteralInitializer, annotations=$annotations, accessor=$accessor, mutator=$mutator)"
+        return "CritterProperty(name='$name', type=$type, annotations=$annotations, isFinal=$isFinal, " +
+            "stringLiteralInitializer=$stringLiteralInitializer, accessor=$accessor, mutator=$mutator)"
     }
 }

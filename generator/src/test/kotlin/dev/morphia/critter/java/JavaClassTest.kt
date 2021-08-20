@@ -7,6 +7,7 @@ import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.MethodSource
+import org.testng.Assert
 import org.testng.Assert.assertEquals
 import org.testng.annotations.Test
 import java.io.File
@@ -25,7 +26,8 @@ class JavaClassTest {
 
         val criteriaFiles = list(directory)
 
-        validatePersonCriteria(personClass, criteriaFiles.find { it.name == "PersonCriteria" } as JavaClassSource)
+        validatePersonCriteria(personClass, criteriaFiles.first { it.name == "PersonCriteria" } as JavaClassSource)
+        validateInvoiceCriteria(criteriaFiles.first { it.name == "InvoiceCriteria" } as JavaClassSource)
     }
 
     @Test
@@ -59,6 +61,10 @@ class JavaClassTest {
 
     private fun list(directory: File): List<JavaType<*>> {
         return directory.walkTopDown().filter { it.name.endsWith(".java") }.map { Roaster.parse(it) }.toList()
+    }
+
+    private fun validateInvoiceCriteria(invoiceCriteria: JavaClassSource) {
+        Assert.assertNotNull(invoiceCriteria.getMethod("addresses"))
     }
 
     private fun validatePersonCriteria(personClass: JavaClass, personCriteria: JavaClassSource) {

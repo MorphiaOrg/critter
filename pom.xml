@@ -42,10 +42,10 @@
         <dokka.version>1.5.0</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
-        <kibble.version>0.18</kibble.version>
+        <kibble.version>0.19-SNAPSHOT</kibble.version>
         <kotlin.version>1.5.20</kotlin.version>
         <kotlinpoet.version>1.9.0</kotlinpoet.version>
-        <ktlint.version>0.31.0</ktlint.version>
+        <ktlint.version>0.42.1</ktlint.version>
         <maven.version>3.6.3</maven.version>
         <morphia.version>2.3.0-SNAPSHOT</morphia.version>
         <roaster.version>2.23.0.Final</roaster.version>
@@ -220,7 +220,7 @@
                 <version>${bottlerocket.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.shyiko</groupId>
+                <groupId>com.pinterest</groupId>
                 <artifactId>ktlint</artifactId>
                 <version>${ktlint.version}</version>
                 <exclusions>

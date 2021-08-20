@@ -7,6 +7,7 @@ import dev.morphia.critter.Critter.addMethods
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.UpdateSieve
+import dev.morphia.critter.titleCase
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
@@ -173,19 +174,6 @@ private fun JavaClassSource.attachFilters(property: CritterProperty) {
 private fun JavaClassSource.attachUpdates(property: CritterProperty) {
     UpdateSieve.handlers(property, this)
 }
-
-fun String.nameCase(): String {
-    return first().uppercase(Locale.getDefault()) + substring(1)
-}
-
-fun String.titleCase(): String {
-    return first().uppercase(Locale.getDefault()) + substring(1)
-}
-
-fun String.methodCase(): String {
-    return first().lowercase(Locale.getDefault()) + substring(1)
-}
-
 fun String.className(): ClassName {
     return ClassName.get(substringBeforeLast('.'), substringAfterLast('.'))
 }

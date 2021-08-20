@@ -32,8 +32,18 @@ class KotlinClassTest {
         personClass as KotlinClass
         Assert.assertEquals(personClass.fields.size, 5, "Found: \n${personClass.fields.joinToString(",\n")}")
         val criteriaFiles = Kibble.parse(listOf(directory))
-        validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!)
-        validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria.kt" }!!)
+        validatePersonCriteria(criteriaFiles.first { it.name == "PersonCriteria.kt" })
+        validateInvoiceCriteria(criteriaFiles.first { it.name == "InvoiceCriteria.kt" })
+    }
+
+    @Test
+    fun codecs() {
+        val context = KotlinContext(format = true, force = true, outputDirectory = File("../tests/maven/kotlin/target/generated-sources/critter"))
+        File("../tests/maven/kotlin/src/main/kotlin/")
+            .walkTopDown()
+            .filter { it.name.endsWith(".kt") }
+            .forEach { context.parse(it) }
+        CodecsBuilder(context).build()
     }
 
     @Test
@@ -55,7 +65,6 @@ class Child(val age: Int, name: String, val nickNames: List<String>): Parent(nam
         Assert.assertEquals(parent.fields.size, 1, "Found: \n${parent.fields.joinToString(",\n")}")
         Assert.assertEquals(child.fields.size, 3, "Found: \n${child.fields.joinToString(",\n")}")
         val builder = KotlinCriteriaBuilder(context)
-        val directory = File("target/properties/")
         builder.build()
     }
 
