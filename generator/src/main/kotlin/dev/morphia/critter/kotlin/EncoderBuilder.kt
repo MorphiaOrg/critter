@@ -1,7 +1,6 @@
 package dev.morphia.critter.kotlin
 
 import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.AnnotationSpec.Companion
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.FINAL
@@ -22,16 +21,13 @@ import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
-import dev.morphia.mapping.codec.pojo.PropertyModel
 import dev.morphia.mapping.codec.writer.DocumentWriter
 import org.bson.BsonWriter
 import org.bson.Document
 import org.bson.codecs.Codec
 import org.bson.codecs.EncoderContext
-import org.bson.codecs.IdGenerator
 import java.io.File
 
 class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
@@ -161,7 +157,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
                 writer.writeString(model.getDiscriminatorKey(), model.getDiscriminator())
             }
         """.trimIndent()
-        source.fields.forEach { field ->
+        source.properties.forEach { field ->
             if (!(field.hasAnnotation(Id::class.java)
                     || field.hasAnnotation(LoadOnly::class.java)
                     || field.hasAnnotation(NotSaved::class.java))
@@ -194,10 +190,9 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
     }
 
     private fun idProperty(): CritterProperty? {
-        return source.fields
+        return source.properties
             .filter { it.hasAnnotation(Id::class.java) }
             .firstOrNull()
-            ?.toCritter()
     }
 
     private fun encoderClassMethod() {

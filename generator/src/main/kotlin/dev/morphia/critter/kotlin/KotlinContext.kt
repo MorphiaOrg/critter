@@ -2,10 +2,14 @@ package dev.morphia.critter.kotlin
 
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import dev.morphia.aggregation.experimental.codecs.ExpressionHelper
 import dev.morphia.critter.CritterContext
+import dev.morphia.critter.CritterType
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.ServiceLoader
@@ -61,4 +65,11 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
         sourceFile.writeText(KtLint.format(sourceFile.readText(), ruleSets, mapOf(), cb))
 */
     }
+}
+
+fun CritterType.typeName(): TypeName {
+    var typeName: ClassName = name.className()
+
+    return if(typeParameters.isEmpty()) typeName else
+        typeName.parameterizedBy(typeParameters.map { it.typeName() })
 }

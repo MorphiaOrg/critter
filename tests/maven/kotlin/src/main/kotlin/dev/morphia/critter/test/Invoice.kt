@@ -22,6 +22,7 @@ import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PreLoad
 import dev.morphia.annotations.PrePersist
 import dev.morphia.annotations.Reference
+import dev.morphia.annotations.Transient
 import org.bson.types.ObjectId
 import java.time.LocalDateTime
 import java.util.Objects
@@ -45,19 +46,19 @@ class Invoice {
     var items: MutableList<Item> = mutableListOf()
 
     @Transient
-    var isPostLoad = false
+    var isPostLoad: Boolean = false
         private set
 
     @Transient
-    var isPreLoad = false
+    var isPreLoad: Boolean = false
         private set
 
     @Transient
-    var isPrePersist = false
+    var isPrePersist: Boolean = false
         private set
 
     @Transient
-    var isPostPersist = false
+    var isPostPersist: Boolean = false
         private set
 
     constructor(orderDate: LocalDateTime, person: Person, addresses: Address, vararg items: Item) {
@@ -69,7 +70,7 @@ class Invoice {
         this.items.addAll(items)
     }
 
-    constructor(orderDate: LocalDateTime, person: Person, addresses: List<Address>, items: List<Item>) {
+    constructor(orderDate: LocalDateTime, person: Person, addresses: MutableList<Address>, items: MutableList<Item>) {
         this.orderDate = orderDate
         this.person = person
         this.addresses.addAll(addresses)

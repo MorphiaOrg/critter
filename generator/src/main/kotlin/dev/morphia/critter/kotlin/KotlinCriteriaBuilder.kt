@@ -74,7 +74,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                         .build()
                 )
 
-                if (source.fields.isNotEmpty()) {
+                if (source.properties.isNotEmpty()) {
                     buildCompanionObject(criteriaName, source, criteriaClass)
                 }
 
@@ -109,7 +109,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                     .build()
             )
 
-            source.fields.forEach { field ->
+            source.properties.forEach { field ->
                 addProperty(
                     PropertySpec.builder(field.name, STRING)
                         .initializer(""""${field.mappedName()}"""")

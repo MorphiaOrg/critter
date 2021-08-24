@@ -9,8 +9,8 @@ class CodecsBuilder(val context: KotlinContext) : SourceBuilder {
 
     override fun build() {
         EncoderBuilder(context).build()
-//        DecoderBuilder(context).build()
-//        InstanceCreatorBuilder(context).build()
+        DecoderBuilder(context).build()
+        InstanceCreatorBuilder(context).build()
 //        CodecProviderBuilder(context).build()
 //        ModelImporter(context).build()
     }

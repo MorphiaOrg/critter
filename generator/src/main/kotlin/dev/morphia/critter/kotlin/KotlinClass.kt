@@ -1,5 +1,6 @@
 package dev.morphia.critter.kotlin
 
+import com.antwerkz.kibble.functions
 import com.antwerkz.kibble.properties
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -21,6 +22,7 @@ import dev.morphia.critter.CritterParameter
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.CritterType
 import java.io.File
+import java.util.TreeMap
 
 @Suppress("UNCHECKED_CAST")
 class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, file: File) :
@@ -28,6 +30,17 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
 
     val annotations = source.annotationSpecs
     val fields by lazy { listProperties() }
+    val properties: List<CritterProperty> by lazy {
+        val parent  = context.resolve(name = source.superclass.toString())
+        (parent?.properties ?: listOf()) + source.properties
+            .filter { !it.isTransient() }
+            .map { property ->
+                CritterProperty(property.name, property.type.toCritter(),
+                    property.annotations.map { it.toCritter() }, !property.mutable, property.initializer.toString())
+            }
+            .sortedBy(CritterProperty::name)
+            .toMutableList()
+    }
     val qualifiedName: String by lazy {
         pkgName?.let { "$pkgName.$name" } ?: name
     }
@@ -47,6 +60,12 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
         }
 
         return list
+    }
+
+    val constructors: List<CritterMethod> by lazy {
+        source.functions
+            .filter { it.isConstructor }
+            .map { it.toCritter() }
     }
 
     fun isAbstract() = source.isAbstract()
@@ -70,6 +89,29 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
             .filter { it.annotations.contains(AnnotationSpec.builder(annotation).build()) }
             .map { it.toCritter() }
     }
+
+    fun bestConstructor(): CritterMethod? {
+        val propertyMap = properties
+            .map { it.name to it.type }
+            .toMap(TreeMap())
+        val ctors = constructors
+        val all = ctors
+            .filter {
+                it.parameters.all { param ->
+                    println("param = ${param}")
+                    val critterType = propertyMap[param.name]
+                    println("critterType = ${critterType}")
+                    println("critterType == param.type = ${critterType == param.type}")
+                    critterType == param.type
+                }
+            }
+        val matches = all
+            .sortedBy { it.parameters.size }
+            .reversed()
+
+        return matches.firstOrNull()
+    }
+
 }
 
 private fun AnnotationSpec.toCritter(): CritterAnnotation {
@@ -77,10 +119,10 @@ private fun AnnotationSpec.toCritter(): CritterAnnotation {
         override fun literalValue(name: String): String {
             TODO("Not yet implemented")
         }
-        override fun annotationArrayValue(): List<CritterAnnotation>? {
+        override fun annotationArrayValue(): List<CritterAnnotation> {
             TODO("Not yet implemented")
         }
-        override fun annotationValue(name: String): CritterAnnotation? {
+        override fun annotationValue(name: String): CritterAnnotation {
             TODO("Not yet implemented")
         }
     }
@@ -96,7 +138,7 @@ fun FunSpec.toCritter(): CritterMethod {
 }
 
 fun PropertySpec.toCritter(): CritterProperty {
-    return CritterProperty(name, type.toCritter(), annotations.map { it.toCritter() }, !mutable, initializer?.toString())
+    return CritterProperty(name, type.toCritter(), annotations.map { it.toCritter() }, !mutable, initializer.toString())
 }
 
 private fun TypeName?.toCritter(): CritterType {
@@ -113,7 +155,7 @@ private fun TypeName?.toCritter(): CritterType {
 }
 
 fun ParameterSpec.toCritter(): CritterParameter {
-    TODO("Not yet implemented")
+    return CritterParameter(name, type.toCritter(), false, annotations.map { it.toCritter() })
 }
 
 internal fun CodeBlock.toPair(): Pair<String, String> {

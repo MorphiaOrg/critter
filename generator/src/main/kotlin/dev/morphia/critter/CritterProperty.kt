@@ -3,14 +3,12 @@ package dev.morphia.critter
 import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
-import org.jboss.forge.roaster.model.Visibility
-import org.jboss.forge.roaster.model.Visibility.PUBLIC
 
 class CritterProperty(
     val name: String, var type: CritterType,
     val annotations: List<CritterAnnotation>,
     var isFinal: Boolean = false,
-    var stringLiteralInitializer: String? = null
+    var stringLiteralInitializer: String //? = null
 ) {
     var accessor: CritterMethod? = null
     var mutator: CritterMethod? = null

@@ -37,11 +37,6 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
         fun isText(type: String) = TEXT_TYPES.contains(type)
     }
 
-    init {
-        if (name != "void" && !name.contains(".")) {
-            throw IllegalArgumentException("$name is not fully qualified")
-        }
-    }
     fun isContainer() = name in CONTAINER_TYPES
     fun isGeoCompatible(): Boolean {
         return name in GEO_TYPES || return try {
