@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.LATEINIT
+import com.squareup.kotlinpoet.KModifier.OPEN
 import com.squareup.kotlinpoet.KModifier.OVERRIDE
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.PropertySpec
@@ -19,19 +20,22 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
     private lateinit var creator: TypeSpec.Builder
     private lateinit var creatorName: ClassName
     private lateinit var entityName: ClassName
+
     override fun build() {
         context.classes.values.forEach { source ->
             this.source = source
             entityName = ClassName.bestGuess(source.qualifiedName)
             creatorName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")
             creator = TypeSpec.classBuilder(creatorName)
+                .addAnnotation(
+                    AnnotationSpec.builder(Suppress::class.java)
+                        .addMember("\"UNCHECKED_CAST\"")
+                        .build()
+                )
+                .addModifiers(OPEN)
             val sourceTimestamp = source.lastModified()
             val decoderFile = File(context.outputDirectory, creatorName.canonicalName.replace('.', '/') + ".java")
 
-            creator.addAnnotation(AnnotationSpec.builder(Suppress::class.java)
-//                .addMember("\"UNNECESSARY_NOT_NULL_ASSERTION\"")
-                .addMember("\"UNCHECKED_CAST\"")
-                .build())
             if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
                 creator.addSuperinterface(MorphiaInstanceCreator::class.java)
                 properties()
