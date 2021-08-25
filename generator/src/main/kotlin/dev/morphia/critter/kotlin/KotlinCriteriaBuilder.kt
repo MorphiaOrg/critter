@@ -137,7 +137,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     private fun Builder.addFieldCriteriaMethod(field: PropertySpec) {
         val concreteType = field.type.concreteType()
         val annotations = context.classes[concreteType.canonicalName]?.annotations
-        val none = annotations?.none { it.className.packageName.startsWith("dev.morphia.annotations") } ?: true
+        val none = annotations?.none { it.type.packageName.startsWith("dev.morphia.annotations") } ?: true
         val fieldCriteriaName = if (none) {
             field.name.titleCase() + "FieldCriteria"
         } else {
@@ -218,7 +218,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     fun PropertySpec.isMappedType(): Boolean {
         val mappedType = mappedType()
         return mappedType != null && mappedType.annotations.any {
-            it.className.packageName in listOf(Entity::class.java.simpleName, Embedded::class.java.simpleName)
+            it.type.packageName in listOf(Entity::class.java.simpleName, Embedded::class.java.simpleName)
         }
     }
 }

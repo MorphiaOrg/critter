@@ -1,11 +1,20 @@
-package dev.morphia.critter.java
+package dev.morphia.critter.kotlin
 
-import com.squareup.javapoet.ClassName
-import com.squareup.javapoet.MethodSpec
-import com.squareup.javapoet.MethodSpec.methodBuilder
-import com.squareup.javapoet.ParameterizedTypeName
-import com.squareup.javapoet.TypeSpec
-import com.squareup.javapoet.TypeSpec.Builder
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.FunSpec.Companion.builder
+import com.squareup.kotlinpoet.KModifier.INTERNAL
+import com.squareup.kotlinpoet.KModifier.OVERRIDE
+import com.squareup.kotlinpoet.KModifier.PRIVATE
+import com.squareup.kotlinpoet.KModifier.VARARG
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeSpec.Builder
+import com.squareup.kotlinpoet.TypeSpec.Companion
+import com.squareup.kotlinpoet.asClassName
 import dev.morphia.Datastore
 import dev.morphia.critter.CritterAnnotation
 import dev.morphia.critter.CritterProperty
@@ -20,30 +29,33 @@ import dev.morphia.mapping.codec.pojo.TypeData
 import dev.morphia.mapping.codec.pojo.experimental.EntityModelImporter
 import org.bson.codecs.pojo.PropertyAccessor
 import java.util.concurrent.atomic.AtomicInteger
-import javax.lang.model.element.Modifier
-import javax.lang.model.element.Modifier.PRIVATE
-import javax.lang.model.element.Modifier.PUBLIC
-import javax.lang.model.element.Modifier.STATIC
 
-class ModelImporter(val context: JavaContext) : SourceBuilder {
+class ModelImporter(val context: KotlinContext) : SourceBuilder {
     private lateinit var utilName: String
     private lateinit var util: Builder
-    private lateinit var source: JavaClass
+    private lateinit var source: KotlinClass
     private lateinit var properties: List<CritterProperty>
     private lateinit var importer: Builder
     private lateinit var importerName: ClassName
     private val builders = AtomicInteger(1)
     override fun build() {
-        importerName = ClassName.get("dev.morphia.mapping.codec.pojo", "CritterModelImporter")
+        importerName = ClassName("dev.morphia.mapping.codec.pojo", "CritterModelImporter")
         importer = TypeSpec.classBuilder(importerName)
-            .addModifiers(PUBLIC, Modifier.FINAL)
             .addSuperinterface(EntityModelImporter::class.java)
-        val method = methodBuilder("importModels")
-            .addModifiers(PUBLIC)
-            .addParameter(Datastore::class.java, "datastore")
-            .returns(ParameterizedTypeName.get(List::class.java, EntityModel::class.java))
+            .addAnnotation(
+                AnnotationSpec.builder(Suppress::class.java)
+                    .addMember("\"UNCHECKED_CAST\"")
+                    .build()
+            )
+        val method = builder("importModels")
+            .addModifiers(OVERRIDE)
+            .addParameter("datastore", Datastore::class.java)
+//            .returns(
+//                List::class.java.asClassName()
+//                    .parameterizedBy(EntityModel::class.java.asClassName())
+//            )
 
-        method.addCode("return List.of(")
+        method.addCode("return listOf(")
         method.addCode(
             context.classes.values
                 .filter { !it.isAbstract() }
@@ -51,20 +63,20 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                     "build${source.name.titleCase()}Model(datastore)"
                 }
         )
-        method.addCode(");")
-        importer.addMethod(method.build())
+        method.addCode(")")
+        importer.addFunction(method.build())
 
         typeData()
 
-        importer.addMethod(
-            methodBuilder("importCodecProvider")
-                .addModifiers(PUBLIC)
-                .addParameter(Datastore::class.java, "datastore")
+        importer.addFunction(
+            builder("importCodecProvider")
+                .addModifiers(OVERRIDE)
+                .addParameter("datastore", Datastore::class.java)
                 .addCode(
                     """
-                        ${"$"}T mapper = datastore.getMapper();
-                        mapper.register(new CritterCodecProvider(mapper, datastore));
-                        datastore.updateDatabaseWithRegistry();
+                        val mapper = datastore.getMapper()
+                        mapper.register(CritterCodecProvider(mapper, datastore))
+                        datastore.updateDatabaseWithRegistry()
                     """.trimIndent(), Mapper::class.java
                 )
                 .build()
@@ -76,22 +88,22 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 this.source = source
                 this.properties = source.properties
                 this.utilName = "${source.name}Util"
-                this.util = TypeSpec.classBuilder(utilName)
-                    .addModifiers(PRIVATE, STATIC)
-                val builder = methodBuilder("build${source.name.titleCase()}Model")
+                this.util = TypeSpec.objectBuilder(utilName)
+                    .addModifiers(INTERNAL)
+                val builder = builder("build${source.name.titleCase()}Model")
                     .addModifiers(PRIVATE)
-                    .addParameter(Datastore::class.java, "datastore")
+                    .addParameter("datastore", Datastore::class.java)
                     .returns(EntityModel::class.java)
 
                 builder
-                    .addCode("var modelBuilder = new \$T(datastore)\n", EntityModelBuilder::class.java)
-                    .addCode(".type(\$T.class)", source.qualifiedName.className())
+                    .addCode("var modelBuilder = %T(datastore)\n", EntityModelBuilder::class.java)
+                    .addCode(".type(%T::class.java)", source.qualifiedName.className())
 
                 annotations(builder)
                 properties(builder)
                 builder.addStatement("return modelBuilder.build()")
 
-                importer.addMethod(builder.build())
+                importer.addFunction(builder.build())
                 importer.addType(util.build())
             }
 
@@ -99,20 +111,27 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     }
 
     private fun typeData() {
-        val method = methodBuilder("typeData")
-            .addModifiers(PRIVATE, STATIC)
-            .addParameter(Class::class.java, "type")
-            .addParameter(arrayOf<TypeData<*>>()::class.java, "arguments")
-            .varargs(true)
-            .returns(TypeData::class.java)
+        val objectBuilder = TypeSpec.companionObjectBuilder()
+        val method = builder("typeData")
+            .addParameter("type", Class::class.java.asClassName()
+                .parameterizedBy(STAR))
+            .addParameter(
+                ParameterSpec.builder("arguments", TypeData::class.java.asClassName()
+                    .parameterizedBy(STAR))
+                    .addModifiers(VARARG)
+                    .build()
+            )
+            .returns(TypeData::class.java.asClassName()
+                .parameterizedBy(STAR))
 
-        method.addStatement("var builder = \$T.builder(type)", TypeData::class.java)
-        method.beginControlFlow("for(TypeData argument: arguments)")
+        method.addStatement("var builder = %T.builder(type)", TypeData::class.java)
+        method.beginControlFlow("for(argument in arguments)")
         method.addStatement("builder.addTypeParameter(argument)", TypeData::class.java)
         method.endControlFlow()
         method.addStatement("return builder.build()")
 
-        importer.addMethod(method.build())
+        objectBuilder.addFunction(method.build())
+        importer.addType(objectBuilder.build())
     }
 
 /*
@@ -128,58 +147,57 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         return props(source)
     }
 */
-
-    private fun properties(builder: MethodSpec.Builder) {
+    private fun properties(builder: FunSpec.Builder) {
         properties
             .forEach { property ->
-            builder.addCode(
-                """modelBuilder.addProperty()
+                builder.addCode(
+                    """modelBuilder.addProperty()
                     .name("${property.name}")
-                    .accessor(${accessor(property)})
+                    .accessor(${accessor(property)} as PropertyAccessor<in Any>)
                 """
-            )
-            typeData(builder, property)
-            property.annotations.forEach {
-                if (it.values.isNotEmpty()) {
-                    val name = buildAnnotation(it)
-                    builder.addCode(".annotation($name())\n")
-                } else {
-                    val name = annotationBuilderName(it)
-                    builder.addCode(".annotation(${"$"}T.${name.simpleName().methodCase()}().build())\n", name)
+                )
+                typeData(builder, property)
+                property.annotations.forEach {
+                    if (it.values.isNotEmpty()) {
+                        val name = buildAnnotation(it)
+                        builder.addCode(".annotation($name())\n")
+                    } else {
+                        val name = annotationBuilderName(it)
+                        builder.addCode(".annotation(%T.${name.simpleName.methodCase()}().build())\n", name)
+                    }
                 }
+                builder.addCode(".discoverMappedName()\n")
             }
-            builder.addCode(".discoverMappedName();\n")
-        }
     }
 
     private fun accessor(property: CritterProperty): String {
         val name = "${property.name.methodCase()}Accessor"
         try {
-            val method = methodBuilder(name)
-                .addModifiers(PRIVATE, STATIC)
-                .returns(PropertyAccessor::class.java)
+            val method = builder(name)
+                .returns(PropertyAccessor::class.java.asClassName()
+                    .parameterizedBy(STAR))
                 .addCode(
                     """
-                        return new ${"$"}T() {
-                            @Override
-                            public void set(Object instance, Object value) {
-                    """.trimIndent(), PropertyAccessor::class.java)
+                        return object: %T<%T> {
+                            override fun <S : Any> set(instance: S, `value`: %T?) {
+                            
+                    """.trimIndent(), PropertyAccessor::class.java, property.type.typeName(), property.type.typeName()
+                )
             property.mutator?.let {
-                method.addCode("((${source.name})instance).${it.name}((${"$"}T)value);", property.type.name.className())
+                method.addCode("(instance as ${source.name}).${it.name} = value as %T", property.type.typeName())
             } ?: run {
-                method.addStatement("throw new \$T(\"${property.name} does not have a set method.\")", IllegalStateException::class.java)
+                method.addCode("throw %T(\"${property.name} is immutable.\")", IllegalStateException::class.java)
             }
             method.addCode(
                 """
                     }
-                        @Override
-                        public Object get(Object instance) {
-                            return ((${source.name})instance).${property.accessor?.name}();
+                        override fun <S : Any> get(instance: S): %T? {
+                            return (instance as ${source.name}).${property.name}
                         }
-                    };
-                """.trimIndent()
+                    }
+                """.trimIndent(), property.type.typeName()
             )
-            util.addMethod(method.build())
+            util.addFunction(method.build())
         } catch (e: NullPointerException) {
             println("property = [${property}]")
             throw e
@@ -189,10 +207,9 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     }
 
     private fun methodName(property: CritterProperty) = (property.name).methodCase()
-
-    private fun typeData(builder: MethodSpec.Builder, property: CritterProperty) {
+    private fun typeData(builder: FunSpec.Builder, property: CritterProperty) {
         if (!property.type.isParameterized()) {
-            builder.addCode(".typeData(\$T.builder(\$T.class).build())\n", TypeData::class.java, property.type.name.className())
+            builder.addCode(".typeData(%T.builder(%T::class.java).build())\n", TypeData::class.java, property.type.typeName())
         } else {
             builder.addCode(".typeData(${typeDataGenerics(property)})")
         }
@@ -200,22 +217,22 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
     private fun typeDataGenerics(property: CritterProperty): String {
         val name = "${methodName(property)}TypeData"
-        val method = methodBuilder(name)
-            .addModifiers(PRIVATE, STATIC)
-            .returns(TypeData::class.java)
+        val method = builder(name)
+            .addModifiers(INTERNAL)
+            .returns(TypeData::class.java.asClassName()
+                .parameterizedBy(STAR))
         val typeCount = AtomicInteger(0)
         val argument = property.type
 
         method.addCode("return ")
         emitTypeData(method, typeCount, argument)
-        method.addCode(";")
 
-        util.addMethod(method.build())
+        util.addFunction(method.build())
         return "$utilName.$name()"
     }
 
-    private fun emitTypeData(method: MethodSpec.Builder, typeCount: AtomicInteger, type: CritterType) {
-        method.addCode("typeData(\$T.class", type.name.className())
+    private fun emitTypeData(method: FunSpec.Builder, typeCount: AtomicInteger, type: CritterType) {
+        method.addCode("typeData(%T::class.java", type.name.className())
 
         type.typeParameters.forEach {
             method.addCode(", ")
@@ -224,7 +241,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         method.addCode(")")
     }
 
-    private fun annotations(builder: MethodSpec.Builder) {
+    private fun annotations(builder: FunSpec.Builder) {
         source.annotations
             .filter { it.type.packageName.startsWith("dev.morphia") }
             .forEach {
@@ -233,22 +250,21 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 } else {
                     val name = annotationBuilderName(it)
                     builder.addCode(
-                        "\n.annotation(\$T.${name.simpleName().methodCase()}().build())\n",
+                        "\n.annotation(%T.${name.simpleName.methodCase()}().build())\n",
                         annotationBuilderName(it)
                     )
                 }
             }
-        builder.addCode(";")
     }
 
     private fun buildAnnotation(annotation: CritterAnnotation): String {
         val builderName = annotationBuilderName(annotation)
         val methodName = "annotation${annotation.type.simpleName}${builders.getAndIncrement()}"
-        val builder = methodBuilder(methodName)
-            .addModifiers(PRIVATE, STATIC)
+        val builder = builder(methodName)
+            .addModifiers(PRIVATE)
             .returns(annotation.type.name.className())
 
-        builder.addStatement("var builder = ${"$"}T.${builderName.simpleName().methodCase()}()", builderName)
+        builder.addStatement("var builder = %T.${builderName.simpleName.methodCase()}()", builderName)
         annotation.values
             .forEach { pair ->
                 val name = pair.key
@@ -267,7 +283,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
         builder.addStatement("return builder.build()")
 
-        util.addMethod(builder.build())
+        util.addFunction(builder.build())
         return "$utilName.$methodName"
     }
 

@@ -12,6 +12,6 @@ class CodecsBuilder(val context: KotlinContext) : SourceBuilder {
         DecoderBuilder(context).build()
         InstanceCreatorBuilder(context).build()
         CodecProviderBuilder(context).build()
-//        ModelImporter(context).build()
+        ModelImporter(context).build()
     }
 }

@@ -28,7 +28,7 @@ import java.util.TreeMap
 class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, file: File) :
     CritterClass(source.name ?: "", fileSpec.packageName, file) {
 
-    val annotations = source.annotationSpecs
+    val annotations = source.annotationSpecs.map { it.toCritter() }
     val fields by lazy { listProperties() }
     val properties: List<CritterProperty> by lazy {
         val parent  = context.resolve(name = source.superclass.toString())
@@ -115,7 +115,7 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
 }
 
 private fun AnnotationSpec.toCritter(): CritterAnnotation {
-    return object: CritterAnnotation(this.typeName.toString()/*, this.members*/) {
+    return object: CritterAnnotation(CritterType(this.typeName.toString())/*, this.members*/) {
         override fun literalValue(name: String): String {
             TODO("Not yet implemented")
         }

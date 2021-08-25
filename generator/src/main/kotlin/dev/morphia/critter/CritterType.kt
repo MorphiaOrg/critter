@@ -1,6 +1,8 @@
 package dev.morphia.critter
 
 import com.mongodb.client.model.geojson.Geometry
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ClassName.Companion
 import dev.morphia.mapping.Mapper
 import org.bson.Document
 import org.jboss.forge.roaster.model.Type
@@ -35,6 +37,16 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
         }
 
         fun isText(type: String) = TEXT_TYPES.contains(type)
+    }
+
+    private val className: ClassName by lazy {
+        ClassName.bestGuess(name)
+    }
+    val packageName: String by lazy {
+        className.packageName
+    }
+    val simpleName: String by lazy {
+        className.simpleName
     }
 
     fun isContainer() = name in CONTAINER_TYPES
