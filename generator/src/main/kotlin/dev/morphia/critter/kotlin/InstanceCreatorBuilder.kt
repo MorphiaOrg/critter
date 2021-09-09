@@ -9,6 +9,8 @@ import com.squareup.kotlinpoet.KModifier.OVERRIDE
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.morphia.critter.CritterParameter
+import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
@@ -16,6 +18,17 @@ import dev.morphia.mapping.codec.pojo.PropertyModel
 import java.io.File
 
 class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
+    companion object {
+        val defaultValues = mapOf(
+            "kotlin.Boolean" to "false",
+            "kotlin.Char" to "0.toChar()",
+            "kotlin.Int" to "0",
+            "kotlin.Long" to "0L",
+            "kotlin.Short" to "0",
+            "kotlin.Float" to "0.0F",
+            "kotlin.Double" to "0.0")
+    }
+
     private lateinit var source: KotlinClass
     private lateinit var creator: TypeSpec.Builder
     private lateinit var creatorName: ClassName
@@ -38,7 +51,6 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
 
             if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
                 creator.addSuperinterface(MorphiaInstanceCreator::class.java)
-                properties()
                 getInstance()
                 set()
 
@@ -47,49 +59,80 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         }
     }
 
-    private fun properties() {
-        source.properties.forEach {
-            var type = it.type.typeName()
-            val property = PropertySpec.builder(it.name, type, PRIVATE)
-                .mutable(true)
-
-            if(it.stringLiteralInitializer == "null") {
-                property.addModifiers(LATEINIT)
-            } else {
-                property.initializer(it.stringLiteralInitializer)
-            }
-
-            creator.addProperty(
-                property
-                    .build()
-            )
-        }
-    }
-
     private fun getInstance() {
-        creator.addProperty(PropertySpec.builder("instance", entityName.copy(true), PRIVATE)
-            .mutable(true)
-            .initializer("null")
-            .build())
+        creator.addProperty(
+            PropertySpec.builder("instance", entityName, PRIVATE, LATEINIT)
+                .mutable(true)
+                .build()
+        )
         val ctor = source.bestConstructor()
-        val params = ctor?.parameters?.map { it.name } ?: emptyList()
-        val properties = source.properties
-            .toMutableList()
-        properties.removeIf { it.name in params }
+        val params = ctor?.parameters?.map { it } ?: emptyList()
+
+        var entityProperties = mutableListOf<PropertySpec>()
+
         val method = FunSpec.builder("getInstance")
             .addModifiers(OVERRIDE)
             .returns(entityName)
-            .beginControlFlow("if (instance == null)")
-            .beginControlFlow("instance = ${entityName.simpleName}(${params.joinToString()}).also")
-        properties.forEach { property ->
-            if (!property.isFinal) {
-                method.addStatement("it.${property.name} = ${property.name}")
+            .beginControlFlow("if (!::instance.isInitialized)")
+            method.addStatement("instance = %T(${params.joinToString { param -> param.name}})", entityName)
+
+        declareProperties(params, entityProperties)
+        if (entityProperties.isNotEmpty()) {
+            method.beginControlFlow(".also")
+            entityProperties.forEach { property ->
+                if(!source.properties.first { prop -> prop.name == property.name }.isFinal) {
+                    if(property.modifiers.contains(LATEINIT)) {
+                        method.beginControlFlow("if (::${property.name}.isInitialized)")
+                    }
+
+                    method.addStatement("it.${property.name} = ${property.name}")
+
+                    if(property.modifiers.contains(LATEINIT)) {
+                        method.endControlFlow()
+                    }
+                }
             }
+            method.endControlFlow()
         }
         method.endControlFlow()
-        method.endControlFlow()
 
-        creator.addFunction(method.addStatement("return instance!!").build())
+        creator.addFunction(method.addStatement("return instance").build())
+    }
+
+    /**
+     * @return the properties not included in the ctor call
+     */
+    private fun declareProperties(
+        params: List<CritterParameter>,
+        entityProperties: MutableList<PropertySpec>
+    ) {
+        val paramNames = params.map { param -> param.name }
+        source.properties.forEach {
+            val initializer = defaultValues[it.type.name]
+            var type = it.type.typeName()
+
+            if (it.type.nullable) {
+                val ctorParam = params.firstOrNull { param -> param.name == it.name }
+                //?.type?.nullable == true
+                type = type.copy(nullable = (ctorParam == null || ctorParam.type.nullable))
+            }
+            val property = PropertySpec.builder(it.name, type, PRIVATE)
+                .mutable(true)
+
+            if (initializer != null) {
+                property.initializer(initializer)
+            } else {
+                if (type.isNullable) {
+                    property.initializer("null")
+                } else {
+                    property.addModifiers(LATEINIT)
+                }
+            }
+            property.build().also {
+                entityProperties += it
+                creator.addProperty(it)
+            }
+        }
     }
 
     private fun set() {
@@ -106,14 +149,11 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
                 method.nextControlFlow("else $ifStmt")
             }
             method.addStatement("${property.name} = value as %T", property.type.typeName())
-            method.beginControlFlow("if(instance != null)")
+            method.beginControlFlow("if(::instance.isInitialized)")
             if (!property.isFinal) {
-                method.addStatement("instance!!.${property.name} = value")
+                method.addStatement("instance.${property.name} = value")
             } else {
-                method.addStatement(
-                    "throw %T(\"An instance has already been created and can not be updated because ${property.name} " +
-                        "does not have a set method.\")", IllegalStateException::class.java
-                )
+                method.addStatement("""throw %T("${property.name} is immutable.")""", IllegalStateException::class.java)
             }
             method.endControlFlow()
         }

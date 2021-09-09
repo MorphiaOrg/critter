@@ -11,11 +11,11 @@ abstract class CritterAnnotation(val type: CritterType, val values: Map<String, 
         }
     }
 
-    abstract fun literalValue(name: String): String
+    abstract fun literalValue(name: String): String?
     abstract fun annotationArrayValue(): List<CritterAnnotation>?
     abstract fun annotationValue(name: String): CritterAnnotation?
 
-    fun value(): String = literalValue("value")
+    fun value(): String? = literalValue("value")
 
     fun matches(aClass: Class<out Annotation>): Boolean {
         return aClass == klass || aClass.name == type.name
@@ -29,7 +29,7 @@ abstract class CritterAnnotation(val type: CritterType, val values: Map<String, 
 fun AnnotationSource<*>.toCritter(): CritterAnnotation {
     val ann = this
 
-    return object : CritterAnnotation(CritterType(qualifiedName), values.associate { it.name to it.stringValue }) {
+    return object : CritterAnnotation(CritterType(qualifiedName, nullable = false), values.associate { it.name to it.stringValue }) {
         override fun literalValue(name: String): String = ann.getLiteralValue(name)
         override fun annotationArrayValue(): List<CritterAnnotation>? {
             return ann.getAnnotationArrayValue()?.map { it.toCritter() }

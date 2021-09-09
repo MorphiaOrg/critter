@@ -2,6 +2,7 @@ package dev.morphia.critter.kotlin
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.FunSpec.Companion.builder
 import com.squareup.kotlinpoet.KModifier.INTERNAL
@@ -30,6 +31,7 @@ import dev.morphia.mapping.codec.pojo.experimental.EntityModelImporter
 import org.bson.codecs.pojo.PropertyAccessor
 import java.util.concurrent.atomic.AtomicInteger
 
+@OptIn(DelicateKotlinPoetApi::class)
 class ModelImporter(val context: KotlinContext) : SourceBuilder {
     private lateinit var utilName: String
     private lateinit var util: Builder
@@ -183,10 +185,10 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                             
                     """.trimIndent(), PropertyAccessor::class.java, property.type.typeName(), property.type.typeName()
                 )
-            property.mutator?.let {
-                method.addCode("(instance as ${source.name}).${it.name} = value as %T", property.type.typeName())
-            } ?: run {
-                method.addCode("throw %T(\"${property.name} is immutable.\")", IllegalStateException::class.java)
+            if(!property.isFinal) {
+                method.addStatement("(instance as ${source.name}).${property.name} = value as %T", property.type.typeName())
+            } else {
+                method.addStatement("throw %T(\"${property.name} is immutable.\")", IllegalStateException::class.java)
             }
             method.addCode(
                 """

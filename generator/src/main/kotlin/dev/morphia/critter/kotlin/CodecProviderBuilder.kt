@@ -10,7 +10,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
-import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.mapping.Mapper
@@ -34,13 +33,13 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
         )
 
         buildConstructor()
-        buildGet()
+        get()
         refreshCodecs()
 
         context.buildFile(provider.build())
     }
 
-    private fun buildGet() {
+    private fun get() {
         val method = FunSpec.builder("get")
             .addModifiers(OVERRIDE)
             .addTypeVariable(TypeVariableName("T"))
@@ -54,7 +53,7 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
                     .parameterizedBy(TypeVariableName("T"))
                     .copy(nullable = true)
             )
-            .addStatement("var found: %T<T>? = getCodecs().get(type) as MorphiaCodec<T>", MorphiaCodec::class.java)
+            .addStatement("var found: %T<T>? = getCodecs().get(type) as MorphiaCodec<T>?", MorphiaCodec::class.java)
 
         method.beginControlFlow("if (found != null)")
         method.addStatement("return found")

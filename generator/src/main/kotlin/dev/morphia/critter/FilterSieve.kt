@@ -121,8 +121,8 @@ enum class Handler : OperationGenerator {
             target.addFunction(
                 FunSpec
                     .builder(name)
-                    .addParameter(ParameterSpec.builder("value", Iterable::class.asClassName().parameterizedBy(STAR)).build())
-                    .addCode("""return Filters.`${name}`(path, value)""")
+                    .addParameter(ParameterSpec.builder("__value", Iterable::class.asClassName().parameterizedBy(STAR)).build())
+                    .addCode("""return Filters.`${name}`(path, __value)""")
                     .build()
             )
         }

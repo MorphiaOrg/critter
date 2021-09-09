@@ -32,8 +32,6 @@ object Critter {
         outputType: OutputType,
         outputDirectory: File
     ) {
-        println("********** baseDir = [${baseDir}], sourceDirectories = [${sourceDirectories}], criteriaPackage = [${criteriaPackage}], " +
-            "force = [${force}], format = [${format}], outputType = [${outputType}], outputDirectory = [${outputDirectory}]")
         javaContext = JavaContext(criteriaPackage, force, format, outputDirectory)
         kotlinContext = KotlinContext(criteriaPackage, force, format, outputDirectory)
         this.outputType = outputType

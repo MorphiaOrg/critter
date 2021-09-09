@@ -48,9 +48,9 @@ interface OperationGenerator {
             throw UnsupportedOperationException("Parameters are nonstandard.  '${kFunction}' needs a custom implementation")
         }
         val params = kFunction.parameters.drop(1).map {
-            ParameterSpec.builder(it.name!!, it.type.asTypeName()).build()
+            ParameterSpec.builder(it.name!! + "DD", it.type.asTypeName()).build()
         }
-        val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
+        val args = params.map { it.name }.joinToString(", ")
         var parameters = """path"""
         if (args.isNotBlank()) {
             parameters += ", ${args}"

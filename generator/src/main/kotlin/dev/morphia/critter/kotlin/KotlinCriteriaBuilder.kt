@@ -112,7 +112,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
             source.properties.forEach { field ->
                 addProperty(
                     PropertySpec.builder(field.name, STRING)
-                        .initializer(""""${field.mappedName()}"""")
+                        .initializer("""${field.mappedName()}""")
                         .build()
                 )
                 addFunction(
@@ -232,8 +232,8 @@ private fun TypeName.concreteType(): ClassName {
 }
 
 fun PropertySpec.isContainer() = type.toString().substringBefore("<") in CritterType.CONTAINER_TYPES
-fun PropertySpec.isNumeric() = isNumeric(type.toString())
-fun PropertySpec.isText() = CritterType.TEXT_TYPES.contains(type.toString())
+fun PropertySpec.isNumeric() = isNumeric(type.concreteType().canonicalName)
+fun PropertySpec.isText() = CritterType.TEXT_TYPES.contains(type.concreteType().canonicalName)
 fun <T : Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
     return annotations.firstOrNull { it.className == annotation.asTypeName() }
 }

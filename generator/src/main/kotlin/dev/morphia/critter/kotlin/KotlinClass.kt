@@ -15,6 +15,10 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
+import dev.morphia.annotations.PostLoad
+import dev.morphia.annotations.PostPersist
+import dev.morphia.annotations.PreLoad
+import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.CritterAnnotation
 import dev.morphia.critter.CritterClass
 import dev.morphia.critter.CritterMethod
@@ -31,16 +35,29 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
     val annotations = source.annotationSpecs.map { it.toCritter() }
     val fields by lazy { listProperties() }
     val properties: List<CritterProperty> by lazy {
-        val parent  = context.resolve(name = source.superclass.toString())
+        val parent = findParent()
         (parent?.properties ?: listOf()) + source.properties
             .filter { !it.isTransient() }
             .map { property ->
                 CritterProperty(property.name, property.type.toCritter(),
-                    property.annotations.map { it.toCritter() }, !property.mutable, property.initializer.toString())
+                    property.annotations.map { it.toCritter() }, !property.mutable, property.initializer?.toString()
+                )
             }
             .sortedBy(CritterProperty::name)
             .toMutableList()
     }
+
+    private fun findParent(): KotlinClass? {
+        var parent = context.resolve(name = source.superclass.toString())
+        if(parent == null) {
+            parent = source.superinterfaces.keys
+                .map { context.resolve(name = it.toString()) }
+                .filterNotNull()
+                .firstOrNull()
+        }
+        return parent
+    }
+
     val qualifiedName: String by lazy {
         pkgName?.let { "$pkgName.$name" } ?: name
     }
@@ -63,9 +80,11 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
     }
 
     val constructors: List<CritterMethod> by lazy {
-        source.functions
+        val ctors = source.functions
             .filter { it.isConstructor }
             .map { it.toCritter() }
+
+        source.primaryConstructor?.let { listOf(it.toCritter()) + ctors } ?: ctors
     }
 
     fun isAbstract() = source.isAbstract()
@@ -91,18 +110,20 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
     }
 
     fun bestConstructor(): CritterMethod? {
+        val ctors = constructors
+        if(hasLifecycleEvents()) {
+            val method = constructors.firstOrNull { it.parameters.isEmpty() }
+            return method ?: throw IllegalStateException("A type with lifecycle events must have a no-arg constructor")
+        }
         val propertyMap = properties
             .map { it.name to it.type }
             .toMap(TreeMap())
-        val ctors = constructors
         val all = ctors
             .filter {
                 it.parameters.all { param ->
-                    println("param = ${param}")
                     val critterType = propertyMap[param.name]
-                    println("critterType = ${critterType}")
-                    println("critterType == param.type = ${critterType == param.type}")
-                    critterType == param.type
+                    val same = critterType?.name == param.type.name
+                    same
                 }
             }
         val matches = all
@@ -111,13 +132,19 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
 
         return matches.firstOrNull()
     }
-
+    private fun hasLifecycleEvents(): Boolean {
+        return functions(PreLoad::class.java).isNotEmpty()
+            || functions(PostLoad::class.java).isNotEmpty()
+            || functions(PrePersist::class.java).isNotEmpty()
+            || functions(PostPersist::class.java).isNotEmpty()
+    }
 }
 
 private fun AnnotationSpec.toCritter(): CritterAnnotation {
-    return object: CritterAnnotation(CritterType(this.typeName.toString())/*, this.members*/) {
-        override fun literalValue(name: String): String {
-            TODO("Not yet implemented")
+    val spec = this
+    return object: CritterAnnotation(this.typeName.toCritter()/*, this.members*/) {
+        override fun literalValue(name: String): String? {
+            return spec.getValue(name)
         }
         override fun annotationArrayValue(): List<CritterAnnotation> {
             TODO("Not yet implemented")
@@ -143,12 +170,12 @@ fun PropertySpec.toCritter(): CritterProperty {
 
 private fun TypeName?.toCritter(): CritterType {
     return when {
-        this == null -> CritterType(UNIT.canonicalName)
+        this == null -> CritterType(UNIT.canonicalName, nullable = false)
         this is ClassName -> {
-            CritterType(this.canonicalName)
+            CritterType(this.canonicalName, nullable = this.isNullable)
         }
         this is ParameterizedTypeName -> {
-            CritterType(this.rawType.canonicalName, typeArguments.map { it.toCritter() })
+            CritterType(this.rawType.canonicalName, typeArguments.map { it.toCritter() }, this.rawType.isNullable)
         }
         else -> TODO("handle this type: ${this::class.java}")
     }

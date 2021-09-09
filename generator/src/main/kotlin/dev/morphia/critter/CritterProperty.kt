@@ -8,7 +8,7 @@ class CritterProperty(
     val name: String, var type: CritterType,
     val annotations: List<CritterAnnotation>,
     var isFinal: Boolean = false,
-    var stringLiteralInitializer: String //? = null
+    var stringLiteralInitializer: String? = null
 ) {
     var accessor: CritterMethod? = null
     var mutator: CritterMethod? = null

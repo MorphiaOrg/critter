@@ -9,10 +9,10 @@ import org.jboss.forge.roaster.model.Type
 import java.time.temporal.Temporal
 import java.util.Date
 
-data class CritterType(val name: String, val typeParameters: List<CritterType> = listOf()) {
+data class CritterType(val name: String, val typeParameters: List<CritterType> = listOf(), val nullable: Boolean = false) {
     companion object {
-        val DOCUMENT = CritterType(Document::class.java.name)
-        val MAPPER = CritterType(Mapper::class.java.name)
+        val DOCUMENT = CritterType(Document::class.java.name, nullable = false)
+        val MAPPER = CritterType(Mapper::class.java.name, nullable = false)
         internal val CONTAINER_TYPES = listOf("List", "Set")
             .map { listOf(it, "java.util.$it", "Mutable$it") }
             .flatten()
@@ -72,5 +72,5 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
 
 fun Type<*>.toCritter(): CritterType {
     val name = if (name != "void") qualifiedName else name
-    return CritterType(name, typeArguments.map { it.toCritter() })
+    return CritterType(name, typeArguments.map { it.toCritter() }, nullable = true)
 }

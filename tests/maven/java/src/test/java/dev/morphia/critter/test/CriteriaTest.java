@@ -118,7 +118,6 @@ public class CriteriaTest extends BottleRocketTest {
                                                     .iterator(new FindOptions()
                                                                   .sort(ascending(InvoiceCriteria.addresses().city().path())));
         List<Invoice> list = criteria1.toList();
-        debug(state, datastore);
         assertEquals(list.get(0).getAddresses().get(0).getCity(), "NYC", list.stream().map(Invoice::getId).collect(
             Collectors.toList()).toString());
         assertEquals(list.get(0), invoice, list.stream().map(Invoice::getId).collect(Collectors.toList()).toString());
@@ -127,22 +126,6 @@ public class CriteriaTest extends BottleRocketTest {
                                                     .iterator(new FindOptions()
                                                                   .sort(descending(InvoiceCriteria.addresses().city().path())));
         assertEquals(criteria2.toList().get(0).getAddresses().get(0).getCity(), "New York City");
-    }
-
-    private void debug(String state, Datastore datastore) {
-        System.out.println("state = " + state);
-        System.out.println("**** immutable");
-        System.out.println("documents = ");
-        datastore.getMapper().getCollection(Invoice.class)
-                 .withDocumentClass(Document.class)
-                 .find()
-                 .into(new ArrayList<>())
-                 .forEach(System.out::println);
-        System.out.println("invoices = ");
-        datastore.getMapper().getCollection(Invoice.class)
-                 .find()
-                 .into(new ArrayList<>())
-                 .forEach(System.out::println);
     }
 
     @Test(dataProvider = "datastores")
