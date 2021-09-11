@@ -44,6 +44,7 @@ import java.time.LocalDateTime.now
 import java.util.stream.Collectors
 
 @Test
+@Suppress("UNUSED_PARAMETER")
 class KotlinCriteriaTest : BottleRocketTest() {
     override fun databaseName(): String {
         return "critter"
@@ -88,6 +89,7 @@ class KotlinCriteriaTest : BottleRocketTest() {
 
     @Test(dataProvider = "datastores")
     fun embeds(state: String, datastore: Datastore) {
+        datastore.mapper.map(Invoice::class.java)
         var person = Person("Mike", "Bloomberg")
         datastore.save(person)
         var invoice = Invoice(now(), person, Address("New York City", "NY", "10036"))

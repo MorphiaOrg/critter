@@ -132,6 +132,7 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
 
         return matches.firstOrNull()
     }
+
     private fun hasLifecycleEvents(): Boolean {
         return functions(PreLoad::class.java).isNotEmpty()
             || functions(PostLoad::class.java).isNotEmpty()
