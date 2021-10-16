@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package dev.morphia.critter.java
 
 import com.squareup.javapoet.ClassName
@@ -123,7 +125,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         builder.beginControlFlow("for (\$T ei : mapper.getInterceptors())", EntityInterceptor::class.java)
         builder.addStatement("ei.prePersist(instance, document, mapper)")
         builder.endControlFlow()
-        builder.addStatement("var documentWriter = new \$T(document)", DocumentWriter::class.java)
+        builder.addStatement("var documentWriter = new \$T(mapper, document)", DocumentWriter::class.java)
         builder.addStatement("encodeProperties(documentWriter, instance, encoderContext)")
         builder.addStatement("document = documentWriter.getDocument()")
         builder.addCode("// call PostPersist methods\n")
@@ -167,7 +169,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         return lines.joinToString("\n")
     }
 
-    fun encodeId() {
+    private fun encodeId() {
         idProperty()?.let {
             val method = MethodSpec.methodBuilder("encodeId")
                 .addModifiers(PROTECTED)
@@ -193,17 +195,13 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
     }
 
     private fun idProperty(): CritterProperty? {
-        return source.properties
-            .filter { it.hasAnnotation(Id::class.java) }
-            .firstOrNull()
+        return source.properties.firstOrNull { it.hasAnnotation(Id::class.java) }
     }
-
     private fun getter(property: CritterProperty): String {
         val name = property.name
         val ending = name.nameCase() + "()"
-        val methodName = if (property.type.name.equals("boolean", true)) "is${ending}" else "get${ending}"
 
-        return methodName
+        return if (property.type.name.equals("boolean", true)) "is${ending}" else "get${ending}"
     }
 
     private fun setter(property: CritterProperty): String {

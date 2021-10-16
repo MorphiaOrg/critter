@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package dev.morphia.critter.kotlin
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -235,7 +237,7 @@ fun PropertySpec.isContainer() = type.toString().substringBefore("<") in Critter
 fun PropertySpec.isNumeric() = isNumeric(type.concreteType().canonicalName)
 fun PropertySpec.isText() = CritterType.TEXT_TYPES.contains(type.concreteType().canonicalName)
 fun <T : Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
-    return annotations.firstOrNull { it.className == annotation.asTypeName() }
+    return annotations.firstOrNull { it.typeName == annotation.asTypeName() }
 }
 
 fun <T : Annotation> PropertySpec.hasAnnotation(annotation: Class<T>): Boolean {

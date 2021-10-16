@@ -1,7 +1,10 @@
+@file:Suppress("DEPRECATION")
+
 package dev.morphia.critter.kotlin
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.FINAL
 import com.squareup.kotlinpoet.KModifier.OVERRIDE
@@ -30,6 +33,7 @@ import org.bson.codecs.Codec
 import org.bson.codecs.EncoderContext
 import java.io.File
 
+@OptIn(DelicateKotlinPoetApi::class)
 class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
     private lateinit var source: KotlinClass
     private lateinit var encoder: TypeSpec.Builder

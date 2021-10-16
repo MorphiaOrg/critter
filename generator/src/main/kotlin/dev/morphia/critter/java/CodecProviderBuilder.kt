@@ -47,7 +47,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
 
         context.classes.values
             .filter { !it.isAbstract() }
-            .forEachIndexed { index, javaClass ->
+            .forEachIndexed { _, javaClass ->
                 method.nextControlFlow("else if (type.equals(\$T.class))", javaClass.qualifiedName.className())
                 method.addStatement("\$T model = getMapper().getEntityModel(type)", EntityModel::class.java)
                 method.addStatement(

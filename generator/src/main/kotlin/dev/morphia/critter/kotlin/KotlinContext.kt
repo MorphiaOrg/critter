@@ -54,6 +54,7 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun formatSource(sourceFile: File) {
 /*
         val cb: (LintError, Boolean) -> Unit = { (line, col, ruleId, detail), corrected ->

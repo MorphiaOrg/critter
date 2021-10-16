@@ -20,6 +20,7 @@ class JavaClassTest {
 
         context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java")))
         context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java")))
+        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Invoice.java")))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
 
         CriteriaBuilder(context).build()

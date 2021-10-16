@@ -2,6 +2,7 @@ package dev.morphia.critter.kotlin
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.LATEINIT
 import com.squareup.kotlinpoet.KModifier.OPEN
@@ -10,13 +11,13 @@ import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import dev.morphia.critter.CritterParameter
-import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import java.io.File
 
+@OptIn(DelicateKotlinPoetApi::class)
 class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
     companion object {
         val defaultValues = mapOf(
@@ -68,7 +69,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         val ctor = source.bestConstructor()
         val params = ctor?.parameters?.map { it } ?: emptyList()
 
-        var entityProperties = mutableListOf<PropertySpec>()
+        val entityProperties = mutableListOf<PropertySpec>()
 
         val method = FunSpec.builder("getInstance")
             .addModifiers(OVERRIDE)
@@ -106,7 +107,6 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         params: List<CritterParameter>,
         entityProperties: MutableList<PropertySpec>
     ) {
-        val paramNames = params.map { param -> param.name }
         source.properties.forEach {
             val initializer = defaultValues[it.type.name]
             var type = it.type.typeName()
@@ -128,9 +128,9 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
                     property.addModifiers(LATEINIT)
                 }
             }
-            property.build().also {
-                entityProperties += it
-                creator.addProperty(it)
+            property.build().also { propertySpec ->
+                entityProperties += propertySpec
+                creator.addProperty(propertySpec)
             }
         }
     }
@@ -138,17 +138,17 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
     private fun set() {
         val method = FunSpec.builder("set")
             .addModifiers(OVERRIDE)
-            .addParameter("value", ClassName("kotlin", "Any"))
+            .addParameter("value", ClassName("kotlin", "Any").copy(nullable = true))
             .addParameter("model", PropertyModel::class.java)
 
         source.properties.forEachIndexed { index, property ->
-            val ifStmt = "if (\"${property.name}\".equals(model.getName()))"
+            val ifStmt = "if (\"${property.name}\" == model.getName())"
             if (index == 0) {
                 method.beginControlFlow(ifStmt)
             } else {
                 method.nextControlFlow("else $ifStmt")
             }
-            method.addStatement("${property.name} = value as %T", property.type.typeName())
+            method.addStatement("this.${property.name} = value as %T", property.type.typeName())
             method.beginControlFlow("if(::instance.isInitialized)")
             if (!property.isFinal) {
                 method.addStatement("instance.${property.name} = value")

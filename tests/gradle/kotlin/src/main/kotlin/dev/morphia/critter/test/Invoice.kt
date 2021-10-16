@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 @Entity
 class Invoice {
     @Id
-    private val id: ObjectId = ObjectId()
+    var id: ObjectId = ObjectId()
 
     var orderDate: LocalDateTime? = null
 
@@ -35,7 +35,7 @@ class Invoice {
 
     var total: Double = 0.0
 
-    private var items: MutableList<Item>? = null
+    var items: MutableList<Item>? = null
 
     constructor() {}
 

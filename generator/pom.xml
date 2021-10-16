@@ -27,6 +27,11 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
+                        <configuration>
+                            <args>
+                                <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
+                            </args>
+                        </configuration>
                     </execution>
 
                     <execution>

@@ -1,9 +1,6 @@
-project.version = org.apache.maven.model.io.xpp3.MavenXpp3Reader().read(file("pom.xml").inputStream())
-    .parent.version
-
 plugins {
     `kotlin-dsl`
-    kotlin("jvm") version "1.5.10"
+    kotlin("jvm") version "1.5.20"
     id("dev.morphia.critter") version "4.2.0-SNAPSHOT"
 }
 
@@ -30,11 +27,16 @@ dependencies {
 }
 
 tasks {
-    test {
+   test {
         useTestNG()
     }
 
     critter {
         force = true
     }
+}
+
+tasks.withType(JavaCompile::class.java) {
+    options.compilerArgs = listOf("-parameters")
+    options.forkOptions.executable = "javac"
 }

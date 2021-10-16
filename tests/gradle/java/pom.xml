@@ -18,6 +18,23 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>com.github.ekryd.echo-maven-plugin</groupId>
+                <artifactId>echo-maven-plugin</artifactId>
+                <version>1.2.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>echo</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <message>morphia.version=${morphia.version}</message>
+                            <toFile>gradle.properties</toFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>

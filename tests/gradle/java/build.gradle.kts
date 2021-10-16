@@ -1,7 +1,12 @@
-import org.gradle.internal.impldep.org.fusesource.jansi.AnsiRenderer.test
+buildscript {
+    dependencies {
+        classpath("org.apache.maven:maven-model:3.8.2")
+    }
+}
 
-project.version = org.apache.maven.model.io.xpp3.MavenXpp3Reader().read(file("pom.xml").inputStream())
-    .parent.version
+//project.version = org.apache.maven.model.io.xpp3.MavenXpp3Reader().read(file("pom.xml").inputStream())
+//    .parent.version
+
 
 plugins {
     id("dev.morphia.critter") version "4.2.0-SNAPSHOT"

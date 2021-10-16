@@ -43,7 +43,7 @@
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
         <kibble.version>0.19-SNAPSHOT</kibble.version>
-        <kotlin.version>1.5.20</kotlin.version>
+        <kotlin.version>1.5.31</kotlin.version>
         <kotlinpoet.version>1.9.0</kotlinpoet.version>
         <ktlint.version>0.42.1</ktlint.version>
         <maven.version>3.6.3</maven.version>

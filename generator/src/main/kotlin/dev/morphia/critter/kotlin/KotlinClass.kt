@@ -6,6 +6,7 @@ import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -29,6 +30,7 @@ import java.io.File
 import java.util.TreeMap
 
 @Suppress("UNCHECKED_CAST")
+@OptIn(DelicateKotlinPoetApi::class)
 class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source: TypeSpec, file: File) :
     CritterClass(source.name ?: "", fileSpec.packageName, file) {
 

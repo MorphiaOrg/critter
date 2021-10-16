@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package dev.morphia.critter
 
 import dev.morphia.annotations.Embedded
