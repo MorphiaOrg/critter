@@ -36,6 +36,9 @@ public class Invoice {
   private transient boolean prePersist;
   private transient boolean postPersist;
 
+  Invoice() {
+  }
+
   public Invoice(LocalDateTime orderDate, Person person, Address addresses, Item... items) {
     this.orderDate = orderDate.withNano(0);
     this.person = person;

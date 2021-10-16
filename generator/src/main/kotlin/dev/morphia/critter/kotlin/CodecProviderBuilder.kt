@@ -134,7 +134,7 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
             }
 
         function.endControlFlow()
-        function.addStatement("return null")
+        function.addStatement("throw %T(\"This shouldn't happen\")", IllegalStateException::class.java)
         provider.addFunction(function.build())
     }
 }

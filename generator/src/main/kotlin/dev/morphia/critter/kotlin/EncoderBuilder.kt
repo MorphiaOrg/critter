@@ -134,7 +134,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         builder.beginControlFlow("mapper.getInterceptors().forEach", EntityInterceptor::class.java)
         builder.addStatement("it.prePersist(instance, document, mapper)")
         builder.endControlFlow()
-        builder.addStatement("var documentWriter = %T(document)", DocumentWriter::class.java)
+        builder.addStatement("var documentWriter = %T(mapper, document)", DocumentWriter::class.java)
         builder.addStatement("encodeProperties(documentWriter, instance, encoderContext)")
         builder.addStatement("document = documentWriter.getDocument()")
         builder.addCode("// call PostPersist methods\n")
