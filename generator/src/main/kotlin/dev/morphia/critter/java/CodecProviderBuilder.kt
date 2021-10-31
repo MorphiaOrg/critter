@@ -67,9 +67,8 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
         provider.addMethod(
             MethodSpec.constructorBuilder()
                 .addModifiers(PUBLIC)
-                .addParameter(Mapper::class.java, "mapper")
                 .addParameter(Datastore::class.java, "datastore")
-                .addStatement("super(mapper, datastore)")
+                .addStatement("super(datastore)")
                 .build()
         )
     }

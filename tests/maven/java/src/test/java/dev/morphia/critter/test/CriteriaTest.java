@@ -24,14 +24,13 @@ import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.Morphia;
 import dev.morphia.UpdateOptions;
-import dev.morphia.critter.codec.CritterModelImporter;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
+import dev.morphia.mapping.MapperOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.testng.annotations.BeforeMethod;
@@ -39,7 +38,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -116,7 +114,7 @@ public class CriteriaTest extends BottleRocketTest {
         MorphiaCursor<Invoice> criteria1 = datastore.find(Invoice.class)
                                                     .filter(InvoiceCriteria.orderDate().lte(LocalDateTime.now().plusDays(5)))
                                                     .iterator(new FindOptions()
-                                                                  .sort(ascending(InvoiceCriteria.addresses().city().path())));
+                                                        .sort(ascending(InvoiceCriteria.addresses().city().path())));
         List<Invoice> list = criteria1.toList();
         assertEquals(list.get(0).getAddresses().get(0).getCity(), "NYC", list.stream().map(Invoice::getId).collect(
             Collectors.toList()).toString());
@@ -124,7 +122,7 @@ public class CriteriaTest extends BottleRocketTest {
 
         MorphiaCursor<Invoice> criteria2 = datastore.find(Invoice.class)
                                                     .iterator(new FindOptions()
-                                                                  .sort(descending(InvoiceCriteria.addresses().city().path())));
+                                                        .sort(descending(InvoiceCriteria.addresses().city().path())));
         assertEquals(criteria2.toList().get(0).getAddresses().get(0).getCity(), "New York City");
     }
 
@@ -216,7 +214,7 @@ public class CriteriaTest extends BottleRocketTest {
                                           .filter(PersonCriteria.lastName().regex()
                                                                 .pattern("Last2"));
         DeleteResult result = criteria.delete(new DeleteOptions()
-                                                  .multi(true));
+            .multi(true));
         assertEquals(result.getDeletedCount(), 11);
         assertEquals(criteria.count(), 0);
 
@@ -227,8 +225,8 @@ public class CriteriaTest extends BottleRocketTest {
                             .filter(PersonCriteria.lastName().regex()
                                                   .pattern("Last3"));
         result = criteria.delete(new DeleteOptions()
-                                     .multi(true)
-                                     .writeConcern(MAJORITY));
+            .multi(true)
+            .writeConcern(MAJORITY));
         assertEquals(result.getDeletedCount(), 11);
 
         assertEquals(criteria.count(), 0);
@@ -262,7 +260,7 @@ public class CriteriaTest extends BottleRocketTest {
             PersonCriteria.lastName().eq("Beam"));
 
         assertEquals(query.update(
-            PersonCriteria.age().set(30L))
+                              PersonCriteria.age().set(30L))
                           .execute(new UpdateOptions().multi(true))
                           .getModifiedCount(), 0);
 
@@ -283,10 +281,9 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     private Datastore getDatastore(boolean useGenerated) {
-        var datastore = Morphia.createDatastore(getMongoClient(), getDatabase().getName());
-        if (useGenerated) {
-            datastore.getMapper().importModels(new CritterModelImporter());
-        }
-        return datastore;
+        return Morphia.createDatastore(getMongoClient(), getDatabase().getName(),
+            MapperOptions.builder()
+                         .autoImportModels(useGenerated)
+                         .build());
     }
 }

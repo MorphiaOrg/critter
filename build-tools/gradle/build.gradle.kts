@@ -18,7 +18,7 @@ project.version = MavenXpp3Reader().read(file("pom.xml").inputStream())
 
 plugins {
     id("com.gradle.plugin-publish") version "0.13.0"
-    kotlin("jvm") version "1.5.20"
+    kotlin("jvm") version "1.6.0-RC"
     `java-gradle-plugin`
 }
 

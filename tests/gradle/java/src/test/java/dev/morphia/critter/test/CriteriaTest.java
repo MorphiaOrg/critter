@@ -24,14 +24,13 @@ import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.Morphia;
 import dev.morphia.UpdateOptions;
-import dev.morphia.critter.codec.CritterModelImporter;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
+import dev.morphia.mapping.MapperOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.testng.annotations.BeforeMethod;
@@ -39,7 +38,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -283,10 +281,9 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     private Datastore getDatastore(boolean useGenerated) {
-        var datastore = Morphia.createDatastore(getMongoClient(), getDatabase().getName());
-        if (useGenerated) {
-            datastore.getMapper().importModels(new CritterModelImporter());
-        }
-        return datastore;
+        return Morphia.createDatastore(getMongoClient(), getDatabase().getName(),
+            MapperOptions.builder()
+                         .autoImportModels(useGenerated)
+                         .build());
     }
 }

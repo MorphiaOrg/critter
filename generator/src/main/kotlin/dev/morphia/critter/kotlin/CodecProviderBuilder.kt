@@ -82,11 +82,9 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
     private fun buildConstructor() {
         provider.primaryConstructor(
             FunSpec.constructorBuilder()
-                .addParameter("mapper", Mapper::class.java)
                 .addParameter("datastore", Datastore::class.java)
                 .build()
         )
-        provider.addSuperclassConstructorParameter("mapper")
         provider.addSuperclassConstructorParameter("datastore")
     }
 
@@ -99,7 +97,8 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
             )
             .addParameter("entity", TypeVariableName("T"))
             .addParameter("registry", CodecRegistry::class.java)
-            .returns(Codec::class.java.asClassName().parameterizedBy(TypeVariableName("T")))
+            .returns(Codec::class.java.asClassName().parameterizedBy(TypeVariableName("T"))
+                .copy(nullable = true))
 
         function.addStatement("var type = entity::class.java as Class<T>")
         function.addStatement("var model = getMapper().getEntityModel(entity::class.java)")
@@ -134,7 +133,7 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
             }
 
         function.endControlFlow()
-        function.addStatement("throw %T(\"This shouldn't happen\")", IllegalStateException::class.java)
+        function.addStatement("return null")
         provider.addFunction(function.build())
     }
 }

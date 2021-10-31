@@ -24,6 +24,7 @@ import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.methodCase
 import dev.morphia.critter.titleCase
 import dev.morphia.mapping.Mapper
+import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.EntityModelBuilder
 import dev.morphia.mapping.codec.pojo.TypeData
@@ -49,9 +50,9 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                     .addMember("\"UNCHECKED_CAST\"")
                     .build()
             )
-        val method = builder("importModels")
+        val method = builder("getModels")
             .addModifiers(OVERRIDE)
-            .addParameter("datastore", Datastore::class.java)
+            .addParameter("mapper", Mapper::class.java)
 //            .returns(
 //                List::class.java.asClassName()
 //                    .parameterizedBy(EntityModel::class.java.asClassName())
@@ -62,7 +63,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             context.classes.values
                 .filter { !it.isAbstract() }
                 .joinToString(",\n\t\t") { source ->
-                    "build${source.name.titleCase()}Model(datastore)"
+                    "build${source.name.titleCase()}Model(mapper)"
                 }
         )
         method.addCode(")")
@@ -71,16 +72,11 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         typeData()
 
         importer.addFunction(
-            builder("importCodecProvider")
+            builder("getCodecProvider")
                 .addModifiers(OVERRIDE)
                 .addParameter("datastore", Datastore::class.java)
-                .addCode(
-                    """
-                        val mapper = datastore.getMapper()
-                        mapper.register(CritterCodecProvider(mapper, datastore))
-                        datastore.updateDatabaseWithRegistry()
-                    """.trimIndent(), Mapper::class.java
-                )
+                .addStatement("return CritterCodecProvider(datastore)")
+                .returns(MorphiaCodecProvider::class.java)
                 .build()
         )
 
@@ -94,12 +90,11 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                     .addModifiers(INTERNAL)
                 val builder = builder("build${source.name.titleCase()}Model")
                     .addModifiers(PRIVATE)
-                    .addParameter("datastore", Datastore::class.java)
+                    .addParameter("mapper", Mapper::class.java)
                     .returns(EntityModel::class.java)
 
                 builder
-                    .addCode("var modelBuilder = %T(datastore)\n", EntityModelBuilder::class.java)
-                    .addCode(".type(%T::class.java)", source.qualifiedName.className())
+                    .addCode("var modelBuilder = %T(mapper, %T::class.java)\n", EntityModelBuilder::class.java, source.qualifiedName.className())
 
                 annotations(builder)
                 properties(builder)

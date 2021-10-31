@@ -23,12 +23,12 @@ import dev.morphia.Datastore
 import dev.morphia.DeleteOptions
 import dev.morphia.Morphia
 import dev.morphia.UpdateOptions
-import dev.morphia.critter.codec.CritterModelImporter
 import dev.morphia.critter.test.criteria.InvoiceCriteria
 import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.addresses
 import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.orderDate
 import dev.morphia.critter.test.criteria.PersonCriteria
 import dev.morphia.critter.test.criteria.UserCriteria.Companion.age
+import dev.morphia.mapping.MapperOptions
 import dev.morphia.query.FindOptions
 import dev.morphia.query.MorphiaCursor
 import dev.morphia.query.Sort
@@ -304,10 +304,11 @@ class KotlinCriteriaTest : BottleRocketTest() {
     }
 
     private fun getDatastore(useGenerated: Boolean): Datastore {
-        val datastore = Morphia.createDatastore(mongoClient, database.name)
-        if (useGenerated) {
-            datastore.mapper.importModels(CritterModelImporter())
-        }
-        return datastore
+        return Morphia.createDatastore(
+            mongoClient, database.name,
+            MapperOptions.builder()
+                .autoImportModels(useGenerated)
+                .build()
+        )
     }
 }
