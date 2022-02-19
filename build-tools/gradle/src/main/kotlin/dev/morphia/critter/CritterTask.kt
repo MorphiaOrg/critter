@@ -2,6 +2,7 @@ package dev.morphia.critter
 
 import dev.morphia.critter.Critter.scan
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
@@ -13,8 +14,11 @@ open class CritterTask : SourceTask() {
 
     @OutputDirectory
     var outputDirectory = File("build/generated/critter")
+    @Internal
     var criteriaPackage: String? = null
+    @Internal
     var outputType: String = "kotlin"
+    @Internal
     var force = false
 
     init {
