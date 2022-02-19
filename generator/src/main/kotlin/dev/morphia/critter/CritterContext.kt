@@ -1,6 +1,8 @@
 package dev.morphia.critter
 
 import dev.morphia.critter.java.JavaClass
+import org.jboss.forge.roaster.Roaster
+import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
 
 @Suppress("UNCHECKED_CAST")
@@ -11,8 +13,12 @@ class CritterContext(val criteriaPkg: String? = null, var force: Boolean = false
         return force || sourceTimestamp == null || Timestamp == null || Timestamp <= sourceTimestamp
     }
 
-    fun add(klass: JavaClass) {
-        classes["${klass.pkgName}.${klass.name}"] = klass
+    fun add(file: File) {
+        val type = Roaster.parse(file)
+        if (type is JavaClassSource) {
+            val klass = JavaClass(this, file, type)
+            classes["${klass.pkgName}.${klass.name}"] = klass
+        }
     }
 
 /*

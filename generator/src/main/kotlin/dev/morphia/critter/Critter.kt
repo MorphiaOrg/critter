@@ -74,7 +74,7 @@ private class Walker(private val context: CritterContext,
     override fun directoryWalkStarting(basedir: File) {}
     override fun directoryWalkStep(percentage: Int, file: File) {
         if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
-            context.add(JavaClass(context, file))
+            context.add(file)
         } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
             kotlinParser.parse(file)
         }

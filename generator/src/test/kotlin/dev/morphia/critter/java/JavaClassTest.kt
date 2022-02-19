@@ -24,8 +24,8 @@ class JavaClassTest {
     fun parents() {
         val context = CritterContext(force = true)
 
-        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java")))
-        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java")))
+        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java"))
+        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java"))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
 
         val directory = File("target/parentTest/")
@@ -44,7 +44,7 @@ class JavaClassTest {
         val directory = File("../tests/maven/java/target/generated-sources/critter")
         val context = CritterContext(force = true)
 
-        files.forEach { context.add(JavaClass(context, it)) }
+        files.forEach { context.add(it) }
         JavaBuilder(context).build(directory)
 
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass

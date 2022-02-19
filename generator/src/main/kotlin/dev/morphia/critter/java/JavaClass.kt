@@ -3,13 +3,12 @@ package dev.morphia.critter.java
 import dev.morphia.critter.CritterAnnotation
 import dev.morphia.critter.CritterContext
 import dev.morphia.critter.CritterField
-import org.jboss.forge.roaster.Roaster
+import org.jboss.forge.roaster.model.Visibility.PUBLIC
 import org.jboss.forge.roaster.model.source.FieldSource
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
-import org.jboss.forge.roaster.model.Visibility.PUBLIC
 
-class JavaClass(val context: CritterContext, val file: File, val sourceClass: JavaClassSource = Roaster.parse(file) as JavaClassSource) {
+class JavaClass(val context: CritterContext, val file: File, val sourceClass: JavaClassSource) {
     var pkgName: String? = sourceClass.`package`
     var name = sourceClass.name
     val superClass: JavaClass? by lazy {

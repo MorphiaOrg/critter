@@ -44,7 +44,7 @@ class CritterContextTest {
         val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
         val critterContext = CritterContext(force = true)
-        files.forEach { critterContext.add(JavaClass(critterContext, it)) }
+        files.forEach { critterContext.add(it) }
         val builder = JavaBuilder(critterContext)
         builder.build(directory)
         val file = File(directory, "dev/morphia/critter/test/criteria/PersonCriteria.java")
