@@ -3,7 +3,6 @@ package dev.morphia.critter
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
 import dev.morphia.critter.java.JavaBuilder
-import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.kotlin.KotlinBuilder
 import dev.morphia.critter.kotlin.KotlinClass
 import dev.morphia.critter.kotlin.KotlinContext
