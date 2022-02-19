@@ -23,8 +23,6 @@ jobs:
           path: ~/.m2
           key: \${{ runner.os }}-m2-\${{ hashFiles('**/pom.xml') }}
           restore-keys: \${{ runner.os }}-m2
-      - name: debug
-        run: mvn dependency:tree
       - name: Build with Maven
         run: mvn clean install
   Snapshots:
