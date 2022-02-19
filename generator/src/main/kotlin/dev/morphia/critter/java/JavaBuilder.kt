@@ -10,6 +10,7 @@ import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
 import java.io.PrintWriter
+import java.util.Locale
 
 class JavaBuilder(private val context: CritterContext) {
     private var nested = mutableListOf<JavaClassSource>()
@@ -18,7 +19,7 @@ class JavaBuilder(private val context: CritterContext) {
         context.classes.values.forEach { source ->
             nested.clear()
             val criteriaClass = Roaster.create(JavaClassSource::class.java)
-                    .setPackage(context.criteriaPkg ?: source.pkgName + ".criteria")
+                    .setPackage(context.criteriaPkg ?: (source.pkgName + ".criteria"))
                     .setName(source.name + "Criteria")
                     .setFinal(true)
 
@@ -127,11 +128,11 @@ class JavaBuilder(private val context: CritterContext) {
         PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toString()) }
     }
 
-    fun CritterField.mappedType(): JavaClass? {
+    private fun CritterField.mappedType(): JavaClass? {
         return context.classes[concreteType()]
     }
 
-    fun CritterField.isMappedType(): Boolean {
+    private fun CritterField.isMappedType(): Boolean {
         return mappedType() != null
     }
 
@@ -152,7 +153,7 @@ class JavaBuilder(private val context: CritterContext) {
                 return instance.${field.name}();
             }""".trimIndent())
 
-        var path = """extendPath(path, "${field.name}")"""
+        val path = """extendPath(path, "${field.name}")"""
         addMethods("""
             public ${fieldCriteriaName} ${field.name}() {
                 return new ${fieldCriteriaName}(${path});
@@ -173,9 +174,9 @@ private fun JavaClassSource.attachUpdates(field: CritterField) {
 }
 
 fun String.toTitleCase(): String {
-    return substring(0, 1).toUpperCase() + substring(1)
+    return substring(0, 1).uppercase(Locale.getDefault()) + substring(1)
 }
 
 fun String.toMethodCase(): String {
-    return substring(0, 1).toLowerCase() + substring(1)
+    return substring(0, 1).lowercase(Locale.getDefault()) + substring(1)
 }
