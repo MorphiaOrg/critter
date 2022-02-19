@@ -24,7 +24,7 @@ jobs:
           key: \${{ runner.os }}-m2-\${{ hashFiles('**/pom.xml') }}
           restore-keys: \${{ runner.os }}-m2
       - name: debug
-        run: cat tests/gradle/java/gradle.properties
+        run: mvn dependency:tree
       - name: Build with Maven
         run: mvn clean install
   Snapshots:
