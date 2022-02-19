@@ -23,11 +23,6 @@
         </repository>
     </repositories>
 
-    <modules>
-        <module>gradle</module>
-        <module>maven</module>
-    </modules>
-
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -60,4 +55,9 @@
             </plugin>
         </plugins>
     </build>
+
+    <modules>
+        <module>gradle</module>
+        <module>maven</module>
+    </modules>
 </project>

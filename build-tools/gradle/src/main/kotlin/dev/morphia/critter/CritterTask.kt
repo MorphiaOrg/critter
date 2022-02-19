@@ -1,10 +1,6 @@
 package dev.morphia.critter
 
 import dev.morphia.critter.Critter.scan
-import dev.morphia.critter.CritterPlugin.Companion
-import org.gradle.api.file.FileTree
-import org.gradle.api.logging.LogLevel.INFO
-import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask

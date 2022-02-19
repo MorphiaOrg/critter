@@ -3,7 +3,6 @@ package dev.morphia.critter
 import dev.morphia.critter.OutputType.JAVA
 import dev.morphia.critter.OutputType.KOTLIN
 import dev.morphia.critter.java.JavaBuilder
-import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.kotlin.KotlinBuilder
 import dev.morphia.critter.kotlin.KotlinContext
 import dev.morphia.critter.kotlin.KotlinParser
@@ -14,6 +13,7 @@ import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.MethodSource
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.Locale
 
 object Critter {
     val LOG = LoggerFactory.getLogger(Critter::class.java)
@@ -61,7 +61,7 @@ object Critter {
 
     fun outputType(name: String): OutputType {
         return try {
-            OutputType.valueOf(name.toUpperCase())
+            OutputType.valueOf(name.uppercase(Locale.getDefault()))
         } catch (_: Exception) {
             throw IllegalArgumentException("Output type of '$name' is not supported.")
         }
