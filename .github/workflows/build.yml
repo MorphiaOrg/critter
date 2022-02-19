@@ -24,10 +24,10 @@ jobs:
           key: \${{ runner.os }}-m2-\${{ hashFiles('**/pom.xml') }}
           restore-keys: \${{ runner.os }}-m2
       - name: Build with Maven
-        run: mvn install --file pom.xml
+        run: mvn clean install
   Snapshots:
     name: Publish Snapshot Artifacts
-    if: "github.repository == 'MorphiaOrg/morphia' && github.ref == 'refs/heads/master' && github.event_name == 'push'"
+    if: "github.repository == 'MorphiaOrg/critter' && github.ref == 'refs/heads/master' && github.event_name == 'push'"
     needs:
       - Critter
     runs-on: ubuntu-latest
