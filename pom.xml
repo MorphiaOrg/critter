@@ -36,7 +36,7 @@
         <morphia.version>2.2.3</morphia.version>
         <roaster.version>2.23.2.Final</roaster.version>
         <slf4j.version>1.7.33</slf4j.version>
-        <testng.version>7.4.0</testng.version>
+        <testng.version>7.5.0</testng.version>
     </properties>
 
     <build>
