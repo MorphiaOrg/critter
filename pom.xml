@@ -35,7 +35,7 @@
         <maven.version>3.6.3</maven.version>
         <morphia.version>2.2.3</morphia.version>
         <roaster.version>2.23.2.Final</roaster.version>
-        <slf4j.version>1.7.25</slf4j.version>
+        <slf4j.version>1.7.33</slf4j.version>
         <testng.version>7.4.0</testng.version>
     </properties>
 
