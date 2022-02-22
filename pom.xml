@@ -30,7 +30,7 @@
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.16</kibble.version>
         <kotlin.version>1.6.10</kotlin.version>
-        <kotlinpoet.version>1.7.2</kotlinpoet.version>
+        <kotlinpoet.version>1.10.2</kotlinpoet.version>
         <ktlint.version>0.31.0</ktlint.version>
         <maven.version>3.6.3</maven.version>
         <morphia.version>2.2.3</morphia.version>
