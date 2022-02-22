@@ -75,10 +75,10 @@ class KotlinCriteriaTest: BottleRocketTest() {
         datastore.save(sally)
         datastore.save(Invoice(LocalDateTime.of(2007, 8, 16, 19, 27), sally, Address("Chicago", "IL", "99999"),
                 Item("kleenex", 3.49), Item("cough and cold syrup", 5.61)))
-        val invoice = datastore.find(Invoice::class.java)
+        val invoice: Invoice? = datastore.find(Invoice::class.java)
                 .filter(InvoiceCriteria.person().eq(john))
                 .first()
-        Assert.assertEquals(invoice.person?.last, "Doe")
+        Assert.assertEquals(invoice?.person?.last, "Doe")
 
         val byCity = datastore.find(Invoice::class.java)
                 .filter(addresses().city().eq("Chicago"))
