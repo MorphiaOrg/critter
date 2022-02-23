@@ -10,7 +10,7 @@
 
     <groupId>dev.morphia.critter</groupId>
     <artifactId>critter</artifactId>
-    <version>4.1.2-SNAPSHOT</version>
+    <version>4.1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>critter</name>
@@ -237,6 +237,12 @@
                     <configuration>
                         <jvmTarget>11</jvmTarget>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.8</version>
+                    <extensions>true</extensions>
                 </plugin>
             </plugins>
         </pluginManagement>
