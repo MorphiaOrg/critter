@@ -31,6 +31,11 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
+      - name: Configure the job
+        run: |
+          mkdir -p ~/.m2
+          curl -o ~/.m2/settings.xml https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/settings.xml
+          curl -o github.properties https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/github.properties
       - name: Release
         env:
           MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
