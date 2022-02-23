@@ -2,7 +2,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 
 buildscript {
     dependencies {
-        classpath("org.apache.maven:maven-model:3.3.9")
+        classpath("org.apache.maven:maven-model:3.8.4")
     }
 }
 repositories {
@@ -17,7 +17,7 @@ project.version = MavenXpp3Reader().read(file("pom.xml").inputStream())
     .parent.version
 
 plugins {
-    id("com.gradle.plugin-publish") version "0.13.0"
+    id("com.gradle.plugin-publish") version "0.20.0"
     kotlin("jvm") version "1.6.10"
     `java-gradle-plugin`
 }
