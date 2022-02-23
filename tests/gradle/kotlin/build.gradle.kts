@@ -22,8 +22,8 @@ sourceSets.test {
 
 dependencies {
     implementation("dev.morphia.morphia:morphia-core:${findProperty("morphia.version")}")
-    testImplementation("org.testng:testng:7.4.0")
-    testImplementation("com.antwerkz.bottlerocket:bottlerocket:0.14")
+    testImplementation("org.testng:testng:${findProperty("testng.version")}")
+    testImplementation("com.antwerkz.bottlerocket:bottlerocket:${findProperty("bottlerocket.version")}")
 }
 
 tasks {

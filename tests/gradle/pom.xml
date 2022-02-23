@@ -15,6 +15,127 @@
     <packaging>pom</packaging>
 
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>default-compile</id>
+                            <phase>none</phase>
+                        </execution>
+                        <!-- Replacing default-testCompile as it is treated specially by maven -->
+                        <execution>
+                            <id>default-testCompile</id>
+                            <phase>none</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <executions>
+                        <execution>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target>
+                                    <echoproperties />
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>replacer</artifactId>
+                    <version>1.5.3</version>
+                    <executions>
+                        <execution>
+                            <id>build.gradle</id>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>replace</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <filesToInclude>${project.basedir}/build.gradle.kts, ${project.basedir}/gradle.properties</filesToInclude>
+                        <replacements>
+                            <replacement>
+                                <token>(id\("dev.morphia.critter"\).*)</token>
+                                <value>id("dev.morphia.critter") version "${project.version}"</value>
+                            </replacement>
+                            <replacement>
+                                <token>(kotlin\("jvm"\).*)</token>
+                                <value>kotlin("jvm") version "${kotlin.version}"</value>
+                            </replacement>
+                            <replacement>
+                                <token>(morphia.version =.*)</token>
+                                <value>morphia.version = ${morphia.version}</value>
+                            </replacement>
+                            <replacement>
+                                <token>(testng.version =.*)</token>
+                                <value>testng.version = ${testng.version}</value>
+                            </replacement>
+                            <replacement>
+                                <token>(bottlerocket.version =.*)</token>
+                                <value>bottlerocket.version = ${bottlerocket.version}</value>
+                            </replacement>
+                        </replacements>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <executions>
+                        <execution>
+                            <id>test</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <executable>java</executable>
+                                <workingDirectory>${project.basedir}</workingDirectory>
+                                <arguments>
+                                    <argument>-cp</argument>
+                                    <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                    <argument>org.gradle.wrapper.GradleWrapperMain</argument>
+                                    <argument>test</argument>
+                                </arguments>
+                                <useMavenLogger>true</useMavenLogger>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>clean</id>
+                            <phase>clean</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <executable>java</executable>
+                                <workingDirectory>${project.basedir}</workingDirectory>
+                                <arguments>
+                                    <argument>-cp</argument>
+                                    <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                    <argument>org.gradle.wrapper.GradleWrapperMain</argument>
+                                    <argument>clean</argument>
+                                </arguments>
+                                <useMavenLogger>true</useMavenLogger>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <modules>
         <module>java</module>
