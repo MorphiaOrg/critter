@@ -32,6 +32,33 @@
         </resources>
         <plugins>
             <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <id>build.gradle</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <filesToInclude>${project.basedir}/build.gradle.kts, ${project.basedir}/gradle.properties</filesToInclude>
+                    <replacements>
+                        <replacement>
+                            <token>(classpath\("org.apache.maven:maven-model.*)</token>
+                            <value>classpath("org.apache.maven:maven-model:${maven.version}")</value>
+                        </replacement>
+                        <replacement>
+                            <token>(kotlin\("jvm"\).*)</token>
+                            <value>kotlin("jvm") version "${kotlin.version}"</value>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
@@ -158,6 +185,10 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

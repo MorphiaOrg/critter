@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package dev.morphia.critter
 
 import com.mongodb.client.model.geojson.Geometry
@@ -8,6 +10,7 @@ import org.jboss.forge.roaster.model.Visibility
 import org.jboss.forge.roaster.model.Visibility.PUBLIC
 import java.time.temporal.Temporal
 import java.util.Date
+import java.util.Locale
 
 class CritterField(val name: String, val type: String) {
     companion object {
@@ -70,6 +73,7 @@ class CritterField(val name: String, val type: String) {
         return annotations.firstOrNull { it.matches(ann) }?.getValue() ?: defaultValue
     }
 
+    @Suppress("DEPRECATION")
     fun mappedName(): String {
         return if (hasAnnotation(Id::class.java)) {
             "\"_id\""
@@ -84,5 +88,5 @@ class CritterField(val name: String, val type: String) {
 }
 
 fun String.nameCase(): String {
-    return substring(0, 1).toUpperCase() + substring(1)
+    return substring(0, 1).uppercase(Locale.getDefault()) + substring(1)
 }

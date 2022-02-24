@@ -15,9 +15,9 @@
  */
 package dev.morphia.critter.test
 
-import dev.morphia.annotations.Embedded
+import dev.morphia.annotations.Entity
 
-@Embedded
+@Entity
 class Item(var name: String, var price: Double) {
 
     constructor() : this("", 0.0)

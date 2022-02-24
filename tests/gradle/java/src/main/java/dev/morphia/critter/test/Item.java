@@ -15,9 +15,9 @@
  */
 package dev.morphia.critter.test;
 
-import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 
-@Embedded
+@Entity
 public class Item {
   private String name;
   private Double price;

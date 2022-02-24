@@ -1,9 +1,10 @@
 package dev.morphia.critter.test;
 
 import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 
-@Embedded
+@Entity
 public class Address {
   @Property("c")
   private String city;
