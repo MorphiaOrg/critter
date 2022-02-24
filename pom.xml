@@ -10,7 +10,7 @@
 
     <groupId>dev.morphia.critter</groupId>
     <artifactId>critter</artifactId>
-    <version>4.1.2-SNAPSHOT</version>
+    <version>4.1.1</version>
     <packaging>pom</packaging>
 
     <name>critter</name>
@@ -131,19 +131,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -242,7 +229,11 @@
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
                     <version>1.6.8</version>
-                    <extensions>true</extensions>
+                    <configuration>
+                        <serverId>central</serverId>
+                        <nexusUrl>${nexus.url}</nexusUrl>
+                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -265,17 +256,6 @@
                     <repository>MorphiaOrg/critter</repository>
                     <docsUrl>https://morphia.dev/critter/4.1</docsUrl>
                     <javadocUrl>https://morphia.dev/critter/4.1/javadoc</javadocUrl>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.8</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>central</serverId>
-                    <nexusUrl>${nexus.url}</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
         </plugins>
@@ -313,6 +293,20 @@
 
     <profiles>
         <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>!release</name>
+                </property>
+            </activation>
+            <modules>
+                <module>generator</module>
+                <module>build-tools</module>
+                <module>tests</module>
+            </modules>
+        </profile>
+        <profile>
             <id>publication</id>
             <activation>
                 <property>
@@ -334,8 +328,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <sourceFile>${session.executionRootDirectory}/LICENSE</sourceFile>
-                                    <destinationFile>${project.build.outputDirectory}/META-INF/LICENSE-${project.identifier}
-                                    </destinationFile>
+                                    <destinationFile>${project.build.outputDirectory}/META-INF/LICENSE-${project.artifactId}</destinationFile>
                                 </configuration>
                             </execution>
                         </executions>
@@ -374,6 +367,10 @@
                     </plugin>
                 </plugins>
             </build>
+            <modules>
+                <module>generator</module>
+                <module>build-tools</module>
+            </modules>
         </profile>
 
         <profile>
@@ -487,10 +484,5 @@
         </profile>
     </profiles>
 
-    <modules>
-        <module>generator</module>
-        <module>build-tools</module>
-        <module>tests</module>
-    </modules>
 
 </project>

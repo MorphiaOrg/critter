@@ -5,12 +5,12 @@
     <parent>
         <groupId>dev.morphia.critter</groupId>
         <artifactId>critter</artifactId>
-        <version>4.1.2-SNAPSHOT</version>
+        <version>4.1.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>critter-generator</artifactId>
-    <version>4.1.2-SNAPSHOT</version>
+    <version>4.1.1</version>
 
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
@@ -62,6 +62,10 @@
                         </plugin>
                     </dokkaPlugins>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

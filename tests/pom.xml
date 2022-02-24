@@ -5,38 +5,15 @@
     <parent>
         <groupId>dev.morphia.critter</groupId>
         <artifactId>critter</artifactId>
-        <version>4.1.2-SNAPSHOT</version>
+        <version>4.1.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>critter-tests</artifactId>
     <packaging>pom</packaging>
 
-    <repositories>
-        <repository>
-            <id>sonatype-snapshots</id>
-            <name>Sontatype Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <modules>
         <module>gradle</module>
         <module>maven</module>
     </modules>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <configuration>
-                    <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
