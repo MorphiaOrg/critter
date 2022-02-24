@@ -7,13 +7,13 @@
     <parent>
         <groupId>dev.morphia.critter</groupId>
         <artifactId>critter-tests-gradle</artifactId>
-        <version>4.1.2-SNAPSHOT</version>
+        <version>4.1.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>critter-tests-gradle-kotlin</artifactId>
     <packaging>pom</packaging>
-    <version>4.1.2-SNAPSHOT</version>
+    <version>4.1.1-SNAPSHOT</version>
 
     <build>
         <plugins>
@@ -28,13 +28,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <configuration>
-                    <skipStaging>true</skipStaging>
-                </configuration>
             </plugin>
         </plugins>
     </build>
