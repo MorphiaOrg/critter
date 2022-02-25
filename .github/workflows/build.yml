@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
+          distribution: 'temurin'
           cache: 'maven'
 
       - name: Build with Maven
@@ -38,6 +39,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
+          distribution: 'temurin'
           java-version: 11
           cache: 'maven'
           server-id: central
