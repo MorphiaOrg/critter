@@ -90,6 +90,7 @@
                                     <argument>-cp</argument>
                                     <argument>gradle/wrapper/gradle-wrapper.jar</argument>
                                     <argument>org.gradle.wrapper.GradleWrapperMain</argument>
+                                    <argument>--no-daemon</argument>
                                     <argument>test</argument>
                                 </arguments>
                                 <useMavenLogger>true</useMavenLogger>
@@ -108,6 +109,7 @@
                                     <argument>-cp</argument>
                                     <argument>gradle/wrapper/gradle-wrapper.jar</argument>
                                     <argument>org.gradle.wrapper.GradleWrapperMain</argument>
+                                    <argument>--no-daemon</argument>
                                     <argument>clean</argument>
                                 </arguments>
                                 <useMavenLogger>true</useMavenLogger>
