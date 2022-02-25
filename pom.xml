@@ -261,14 +261,13 @@
         </plugins>
     </build>
 
-
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
+            <id>central</id>
             <url>${nexus.url}/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
+            <id>central</id>
             <url>${nexus.url}/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
@@ -295,6 +294,9 @@
                     <name>release</name>
                 </property>
             </activation>
+            <properties>
+                <skipTests>true</skipTests>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
