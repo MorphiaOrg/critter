@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir -p ~/.m2
           curl -o github.properties https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/github.properties
-      - name: Release
+      - name: Publish
         env:
           MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASSWORD }}
