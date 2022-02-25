@@ -27,7 +27,7 @@ jobs:
 
   Snapshots:
     name: Publish Snapshot Artifacts
-    if: "github.repository == 'MorphiaOrg/critter' && github.ref == 'refs/heads/master' && github.event_name == 'push'"
+    if: "github.repository == 'MorphiaOrg/critter' && github.event_name == 'push'"
     needs:
       - Critter
     runs-on: ubuntu-latest
