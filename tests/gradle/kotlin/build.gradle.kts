@@ -1,7 +1,7 @@
 plugins {
     `kotlin-dsl`
     kotlin("jvm") version "1.6.10"
-    id("dev.morphia.critter") version "4.1.1"
+    id("dev.morphia.critter") version "4.1.2-SNAPSHOT"
 }
 
 repositories {
