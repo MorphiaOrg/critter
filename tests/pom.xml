@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>gradle</module>
         <module>maven</module>
+        <module>gradle</module>
     </modules>
 </project>

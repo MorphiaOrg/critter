@@ -15,7 +15,7 @@ class JavaBuilder(private val context: CritterContext) {
     private var nested = mutableListOf<JavaClassSource>()
 
     fun build(directory: File) {
-        context.classes.values.forEach { source ->
+        context.classes().values.forEach { source ->
             nested.clear()
             val criteriaClass = Roaster.create(JavaClassSource::class.java)
                     .setPackage(context.criteriaPkg ?: source.pkgName + ".criteria")
@@ -128,7 +128,7 @@ class JavaBuilder(private val context: CritterContext) {
     }
 
     fun CritterField.mappedType(): JavaClass? {
-        return context.classes[concreteType()]
+        return context.classes()[concreteType()]
     }
 
     fun CritterField.isMappedType(): Boolean {
@@ -137,7 +137,7 @@ class JavaBuilder(private val context: CritterContext) {
 
     private fun JavaClassSource.addFieldCriteriaMethod(criteriaClass: JavaClassSource, field: CritterField) {
         val concreteType = field.concreteType()
-        val annotations = context.classes[concreteType]?.annotations
+        val annotations = context.classes()[concreteType]?.annotations
         val fieldCriteriaName = if (annotations == null) {
             field.name.toTitleCase() + "FieldCriteria"
         } else {
