@@ -254,6 +254,7 @@ fun AnnotationSpec.getValue(name: String = "value"): String? {
     return members.map { it.toPair() }.firstOrNull { it.first == name }?.second
 }
 
+@Suppress("DEPRECATION")
 fun PropertySpec.mappedName(): String {
     val annotation = getAnnotation(Id::class.java)
     return if (annotation != null) {
