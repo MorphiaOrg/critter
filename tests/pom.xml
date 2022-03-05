@@ -12,6 +12,10 @@
     <artifactId>critter-tests</artifactId>
     <packaging>pom</packaging>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <modules>
         <module>maven</module>
         <module>gradle</module>
