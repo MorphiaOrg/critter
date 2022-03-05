@@ -281,11 +281,6 @@
                     <name>!release</name>
                 </property>
             </activation>
-            <modules>
-                <module>generator</module>
-                <module>build-tools</module>
-                <module>tests</module>
-            </modules>
         </profile>
         <profile>
             <id>publication</id>
@@ -299,6 +294,33 @@
             </properties>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-environment-variable-is-set</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireEnvironmentVariable>
+                                            <variableName>MAVEN_USERNAME</variableName>
+                                        </requireEnvironmentVariable>
+                                        <requireEnvironmentVariable>
+                                            <variableName>MAVEN_CENTRAL_TOKEN</variableName>
+                                        </requireEnvironmentVariable>
+                                        <requireEnvironmentVariable>
+                                            <variableName>MAVEN_GPG_PASSPHRASE</variableName>
+                                        </requireEnvironmentVariable>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>com.coderplus.maven.plugins</groupId>
                         <artifactId>copy-rename-maven-plugin</artifactId>
@@ -351,10 +373,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <modules>
-                <module>generator</module>
-                <module>build-tools</module>
-            </modules>
         </profile>
 
         <profile>
@@ -397,19 +415,21 @@
             </activation>
             <build>
                 <defaultGoal>deploy</defaultGoal>
-                <plugins>
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.12</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>central</serverId>
-                            <nexusUrl>${nexus.url}</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
-                    </plugin>
-                </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.sonatype.plugins</groupId>
+                            <artifactId>nexus-staging-maven-plugin</artifactId>
+                            <version>1.6.12</version>
+                            <extensions>true</extensions>
+                            <configuration>
+                                <serverId>central</serverId>
+                                <nexusUrl>${nexus.url}</nexusUrl>
+                                <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
             </build>
         </profile>
         <profile>
@@ -468,5 +488,10 @@
         </profile>
     </profiles>
 
+    <modules>
+        <module>build-tools</module>
+        <module>generator</module>
+        <module>tests</module>
+    </modules>
 
 </project>
