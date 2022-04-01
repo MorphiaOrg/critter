@@ -27,7 +27,7 @@
         <dokka.version>1.6.10</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.18</kibble.version>
-        <kotlin.version>1.6.10</kotlin.version>
+        <kotlin.version>1.6.20</kotlin.version>
         <kotlinpoet.version>1.10.2</kotlinpoet.version>
         <ktlint.version>0.31.0</ktlint.version>
         <maven.version>3.8.5</maven.version>
