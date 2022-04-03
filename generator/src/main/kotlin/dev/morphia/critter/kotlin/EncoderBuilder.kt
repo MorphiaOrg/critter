@@ -16,7 +16,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import dev.morphia.EntityInterceptor
-import dev.morphia.aggregation.experimental.codecs.ExpressionHelper
+import dev.morphia.aggregation.codecs.ExpressionHelper
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.LoadOnly
 import dev.morphia.annotations.NotSaved

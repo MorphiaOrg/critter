@@ -1,7 +1,6 @@
 package dev.morphia.critter
 
 import dev.morphia.critter.Critter.addMethods
-import dev.morphia.critter.kotlin.isContainer
 import dev.morphia.critter.kotlin.isNumeric
 import dev.morphia.critter.kotlin.isText
 import com.squareup.kotlinpoet.FunSpec
@@ -12,9 +11,10 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import dev.morphia.query.experimental.updates.AddToSetOperator
-import dev.morphia.query.experimental.updates.UpdateOperator
-import dev.morphia.query.experimental.updates.UpdateOperators
+import dev.morphia.critter.kotlin.isContainer
+import dev.morphia.query.updates.AddToSetOperator
+import dev.morphia.query.updates.UpdateOperator
+import dev.morphia.query.updates.UpdateOperators
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.TreeSet
 import kotlin.reflect.full.createType

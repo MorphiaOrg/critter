@@ -12,13 +12,11 @@ import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.critter.kotlin.isContainer
 import dev.morphia.critter.kotlin.isNumeric
 import dev.morphia.critter.kotlin.isText
-import dev.morphia.query.experimental.filters.Filter
-import dev.morphia.query.experimental.filters.Filters
-import dev.morphia.query.experimental.filters.RegexFilter
+import dev.morphia.query.filters.Filter
+import dev.morphia.query.filters.Filters
+import dev.morphia.query.filters.RegexFilter
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.TreeSet
-import kotlin.jvm.internal.Reflection.typeOf
-import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSupertypeOf

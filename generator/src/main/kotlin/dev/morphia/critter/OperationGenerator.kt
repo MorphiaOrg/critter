@@ -6,10 +6,10 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import dev.morphia.query.experimental.filters.Filter
-import dev.morphia.query.experimental.filters.Filters
-import dev.morphia.query.experimental.updates.UpdateOperator
-import dev.morphia.query.experimental.updates.UpdateOperators
+import dev.morphia.query.filters.Filter
+import dev.morphia.query.filters.Filters
+import dev.morphia.query.updates.UpdateOperator
+import dev.morphia.query.updates.UpdateOperators
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.javaType

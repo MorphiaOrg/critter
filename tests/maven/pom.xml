@@ -50,10 +50,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <properties>
-        <kotlin.version>1.6.0-RC</kotlin.version>
-    </properties>
-
     <modules>
         <module>java</module>
         <module>kotlin</module>

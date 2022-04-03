@@ -28,8 +28,8 @@ import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.UpdateSieve
 import dev.morphia.critter.titleCase
-import dev.morphia.query.experimental.filters.Filters
-import dev.morphia.query.experimental.updates.UpdateOperators
+import dev.morphia.query.filters.Filters
+import dev.morphia.query.updates.UpdateOperators
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -233,7 +233,9 @@ private fun TypeName.concreteType(): ClassName {
     }
 }
 
-fun PropertySpec.isContainer() = type.toString().substringBefore("<") in CritterType.CONTAINER_TYPES
+fun PropertySpec.isContainer(): Boolean {
+    return type.toString().substringBefore("<") in CritterType.CONTAINER_TYPES
+}
 fun PropertySpec.isNumeric() = isNumeric(type.concreteType().canonicalName)
 fun PropertySpec.isText() = CritterType.TEXT_TYPES.contains(type.concreteType().canonicalName)
 fun <T : Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {

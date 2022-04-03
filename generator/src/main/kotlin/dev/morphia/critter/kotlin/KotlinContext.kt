@@ -7,12 +7,10 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import dev.morphia.aggregation.experimental.codecs.ExpressionHelper
 import dev.morphia.critter.CritterContext
 import dev.morphia.critter.CritterType
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.ServiceLoader
 
 @Suppress("UNCHECKED_CAST")
 class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format: Boolean = false, outputDirectory: File)

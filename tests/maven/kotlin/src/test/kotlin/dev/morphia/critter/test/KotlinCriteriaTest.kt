@@ -33,8 +33,8 @@ import dev.morphia.query.FindOptions
 import dev.morphia.query.MorphiaCursor
 import dev.morphia.query.Sort
 import dev.morphia.query.Sort.ascending
-import dev.morphia.query.experimental.filters.Filters
-import dev.morphia.query.experimental.filters.Filters.and
+import dev.morphia.query.filters.Filters
+import dev.morphia.query.filters.Filters.and
 import org.testng.Assert
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider

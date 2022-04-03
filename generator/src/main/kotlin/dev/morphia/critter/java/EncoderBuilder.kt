@@ -8,7 +8,7 @@ import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import dev.morphia.EntityInterceptor
-import dev.morphia.aggregation.experimental.codecs.ExpressionHelper
+import dev.morphia.aggregation.codecs.ExpressionHelper
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.LoadOnly
 import dev.morphia.annotations.NotSaved
