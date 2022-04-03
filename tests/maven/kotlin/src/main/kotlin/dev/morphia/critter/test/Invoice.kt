@@ -1,94 +1,131 @@
-/**
- * Copyright (C) 2012-2020 Justin Lee <jlee></jlee>@antwerkz.com>
-
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
-
- * http://www.apache.org/licenses/LICENSE-2.0
-
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package dev.morphia.critter.test
 
-import org.bson.types.ObjectId
+
 import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
+import dev.morphia.annotations.PostLoad
+import dev.morphia.annotations.PostPersist
+import dev.morphia.annotations.PreLoad
+import dev.morphia.annotations.PrePersist
 import dev.morphia.annotations.Reference
+import dev.morphia.annotations.Transient
+import org.bson.types.ObjectId
 import java.time.LocalDateTime
+import java.util.Objects
+import java.util.StringJoiner
 
 @Entity
-class Invoice {
+class Invoice() {
     @Id
-    private val id: ObjectId = ObjectId()
+    var id: ObjectId = ObjectId()
 
     var orderDate: LocalDateTime? = null
+        set(value: LocalDateTime?) {
+            field = value?.withNano(0)
+        }
 
     @Reference
     var person: Person? = null
-
-    var addresses: MutableList<Address>? = null
-
+    var listListList: List<List<List<Address>>> = mutableListOf()
+    var addresses: MutableList<Address> = mutableListOf()
+    var mapList: MutableMap<String, List<Address>> = LinkedHashMap()
     var total: Double = 0.0
+    var items: MutableList<Item> = mutableListOf()
 
-    private var items: MutableList<Item>? = null
+    @Transient
+    var isPostLoad: Boolean = false
+        private set
 
-    constructor() {}
+    @Transient
+    var isPreLoad: Boolean = false
+        private set
 
-    constructor(date: LocalDateTime, person: Person, address: Address, vararg items: Item) {
-        this.orderDate = date
+    @Transient
+    var isPrePersist: Boolean = false
+        private set
+
+    @Transient
+    var isPostPersist: Boolean = false
+        private set
+
+    constructor(orderDate: LocalDateTime, person: Person, addresses: MutableList<Address>, items: MutableList<Item>) : this() {
+        this.orderDate = orderDate
         this.person = person
-        add(address)
-        for (item in items) {
-            add(item)
-        }
+        this.addresses.addAll(addresses)
+        this.items.addAll(items)
+    }
+
+    constructor(orderDate: LocalDateTime, person: Person, addresses: Address, vararg items: Item) : this() {
+        this.orderDate = orderDate
+        this.person = person
+        this.addresses.add(addresses)
+        mapList["1"] = this.addresses
+        listListList = mutableListOf(mutableListOf<List<Address>>(this.addresses))
+        this.items.addAll(items)
     }
 
     fun add(item: Item) {
-        if (items == null) {
-            items = mutableListOf()
-        }
-        items!!.add(item)
+        items.add(item)
         total += item.price
     }
 
-    fun add(address: Address) {
-        if (addresses == null) {
-            addresses = mutableListOf()
-        }
-        addresses!!.add(address)
+    @PostLoad
+    fun postLoad() {
+        isPostLoad = true
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        }
-        if (other == null || javaClass != other.javaClass) {
-            return false
-        }
-        val invoice = other as Invoice?
-        if (id != invoice!!.id) {
-            return false
-        }
-        return true
+    @PostPersist
+    fun postPersist() {
+        isPostPersist = true
     }
 
-    override fun hashCode(): Int {
-        return id.hashCode()
+    @PreLoad
+    fun preLoad() {
+        isPreLoad = true
+    }
+
+    @PrePersist
+    fun prePersist() {
+        isPrePersist = true
     }
 
     override fun toString(): String {
-        return "Invoice{" +
-                "id=" + id +
-                ", date=" + orderDate +
-                ", person=" + person +
-                ", addresses=" + addresses +
-                ", total=" + total +
-                ", items=" + items +
-                '}'
+        return StringJoiner(", ", Invoice::class.java.simpleName + "[", "]")
+            .add("id=$id")
+            .add("orderDate=$orderDate")
+            .add("person=$person")
+            .add("listListList=$listListList")
+            .add("addresses=$addresses")
+            .add("mapList=$mapList")
+            .add("total=$total")
+            .add("items=$items")
+            .toString()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Invoice) return false
+
+        if (id != other.id) return false
+        if (orderDate != other.orderDate) return false
+        if (person != other.person) return false
+        if (listListList != other.listListList) return false
+        if (addresses != other.addresses) return false
+        if (mapList != other.mapList) return false
+        if (total != other.total) return false
+        if (items != other.items) return false
+
+        return true
+    }
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + (orderDate?.hashCode() ?: 0)
+        result = 31 * result + (person?.hashCode() ?: 0)
+        result = 31 * result + listListList.hashCode()
+        result = 31 * result + addresses.hashCode()
+        result = 31 * result + mapList.hashCode()
+        result = 31 * result + total.hashCode()
+        result = 31 * result + items.hashCode()
+        return result
     }
 }

@@ -15,12 +15,12 @@ each model object.  To use it, you simply need to add a plugin to your maven pom
             <goals>
                 <goal>generate</goal>
             </goals>
+            <configuration>
+                <force>false</force>
+                <criteriaPackage>com.bob.bar</criteriaPackage>
+            </configuration>
         </execution>
     </executions>
-    <configuration>
-        <force>false</force>
-        <criteriaPackage>com.bob.bar</criteriaPackage>
-    </configuration>
 </plugin>
 ----
 This will generate your criteria classes in `target/generated-sources/critter` and add the directory as a source directory of your maven

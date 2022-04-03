@@ -12,28 +12,39 @@ import org.testng.annotations.Test
 import java.io.File
 
 class KotlinClassTest {
-    private var context = KotlinContext(force = true)
     private val directory = File("../tests/kotlin/target/generated-sources/critter")
+    private var context = KotlinContext(force = true, outputDirectory = directory)
 
     @Test
     fun build() {
-        val files = File("../tests/maven/kotlin/src/main/kotlin/").walkTopDown().iterator().asSequence().toList()
-        files.forEach {
-            Kibble.parse(listOf(it)).forEach { file ->
-                file.classes.forEach { klass ->
-                    context.add(KotlinClass(context, file, klass, it))
+        File("../tests/maven/kotlin/src/main/kotlin/")
+            .walkTopDown()
+            .forEach {
+                Kibble.parse(listOf(it)).forEach { file ->
+                    file.classes.forEach { klass ->
+                        context.add(KotlinClass(context, file, klass, it))
+                    }
                 }
             }
-        }
 
-        KotlinBuilder(context).build(directory)
+        KotlinCriteriaBuilder(context).build()
         val personClass = context.resolve("dev.morphia.critter.test", "Person")
         Assert.assertNotNull(personClass)
         personClass as KotlinClass
-        Assert.assertEquals(personClass.fields.size, 5, "Found: \n${personClass.fields.joinToString(",\n")}")
+        Assert.assertEquals(personClass.properties.map {  it.name }.toSortedSet(), sortedSetOf("age", "first", "id", "last", "ssn"))
         val criteriaFiles = Kibble.parse(listOf(directory))
-        validatePersonCriteria(criteriaFiles.find { it.name == "PersonCriteria.kt" }!!)
-        validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria.kt" }!!)
+        validatePersonCriteria(criteriaFiles.first { it.name == "PersonCriteria.kt" })
+        validateInvoiceCriteria(criteriaFiles.first { it.name == "InvoiceCriteria.kt" })
+    }
+
+    @Test
+    fun codecs() {
+        val context = KotlinContext(format = true, force = true, outputDirectory = File("../tests/maven/kotlin/target/generated-sources/critter"))
+        File("../tests/maven/kotlin/src/main/kotlin/")
+            .walkTopDown()
+            .filter { it.name.endsWith(".kt") }
+            .forEach { context.parse(it) }
+        CodecsBuilder(context).build()
     }
 
     @Test
@@ -46,17 +57,16 @@ class Parent(val name: String)
 class Child(val age: Int, name: String, val nickNames: List<String>): Parent(name)
 """
         )
-        val context = KotlinContext(force = true)
+        val context = KotlinContext(force = true, outputDirectory = directory)
         file.classes.forEach { klass ->
             context.add(KotlinClass(context, file, klass, File("")))
         }
         val parent = context.resolve("properties", "Parent")!!
         val child = context.resolve("properties", "Child")!!
-        Assert.assertEquals(parent.fields.size, 1, "Found: \n${parent.fields.joinToString(",\n")}")
-        Assert.assertEquals(child.fields.size, 3, "Found: \n${child.fields.joinToString(",\n")}")
-        val builder = KotlinBuilder(context)
-        val directory = File("target/properties/")
-        builder.build(directory)
+        Assert.assertEquals(parent.properties.size, 1, "Found: \n${parent.properties.joinToString(",\n")}")
+        Assert.assertEquals(child.properties.size, 3, "Found: \n${child.properties.joinToString(",\n")}")
+        val builder = KotlinCriteriaBuilder(context)
+        builder.build()
     }
 
     private fun validateInvoiceCriteria(file: FileSpec) {

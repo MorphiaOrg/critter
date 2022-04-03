@@ -2,9 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <properties>
-        <gradle.version>6.8.3</gradle.version>
-    </properties>
 
     <parent>
         <groupId>dev.morphia.critter</groupId>
@@ -32,33 +29,6 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>com.google.code.maven-replacer-plugin</groupId>
-                <artifactId>replacer</artifactId>
-                <version>1.5.3</version>
-                <executions>
-                    <execution>
-                        <id>build.gradle</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>replace</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <filesToInclude>${project.basedir}/build.gradle.kts, ${project.basedir}/gradle.properties</filesToInclude>
-                    <replacements>
-                        <replacement>
-                            <token>(classpath\("org.apache.maven:maven-model.*)</token>
-                            <value>classpath("org.apache.maven:maven-model:${maven.version}")</value>
-                        </replacement>
-                        <replacement>
-                            <token>(kotlin\("jvm"\).*)</token>
-                            <value>kotlin("jvm") version "${kotlin.version}"</value>
-                        </replacement>
-                    </replacements>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
@@ -78,42 +48,6 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>java</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                            <arguments>
-                                <argument>-cp</argument>
-                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
-                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
-                                <argument>classes</argument>
-                            </arguments>
-                            <useMavenLogger>true</useMavenLogger>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>java</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                            <arguments>
-                                <argument>-cp</argument>
-                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
-                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
-                                <argument>classes</argument>
-                            </arguments>
-                            <useMavenLogger>true</useMavenLogger>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>clean</id>
                         <phase>clean</phase>
@@ -185,10 +119,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

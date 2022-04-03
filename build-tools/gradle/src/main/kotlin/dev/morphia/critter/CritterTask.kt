@@ -1,8 +1,10 @@
 package dev.morphia.critter
 
+import dev.morphia.critter.Critter.generateCodecs
+import dev.morphia.critter.Critter.generateCriteria
 import dev.morphia.critter.Critter.scan
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
@@ -14,12 +16,15 @@ open class CritterTask : SourceTask() {
 
     @OutputDirectory
     var outputDirectory = File("build/generated/critter")
-    @Internal
+    @Input
+    @Optional
     var criteriaPackage: String? = null
-    @Internal
+    @Input
     var outputType: String = "kotlin"
-    @Internal
+    @Input
     var force = false
+    @Input
+    var format = false
 
     init {
         description = "Processes files for critter."
@@ -27,13 +32,8 @@ open class CritterTask : SourceTask() {
 
     @TaskAction
     fun generate() {
-        scan(
-            project.projectDir,
-            files,
-            criteriaPackage,
-            force,
-            Critter.outputType(outputType),
-            outputDirectory
-        )
+        scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType), outputDirectory)
+        generateCriteria()
+        generateCodecs()
     }
 }

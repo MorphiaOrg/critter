@@ -28,18 +28,20 @@
                 </executions>
                 <configuration>
                     <force>true</force>
+                    <format>true</format>
                     <outputType>java</outputType>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>11</source>
                     <target>11</target>
                     <compilerArgument>-proc:none</compilerArgument>
                     <compilerArgument>-Xlint:deprecation</compilerArgument>
+                    <compilerArgument>-parameters</compilerArgument>
                 </configuration>
             </plugin>
         </plugins>
@@ -53,7 +55,6 @@
         <dependency>
             <groupId>dev.morphia.morphia</groupId>
             <artifactId>morphia-core</artifactId>
-            <version>${morphia.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
@@ -66,6 +67,11 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

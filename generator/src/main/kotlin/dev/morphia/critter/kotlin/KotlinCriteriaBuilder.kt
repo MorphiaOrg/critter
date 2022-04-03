@@ -1,9 +1,7 @@
+@file:Suppress("DEPRECATION")
+
 package dev.morphia.critter.kotlin
 
-import com.github.shyiko.ktlint.core.KtLint
-import com.github.shyiko.ktlint.core.LintError
-import com.github.shyiko.ktlint.core.RuleSet
-import com.github.shyiko.ktlint.core.RuleSetProvider
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -24,33 +22,28 @@ import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
-import dev.morphia.critter.CritterField
+import dev.morphia.critter.CritterType
+import dev.morphia.critter.CritterType.Companion.isNumeric
 import dev.morphia.critter.FilterSieve
+import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.UpdateSieve
-import dev.morphia.critter.java.toTitleCase
-import dev.morphia.query.experimental.filters.Filters
-import dev.morphia.query.experimental.updates.UpdateOperators
+import dev.morphia.critter.titleCase
+import dev.morphia.query.filters.Filters
+import dev.morphia.query.updates.UpdateOperators
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.Comparator.comparingInt
-import java.util.ServiceLoader
 
-class KotlinBuilder(val context: KotlinContext) {
+class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     companion object {
         private val STRING = String::class.asClassName()
         private val NULLABLE_STRING = STRING.copy(nullable = true)
-        private val LOG = LoggerFactory.getLogger(KotlinBuilder::class.java)
+        private val LOG = LoggerFactory.getLogger(KotlinCriteriaBuilder::class.java)
     }
 
-    fun build(directory: File) {
+    override fun build() {
         context.classes.values.forEach {
-            build(directory, it)
+            build(context.outputDirectory, it)
         }
-    }
-
-    private val ruleSets: List<RuleSet> by lazy {
-        ServiceLoader.load(RuleSetProvider::class.java).map<RuleSetProvider, RuleSet> { it.get() }
-            .sortedWith(comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }.thenComparing(RuleSet::id))
     }
 
     private fun build(directory: File, source: KotlinClass) {
@@ -83,7 +76,7 @@ class KotlinBuilder(val context: KotlinContext) {
                         .build()
                 )
 
-                if (source.fields.isNotEmpty()) {
+                if (source.properties.isNotEmpty()) {
                     buildCompanionObject(criteriaName, source, criteriaClass)
                 }
 
@@ -97,7 +90,6 @@ class KotlinBuilder(val context: KotlinContext) {
                     .addImport(UpdateOperators::class.java.packageName, "UpdateOperators", "UpdateOperator")
                     .build()
                 fileSpec.writeTo(directory)
-
 //                formatOutput(directory, fileSpec)
             }
         } catch (e: Exception) {
@@ -119,10 +111,10 @@ class KotlinBuilder(val context: KotlinContext) {
                     .build()
             )
 
-            source.fields.forEach { field ->
+            source.properties.forEach { field ->
                 addProperty(
                     PropertySpec.builder(field.name, STRING)
-                        .initializer(""""${field.mappedName()}"""")
+                        .initializer("""${field.mappedName()}""")
                         .build()
                 )
                 addFunction(
@@ -147,9 +139,9 @@ class KotlinBuilder(val context: KotlinContext) {
     private fun Builder.addFieldCriteriaMethod(field: PropertySpec) {
         val concreteType = field.type.concreteType()
         val annotations = context.classes[concreteType.canonicalName]?.annotations
-        val none = annotations?.none { it.className.packageName.startsWith("dev.morphia.annotations") } ?: true
+        val none = annotations?.none { it.type.packageName.startsWith("dev.morphia.annotations") } ?: true
         val fieldCriteriaName = if (none) {
-            field.name.toTitleCase() + "FieldCriteria"
+            field.name.titleCase() + "FieldCriteria"
         } else {
             concreteType.simpleName + "Criteria"
         }
@@ -161,6 +153,7 @@ class KotlinBuilder(val context: KotlinContext) {
         )
     }
 
+/*
     private fun formatOutput(directory: File, fileSpec: FileSpec) {
         val path = fileSpec.toJavaFileObject().toUri().path
         val file = File(directory, path)
@@ -172,6 +165,7 @@ class KotlinBuilder(val context: KotlinContext) {
         LOG.debug("Formatting generated file: $file")
         file.writeText(KtLint.format(file.readText(), ruleSets, mapOf(), cb))
     }
+*/
 
     private fun addField(criteriaClass: Builder, field: PropertySpec) {
         if (field.hasAnnotation(Reference::class.java)) {
@@ -186,7 +180,7 @@ class KotlinBuilder(val context: KotlinContext) {
     }
 
     private fun addFieldCriteriaClass(field: PropertySpec, criteriaClass: Builder) {
-        TypeSpec.classBuilder("${field.name.toTitleCase()}FieldCriteria")
+        TypeSpec.classBuilder("${field.name.titleCase()}FieldCriteria")
             .apply {
                 primaryConstructor(
                     FunSpec.constructorBuilder()
@@ -210,7 +204,7 @@ class KotlinBuilder(val context: KotlinContext) {
     }
 
     private fun addReferenceCriteria(criteriaClass: Builder, field: PropertySpec) {
-        val fieldCriteriaName = field.name.toTitleCase() + "FieldCriteria"
+        val fieldCriteriaName = field.name.titleCase() + "FieldCriteria"
         criteriaClass.addFunction(
             FunSpec.builder(field.name)
                 .addCode(CodeBlock.of("return ${fieldCriteriaName}(extendPath(path, \"${field.name}\"))"))
@@ -226,7 +220,7 @@ class KotlinBuilder(val context: KotlinContext) {
     fun PropertySpec.isMappedType(): Boolean {
         val mappedType = mappedType()
         return mappedType != null && mappedType.annotations.any {
-            it.className.packageName in listOf(Entity::class.java.simpleName, Embedded::class.java.simpleName)
+            it.type.packageName in listOf(Entity::class.java.simpleName, Embedded::class.java.simpleName)
         }
     }
 }
@@ -239,11 +233,13 @@ private fun TypeName.concreteType(): ClassName {
     }
 }
 
-fun PropertySpec.isContainer() = type.toString().substringBefore("<") in CritterField.CONTAINER_TYPES
-fun PropertySpec.isNumeric() = CritterField.isNumeric(type.toString())
-fun PropertySpec.isText() = CritterField.TEXT_TYPES.contains(type.toString())
+fun PropertySpec.isContainer(): Boolean {
+    return type.toString().substringBefore("<") in CritterType.CONTAINER_TYPES
+}
+fun PropertySpec.isNumeric() = isNumeric(type.concreteType().canonicalName)
+fun PropertySpec.isText() = CritterType.TEXT_TYPES.contains(type.concreteType().canonicalName)
 fun <T : Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
-    return annotations.firstOrNull { it.className == annotation.asTypeName() }
+    return annotations.firstOrNull { it.typeName == annotation.asTypeName() }
 }
 
 fun <T : Annotation> PropertySpec.hasAnnotation(annotation: Class<T>): Boolean {
@@ -254,7 +250,6 @@ fun AnnotationSpec.getValue(name: String = "value"): String? {
     return members.map { it.toPair() }.firstOrNull { it.first == name }?.second
 }
 
-@Suppress("DEPRECATION")
 fun PropertySpec.mappedName(): String {
     val annotation = getAnnotation(Id::class.java)
     return if (annotation != null) {
@@ -272,3 +267,6 @@ private fun Builder.attachUpdates(field: PropertySpec) {
     UpdateSieve.handlers(field, this)
 }
 
+fun String.className(): ClassName {
+    return ClassName.bestGuess(this)
+}

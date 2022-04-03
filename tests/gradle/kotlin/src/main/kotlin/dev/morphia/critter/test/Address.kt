@@ -1,9 +1,9 @@
 package dev.morphia.critter.test
 
-import dev.morphia.annotations.Entity
+import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Property
 
-@Entity
+@Embedded
 class Address {
     @Property("c")
     var city: String? = null

@@ -1,40 +1,34 @@
 package dev.morphia.critter.java
 
-import dev.morphia.critter.CritterContext
-import dev.morphia.critter.CritterField
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
-import org.bson.types.ObjectId
+import dev.morphia.critter.CritterProperty
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.MethodSource
+import org.testng.Assert
 import org.testng.Assert.assertEquals
-import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test
 import java.io.File
-import kotlin.test.assertTrue
 
 class JavaClassTest {
-    @BeforeTest
-    fun scan() {
-    }
-
     @Test
     fun parents() {
-        val context = CritterContext(force = true)
+        val directory = File("target/parentTest/")
+        val context = JavaContext(outputDirectory = directory)
 
-        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java"))
-        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java"))
+        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java")))
+        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java")))
+        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Invoice.java")))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
 
-        val directory = File("target/parentTest/")
-
-        JavaBuilder(context).build(directory)
+        CriteriaBuilder(context).build()
 
         val criteriaFiles = list(directory)
 
-        validatePersonCriteria(personClass, criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource)
+        validatePersonCriteria(personClass, criteriaFiles.first { it.name == "PersonCriteria" } as JavaClassSource)
+        validateInvoiceCriteria(criteriaFiles.first { it.name == "InvoiceCriteria" } as JavaClassSource)
     }
 
     @Test
@@ -42,25 +36,40 @@ class JavaClassTest {
         val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
 
         val directory = File("../tests/maven/java/target/generated-sources/critter")
-        val context = CritterContext(force = true)
+        val context = JavaContext(outputDirectory = directory)
 
-        files.forEach { context.add(it) }
-        JavaBuilder(context).build(directory)
+        files.forEach { context.add(JavaClass(context, it)) }
+        CriteriaBuilder(context).build()
 
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
-        assertEquals(personClass.fields.size, 4)
+        assertEquals(personClass.properties.size, 4)
 
         val criteriaFiles = list(directory)
 
-        validatePersonCriteria(personClass, criteriaFiles.find { it.getName() == "PersonCriteria" } as JavaClassSource)
+        validatePersonCriteria(personClass, criteriaFiles.find { it.name == "PersonCriteria" } as JavaClassSource)
+    }
+
+    @Test
+    fun codecs() {
+        val context = JavaContext(format = true, force = true, outputDirectory = File("." +
+            "./tests/maven/java/target/generated-sources/critter"))
+        File("../tests/maven/java/src/main/java/")
+            .walkTopDown()
+            .filter { it.name.endsWith(".java") }
+            .forEach { context.add(JavaClass(context, it)) }
+        CodecsBuilder(context).build()
     }
 
     private fun list(directory: File): List<JavaType<*>> {
         return directory.walkTopDown().filter { it.name.endsWith(".java") }.map { Roaster.parse(it) }.toList()
     }
 
+    private fun validateInvoiceCriteria(invoiceCriteria: JavaClassSource) {
+        Assert.assertNotNull(invoiceCriteria.getMethod("addresses"))
+    }
+
     private fun validatePersonCriteria(personClass: JavaClass, personCriteria: JavaClassSource) {
-        val origFields = personClass.fields
+        val origFields = personClass.properties
         val criteriaFields = personCriteria.fields.filter { it.isStatic && it.name != "instance" }
         assertEquals(criteriaFields.size, origFields.size, "Criteria fields: $criteriaFields.\n " +
                 "person fields: ${origFields.joinToString("\n")}")
@@ -79,15 +88,11 @@ class JavaClassTest {
         }
     }
 
-    private fun JavaClassSource.shouldImport(type: String) {
-        assertTrue(imports.any { it.qualifiedName == type }, "Should find an import for $type in ${name}")
-    }
-
-    private fun extractName(property: CritterField): String {
+    private fun extractName(property: CritterProperty): String {
         return if (property.hasAnnotation(Id::class.java)) {
             "_id"
         } else {
-            property.getValue(Property::class.java, property.name).replace("\"", "")
+            (property.getAnnotation(Property::class.java)?.literalValue("value") ?: property.name).replace("\"", "")
         }
     }
 

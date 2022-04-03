@@ -18,16 +18,124 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <groupId>com.github.ekryd.echo-maven-plugin</groupId>
+                <artifactId>echo-maven-plugin</artifactId>
+                <version>1.2.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>echo</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <message>morphia.version=${morphia.version}</message>
+                            <toFile>gradle.properties</toFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
-                <groupId>com.google.code.maven-replacer-plugin</groupId>
-                <artifactId>replacer</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <!-- Replacing default-testCompile as it is treated specially by maven -->
+                    <execution>
+                        <id>default-testCompile</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>-cp</argument>
+                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
+                                <argument>classes</argument>
+                                <argument>-Pmorphia.version=${morphia.version}</argument>
+                                <argument>-Pversion=${project.version}</argument>
+                                <argument>--stacktrace</argument>
+                            </arguments>
+                            <useMavenLogger>true</useMavenLogger>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>-cp</argument>
+                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
+                                <argument>testClasses</argument>
+                                <argument>-Pmorphia.version=${morphia.version}</argument>
+                                <argument>-Pversion=${project.version}</argument>
+                                <argument>--stacktrace</argument>
+                            </arguments>
+                            <useMavenLogger>true</useMavenLogger>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>-cp</argument>
+                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
+                                <argument>-Pmorphia.version=${morphia.version}</argument>
+                                <argument>-Pversion=${project.version}</argument>
+                                <argument>test</argument>
+                            </arguments>
+                            <useMavenLogger>true</useMavenLogger>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>-cp</argument>
+                                <argument>gradle/wrapper/gradle-wrapper.jar</argument>
+                                <argument>org.gradle.wrapper.GradleWrapperMain</argument>
+                                <argument>clean</argument>
+                                <argument>-Pmorphia.version=${morphia.version}</argument>
+                            </arguments>
+                            <useMavenLogger>true</useMavenLogger>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

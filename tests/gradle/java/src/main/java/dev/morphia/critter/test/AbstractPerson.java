@@ -1,6 +1,6 @@
 package dev.morphia.critter.test;
 
-public class AbstractPerson {
+public abstract class AbstractPerson {
   private Long age;
 
   public Long getAge() {

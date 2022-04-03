@@ -6,16 +6,16 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import dev.morphia.query.experimental.filters.Filter
-import dev.morphia.query.experimental.filters.Filters
-import dev.morphia.query.experimental.updates.UpdateOperator
-import dev.morphia.query.experimental.updates.UpdateOperators
+import dev.morphia.query.filters.Filter
+import dev.morphia.query.filters.Filters
+import dev.morphia.query.updates.UpdateOperator
+import dev.morphia.query.updates.UpdateOperators
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.javaType
 
 interface OperationGenerator {
-    fun handle(target: JavaClassSource, field: CritterField, name: String, functions: Map<String, KFunction<*>>, functionSource: String) {
+    fun handle(target: JavaClassSource, property: CritterProperty, name: String, functions: Map<String, KFunction<*>>, functionSource: String) {
         target.addImport(Filters::class.java)
         target.addImport(Filter::class.java)
         target.addImport(UpdateOperators::class.java.name)
@@ -48,9 +48,9 @@ interface OperationGenerator {
             throw UnsupportedOperationException("Parameters are nonstandard.  '${kFunction}' needs a custom implementation")
         }
         val params = kFunction.parameters.drop(1).map {
-            ParameterSpec.builder(it.name!!, it.type.asTypeName()).build()
+            ParameterSpec.builder(it.name!! + "DD", it.type.asTypeName()).build()
         }
-        val args = kFunction.parameters.drop(1).map { it.name }.joinToString(", ")
+        val args = params.map { it.name }.joinToString(", ")
         var parameters = """path"""
         if (args.isNotBlank()) {
             parameters += ", ${args}"

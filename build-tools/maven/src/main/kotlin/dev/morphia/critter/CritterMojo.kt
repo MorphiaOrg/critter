@@ -1,5 +1,7 @@
 package dev.morphia.critter
 
+import dev.morphia.critter.Critter.generateCodecs
+import dev.morphia.critter.Critter.generateCriteria
 import dev.morphia.critter.Critter.outputType
 import dev.morphia.critter.Critter.scan
 import org.apache.maven.plugin.AbstractMojo
@@ -11,7 +13,6 @@ import java.io.File
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 class CritterMojo : AbstractMojo() {
-
     @Parameter
     private var sourceDirectories = setOf("src/main/java", "src/main/kotlin")
 
@@ -23,11 +24,17 @@ class CritterMojo : AbstractMojo() {
     )
     private lateinit var outputDirectory: File
 
+    @Parameter(property = "critter.codecs", defaultValue = "true")
+    private var generateCodecs: Boolean = true
+
     @Parameter(property = "critter.criteria.package")
     private var criteriaPackage: String? = null
 
     @Parameter(property = "critter.force", defaultValue = "false")
     private var force: Boolean = false
+
+    @Parameter(property = "critter.format", defaultValue = "false")
+    private var format: Boolean = false
 
     @Parameter(property = "critter.output.type", name = "outputType", required = true)
     lateinit var outputType: String
@@ -37,7 +44,10 @@ class CritterMojo : AbstractMojo() {
 
     override fun execute() {
         project.addCompileSourceRoot(outputDirectory.path)
-        scan(project.basedir, sourceDirectories, criteriaPackage, force, outputType(outputType), outputDirectory)
+        scan(project.basedir, sourceDirectories, criteriaPackage, force, format, outputType(outputType), outputDirectory)
+        generateCriteria()
+        if (generateCodecs) {
+            generateCodecs()
+        }
     }
-
 }

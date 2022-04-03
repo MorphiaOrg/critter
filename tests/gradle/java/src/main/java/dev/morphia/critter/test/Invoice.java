@@ -1,55 +1,112 @@
-/**
- * Copyright (C) 2012-2020 Justin Lee <jlee@antwerkz.com>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package dev.morphia.critter.test;
+
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.PostLoad;
+import dev.morphia.annotations.PostPersist;
+import dev.morphia.annotations.PreLoad;
+import dev.morphia.annotations.PrePersist;
+import dev.morphia.annotations.Reference;
+import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.StringJoiner;
 
-import org.bson.types.ObjectId;
-import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.Id;
-import dev.morphia.annotations.Reference;
+import static java.util.Arrays.asList;
 
 @Entity
 public class Invoice {
   @Id
   private ObjectId id = new ObjectId();
-
   private LocalDateTime orderDate;
-
   @Reference
   private Person person;
-
-  private List<Address> addresses;
-
+  private List<List<List<Address>>> listListList = new ArrayList<>();
+  private List<Address> addresses = new ArrayList<>();
+  private Map<String, List<Address>> mapList = new LinkedHashMap<>();
   private Double total = 0.0;
+  private List<Item> items = new ArrayList<>();
+  private transient boolean postLoad;
+  private transient boolean preLoad;
+  private transient boolean prePersist;
+  private transient boolean postPersist;
 
-  private List<Item> items;
-
-  public Invoice() {
+  Invoice() {
   }
 
-  public Invoice(LocalDateTime orderDate, Person person, Address address, Item... items) {
-    this.orderDate = orderDate;
+  public Invoice(LocalDateTime orderDate, Person person, Address addresses, Item... items) {
+    this.orderDate = orderDate.withNano(0);
     this.person = person;
-    add(address);
-    for (Item item : items) {
-      add(item);
+    if (addresses != null) {
+      this.addresses.add(addresses);
+      mapList.put("1", this.addresses);
+      listListList = List.of(List.of(this.addresses));
     }
+    this.items.addAll(asList(items));
+  }
+
+  public Invoice(LocalDateTime orderDate, Person person, List<Address> addresses, List<Item> items) {
+    setOrderDate(orderDate);
+    this.person = person;
+    if (addresses != null) {
+      this.addresses.addAll(addresses);
+    }
+    if (items != null) {
+      this.items.addAll(items);
+    }
+  }
+
+  public void add(Item item) {
+    if (items == null) {
+      items = new ArrayList<>();
+    }
+    items.add(item);
+    total += item.getPrice();
+  }
+
+  public List<Address> getAddresses() {
+    return addresses;
+  }
+
+  public void setAddresses(List<Address> addresses) {
+    this.addresses = addresses;
+  }
+
+  public ObjectId getId() {
+    return id;
+  }
+
+  public void setId(ObjectId id) {
+    this.id = id;
+  }
+
+  public List<Item> getItems() {
+    return items;
+  }
+
+  public void setItems(List<Item> items) {
+    this.items = items;
+  }
+
+  public List<List<List<Address>>> getListListList() {
+    return listListList;
+  }
+
+  public void setListListList(List<List<List<Address>>> listListList) {
+    this.listListList = listListList;
+  }
+
+  public Map<String, List<Address>> getMapList() {
+    return mapList;
+  }
+
+  public void setMapList(Map<String, List<Address>> mapList) {
+    this.mapList = mapList;
   }
 
   public LocalDateTime getOrderDate() {
@@ -57,7 +114,7 @@ public class Invoice {
   }
 
   public void setOrderDate(LocalDateTime orderDate) {
-    this.orderDate = orderDate;
+    this.orderDate = orderDate != null ? orderDate.withNano(0) : null;
   }
 
   public Person getPerson() {
@@ -72,19 +129,13 @@ public class Invoice {
     return total;
   }
 
-  public void add(Item item) {
-    if (items == null) {
-      items = new ArrayList<>();
-    }
-    items.add(item);
-    total += item.getPrice();
+  public void setTotal(Double total) {
+    this.total = total;
   }
 
-  public void add(Address address) {
-    if (addresses == null) {
-      addresses = new ArrayList<>();
-    }
-    addresses.add(address);
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, orderDate, person, listListList, addresses, mapList, total, items);
   }
 
   @Override
@@ -92,34 +143,63 @@ public class Invoice {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof Invoice)) {
       return false;
     }
     Invoice invoice = (Invoice) o;
-    if (!id.equals(invoice.id)) {
-      return false;
-    }
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return id.hashCode();
-  }
-
-  public List<Address> getAddresses() {
-    return addresses;
+    return Objects.equals(id, invoice.id) && Objects.equals(orderDate, invoice.orderDate) &&
+           Objects.equals(person, invoice.person) && Objects.equals(listListList, invoice.listListList) &&
+           Objects.equals(addresses, invoice.addresses) && Objects.equals(mapList, invoice.mapList) &&
+           Objects.equals(total, invoice.total) && Objects.equals(items, invoice.items);
   }
 
   @Override
   public String toString() {
-    return "Invoice{" +
-           "id=" + id +
-           ", date=" + orderDate +
-           ", person=" + person +
-           ", addresses=" + addresses +
-           ", total=" + total +
-           ", items=" + items +
-           '}';
+    return new StringJoiner(", ", Invoice.class.getSimpleName() + "[", "]")
+        .add("id=" + id)
+        .add("orderDate=" + orderDate)
+        .add("person=" + person)
+        .add("listListList=" + listListList)
+        .add("addresses=" + addresses)
+        .add("mapList=" + mapList)
+        .add("total=" + total)
+        .add("items=" + items)
+        .toString();
+  }
+
+  public boolean isPostLoad() {
+    return postLoad;
+  }
+
+  public boolean isPostPersist() {
+    return postPersist;
+  }
+
+  public boolean isPreLoad() {
+    return preLoad;
+  }
+
+  public boolean isPrePersist() {
+    return prePersist;
+  }
+
+  @PostLoad
+  public void postLoad() {
+    postLoad = true;
+  }
+
+  @PostPersist
+  public void postPersist() {
+    postPersist = true;
+  }
+
+  @PreLoad
+  public void preLoad() {
+    preLoad = true;
+  }
+
+  @PrePersist
+  public void prePersist() {
+    prePersist = true;
   }
 }

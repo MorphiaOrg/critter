@@ -27,6 +27,11 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
+                        <configuration>
+                            <args>
+                                <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
+                            </args>
+                        </configuration>
                     </execution>
 
                     <execution>
@@ -63,10 +68,6 @@
                     </dokkaPlugins>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-            </plugin>
         </plugins>
     </build>
 
@@ -99,7 +100,12 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.github.shyiko</groupId>
+            <groupId>com.squareup</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>${javapoet.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.pinterest</groupId>
             <artifactId>ktlint</artifactId>
         </dependency>
         <dependency>

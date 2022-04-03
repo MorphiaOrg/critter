@@ -1,7 +1,6 @@
 package dev.morphia.critter
 
 import dev.morphia.critter.Critter.addMethods
-import dev.morphia.critter.kotlin.isContainer
 import dev.morphia.critter.kotlin.isNumeric
 import dev.morphia.critter.kotlin.isText
 import com.squareup.kotlinpoet.FunSpec
@@ -12,16 +11,15 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import dev.morphia.query.experimental.updates.AddToSetOperator
-import dev.morphia.query.experimental.updates.UpdateOperator
-import dev.morphia.query.experimental.updates.UpdateOperators
+import dev.morphia.critter.kotlin.isContainer
+import dev.morphia.query.updates.AddToSetOperator
+import dev.morphia.query.updates.UpdateOperator
+import dev.morphia.query.updates.UpdateOperators
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.TreeSet
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSupertypeOf
-import kotlin.reflect.jvm.javaType
-import kotlin.reflect.typeOf
 
 object UpdateSieve {
     internal val functions = updates()
@@ -34,19 +32,19 @@ object UpdateSieve {
             .filter { it.name !in setOf("setOnInsert") }
             .filterNot { it.name == "set" && it.parameters.size == 1 }
 
-    fun handlers(field: CritterField, target: JavaClassSource) {
+    fun handlers(property: CritterProperty, target: JavaClassSource) {
         val updates = TreeSet(Updates.common())
-        if (field.isNumeric()) {
+        if (property.type.isNumeric()) {
             updates.addAll(Updates.numerics())
         }
-        if (field.isText()) {
+        if (property.type.isText()) {
             updates.addAll(Updates.strings())
         }
-        if (field.isContainer()) {
+        if (property.type.isContainer()) {
             updates.addAll(Updates.containers())
         }
         updates.forEach {
-            it.handle(target, field)
+            it.handle(target, property)
         }
     }
 
@@ -72,7 +70,7 @@ object UpdateSieve {
 enum class Updates : OperationGenerator {
     and,
     addToSet {
-        override fun handle(target: JavaClassSource, field: CritterField) {
+        override fun handle(target: JavaClassSource, property: CritterProperty) {
             target.addImport(AddToSetOperator::class.java)
             target.addMethods("""
             public AddToSetOperator ${name}(Object value) {
@@ -100,7 +98,7 @@ enum class Updates : OperationGenerator {
     },
     currentDate,
     dec {
-        override fun handle(target: JavaClassSource, field: CritterField) {
+        override fun handle(target: JavaClassSource, property: CritterProperty) {
             target.addMethod("""
                 public UpdateOperator ${name}() {
                     return UpdateOperators.${name}(path);
@@ -122,7 +120,7 @@ enum class Updates : OperationGenerator {
         }
     },
     inc {
-        override fun handle(target: JavaClassSource, field: CritterField) {
+        override fun handle(target: JavaClassSource, property: CritterProperty) {
             target.addMethod("""
                 public UpdateOperator ${name}() {
                     return UpdateOperators.${name}(path);
@@ -150,7 +148,7 @@ enum class Updates : OperationGenerator {
     pop,
     pull,
     pullAll {
-        override fun handle(target: JavaClassSource, field: CritterField) {
+        override fun handle(target: JavaClassSource, property: CritterProperty) {
             target.addImport(java.util.List::class.java)
             target.addMethod("""
             public UpdateOperator ${name}(List<?> values) {
@@ -172,8 +170,8 @@ enum class Updates : OperationGenerator {
         fun common() = values().toList() - numerics() - strings() - containers()
     }
 
-    open fun handle(target: JavaClassSource, field: CritterField) {
-        handle(target, field, name, UpdateSieve.functions, "UpdateOperators")
+    open fun handle(target: JavaClassSource, property: CritterProperty) {
+        handle(target, property, name, UpdateSieve.functions, "UpdateOperators")
     }
 
     open fun handle(target: Builder, field: PropertySpec) {

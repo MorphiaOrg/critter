@@ -15,10 +15,12 @@
  */
 package dev.morphia.critter.test
 
+import dev.morphia.annotations.Embedded
+import org.bson.types.ObjectId
 import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
-import org.bson.types.ObjectId
+import java.time.LocalDateTime
 
 @Entity
 open class Person : AbstractPerson {
@@ -61,7 +63,7 @@ open class Person : AbstractPerson {
     }
 }
 
-@Entity
+@Embedded
 class SSN(var value: String) {
     private constructor() : this("")
 }

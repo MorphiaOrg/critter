@@ -22,114 +22,36 @@
         <url>git@github.com:MorphiaOrg/critter.git</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>snapshots-repo</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <properties>
-        <bottlerocket.version>0.31.0</bottlerocket.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <bottlerocket.version>0.14</bottlerocket.version>
         <dokka.version>1.6.10</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
-        <kibble.version>0.18</kibble.version>
+        <javapoet.version>1.13.0</javapoet.version>
+        <kibble.version>0.19-SNAPSHOT</kibble.version>
         <kotlin.version>1.6.20</kotlin.version>
-        <kotlinpoet.version>1.10.2</kotlinpoet.version>
-        <ktlint.version>0.31.0</ktlint.version>
-        <maven.version>3.8.5</maven.version>
-        <morphia.version>2.2.6</morphia.version>
-        <roaster.version>2.24.0.Final</roaster.version>
-        <slf4j.version>1.7.36</slf4j.version>
-        <testng.version>7.5</testng.version>
-
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <downloadSources>true</downloadSources>
-        <nexus.url>https://oss.sonatype.org</nexus.url>
+        <kotlinpoet.version>1.9.0</kotlinpoet.version>
+        <ktlint.version>0.42.1</ktlint.version>
+        <maven.version>3.6.3</maven.version>
+        <morphia.version>2.3.0-SNAPSHOT</morphia.version>
+        <roaster.version>2.23.0.Final</roaster.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <testng.version>7.4.0</testng.version>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.morphia.morphia</groupId>
-                <artifactId>morphia-core</artifactId>
-                <version>${morphia.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.morphia.morphia</groupId>
-                <artifactId>morphia-core</artifactId>
-                <version>${morphia.version}</version>
-                <classifier>tests</classifier>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.forge.roaster</groupId>
-                <artifactId>roaster-api</artifactId>
-                <version>${roaster.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.forge.roaster</groupId>
-                <artifactId>roaster-jdt</artifactId>
-                <version>${roaster.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-stdlib</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-reflect</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-compiler-embeddable</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.antwerkz.kibble</groupId>
-                <artifactId>kibble</artifactId>
-                <version>${kibble.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.antwerkz.bottlerocket</groupId>
-                <artifactId>bottlerocket</artifactId>
-                <version>${bottlerocket.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.shyiko</groupId>
-                <artifactId>ktlint</artifactId>
-                <version>${ktlint.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-nop</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.testng</groupId>
-                <artifactId>testng</artifactId>
-                <version>${testng.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-test</artifactId>
-                <version>${kotlin.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>2.17.2</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <build>
         <pluginManagement>
@@ -137,7 +59,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>3.3.0</version>
+                    <version>3.0.0</version>
                     <executions>
                         <execution>
                             <phase>generate-sources</phase>
@@ -156,7 +78,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.10.1</version>
+                    <version>3.8.1</version>
                     <configuration>
                         <source>11</source>
                         <target>11</target>
@@ -225,16 +147,6 @@
                         <jvmTarget>11</jvmTarget>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.12</version>
-                    <configuration>
-                        <serverId>central</serverId>
-                        <nexusUrl>${nexus.url}</nexusUrl>
-                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                    </configuration>
-                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -242,7 +154,7 @@
             <plugin>
                 <groupId>com.antwerkz.github</groupId>
                 <artifactId>issues-maven-plugin</artifactId>
-                <version>1.1.7</version>
+                <version>1.1.3</version>
                 <executions>
                     <execution>
                         <id>issues</id>
@@ -260,225 +172,135 @@
             </plugin>
         </plugins>
     </build>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.morphia.morphia</groupId>
+                <artifactId>morphia-core</artifactId>
+                <version>${morphia.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.forge.roaster</groupId>
+                <artifactId>roaster-api</artifactId>
+                <version>${roaster.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.forge.roaster</groupId>
+                <artifactId>roaster-jdt</artifactId>
+                <version>${roaster.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-reflect</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-compiler-embeddable</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.antwerkz.kibble</groupId>
+                <artifactId>kibble</artifactId>
+                <version>${kibble.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.antwerkz.bottlerocket</groupId>
+                <artifactId>bottlerocket</artifactId>
+                <version>${bottlerocket.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pinterest</groupId>
+                <artifactId>ktlint</artifactId>
+                <version>${ktlint.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-nop</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>${testng.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-test</artifactId>
+                <version>${kotlin.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>2.14.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>central</id>
-            <url>${nexus.url}/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>central</id>
-            <url>${nexus.url}/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!--
+        <reporting>
+            <plugins>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                    <reportSets>
+                        <reportSet>
+                            <reports>
+                                <report>report</report>
+                            </reports>
+                        </reportSet>
+                    </reportSets>
+                </plugin>
+            </plugins>
+        </reporting>
+    -->
 
     <profiles>
         <profile>
-            <id>default</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <property>
-                    <name>!release</name>
-                </property>
-            </activation>
-        </profile>
-        <profile>
-            <id>publication</id>
-            <activation>
-                <property>
-                    <name>release</name>
-                </property>
-            </activation>
-            <properties>
-                <skipTests>true</skipTests>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>3.0.0</version>
-                        <executions>
-                            <execution>
-                                <id>enforce-environment-variable-is-set</id>
-                                <goals>
-                                    <goal>enforce</goal>
-                                </goals>
-                                <configuration>
-                                    <rules>
-                                        <requireEnvironmentVariable>
-                                            <variableName>MAVEN_USERNAME</variableName>
-                                        </requireEnvironmentVariable>
-                                        <requireEnvironmentVariable>
-                                            <variableName>MAVEN_CENTRAL_TOKEN</variableName>
-                                        </requireEnvironmentVariable>
-                                        <requireEnvironmentVariable>
-                                            <variableName>MAVEN_GPG_PASSPHRASE</variableName>
-                                        </requireEnvironmentVariable>
-                                    </rules>
-                                    <fail>true</fail>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.coderplus.maven.plugins</groupId>
-                        <artifactId>copy-rename-maven-plugin</artifactId>
-                        <version>1.0.1</version>
-                        <executions>
-                            <execution>
-                                <id>copy-license-file</id>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <sourceFile>${session.executionRootDirectory}/LICENSE</sourceFile>
-                                    <destinationFile>${project.build.outputDirectory}/META-INF/LICENSE-${project.artifactId}</destinationFile>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.3.2</version>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <attach>true</attach>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.1</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <attach>true</attach>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>gpg</id>
-            <activation>
-                <property>
-                    <name>release</name>
-                </property>
-            </activation>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <version>1.6</version>
                         <executions>
                             <execution>
-                                <phase>verify</phase>
+                                <id>sign-artifacts</id>
                                 <goals>
                                     <goal>sign</goal>
-                                </goals>
-                                <configuration>
-                                    <gpgArguments>
-                                        <arg>--pinentry-mode</arg>
-                                        <arg>loopback</arg>
-                                    </gpgArguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>remote-deploy</id>
-            <activation>
-                <property>
-                    <name>release</name>
-                </property>
-            </activation>
-            <build>
-                <defaultGoal>deploy</defaultGoal>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.sonatype.plugins</groupId>
-                            <artifactId>nexus-staging-maven-plugin</artifactId>
-                            <version>1.6.12</version>
-                            <extensions>true</extensions>
-                            <configuration>
-                                <serverId>central</serverId>
-                                <nexusUrl>${nexus.url}</nexusUrl>
-                                <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-        <profile>
-            <id>local-deploy</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>local-snapshot</id>
-                    <url>file://${local.repository.path}/snapshot</url>
-                </snapshotRepository>
-                <repository>
-                    <id>local-release</id>
-                    <url>file://${local.repository.path}/release</url>
-                </repository>
-            </distributionManagement>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-clean-plugin</artifactId>
-                        <version>3.1.0</version>
-                        <inherited>false</inherited>
-                        <configuration>
-                            <filesets>
-                                <fileset>
-                                    <directory>${local.repository.path}</directory>
-                                </fileset>
-                            </filesets>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.0.0</version>
-                        <inherited>false</inherited>
-                        <executions>
-                            <execution>
-                                <id>generate-repository-directories</id>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <target>
-                                        <mkdir dir="${local.repository.path}/snapshot" />
-                                        <mkdir dir="${local.repository.path}/release" />
-                                    </target>
-                                </configuration>
-                                <goals>
-                                    <goal>run</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -489,8 +311,8 @@
     </profiles>
 
     <modules>
-        <module>build-tools</module>
         <module>generator</module>
+        <module>build-tools</module>
         <module>tests</module>
     </modules>
 

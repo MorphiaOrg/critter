@@ -1,6 +1,6 @@
 plugins {
     `kotlin-dsl`
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.6.0-RC"
     id("dev.morphia.critter") version "4.2.0-SNAPSHOT"
 }
 
@@ -22,16 +22,21 @@ sourceSets.test {
 
 dependencies {
     implementation("dev.morphia.morphia:morphia-core:${findProperty("morphia.version")}")
-    testImplementation("org.testng:testng:${findProperty("testng.version")}")
-    testImplementation("com.antwerkz.bottlerocket:bottlerocket:${findProperty("bottlerocket.version")}")
+    testImplementation("org.testng:testng:7.4.0")
+    testImplementation("com.antwerkz.bottlerocket:bottlerocket:0.14")
 }
 
 tasks {
-    test {
+   test {
         useTestNG()
     }
 
     critter {
         force = true
     }
+}
+
+tasks.withType(JavaCompile::class.java) {
+    options.compilerArgs = listOf("-parameters")
+    options.forkOptions.executable = "javac"
 }

@@ -1,3 +1,13 @@
+buildscript {
+    dependencies {
+        classpath("org.apache.maven:maven-model:3.8.2")
+    }
+}
+
+//project.version = org.apache.maven.model.io.xpp3.MavenXpp3Reader().read(file("pom.xml").inputStream())
+//    .parent.version
+
+
 plugins {
     id("dev.morphia.critter") version "4.2.0-SNAPSHOT"
 }
@@ -13,12 +23,12 @@ repositories {
 
 dependencies {
     implementation("dev.morphia.morphia:morphia-core:${findProperty("morphia.version")}")
-    testImplementation("org.testng:testng:${findProperty("testng.version")}")
-    testImplementation("com.antwerkz.bottlerocket:bottlerocket:${findProperty("bottlerocket.version")}")
+    testImplementation("org.testng:testng:7.4.0")
+    testImplementation("com.antwerkz.bottlerocket:bottlerocket:0.14")
 }
 
 tasks {
-    test {
+   test {
         useTestNG()
     }
 
@@ -26,4 +36,9 @@ tasks {
         force = true
         outputType = "java"
     }
+}
+
+tasks.withType(JavaCompile::class.java) {
+    options.compilerArgs = listOf("-parameters")
+    options.forkOptions.executable = "javac"
 }
