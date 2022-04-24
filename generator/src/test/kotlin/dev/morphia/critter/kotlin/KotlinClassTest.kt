@@ -43,18 +43,6 @@ class KotlinClassTest {
         CodecsBuilder(context).build()
     }
 
-    @Test
-    fun parentProperties() {
-        val context = KotlinContext(force = true, outputDirectory = directory)
-        context.add(File("src/test/dev/morphia/critter/kotlin/models/Parent.kt"))
-        val parent = context.resolve("properties", "Parent")!!
-        val child = context.resolve("properties", "Child")!!
-        Assert.assertEquals(parent.properties.size, 1, "Found: \n${parent.properties.joinToString(",\n")}")
-        Assert.assertEquals(child.properties.size, 3, "Found: \n${child.properties.joinToString(",\n")}")
-        val builder = KotlinCriteriaBuilder(context)
-        builder.build()
-    }
-
     private fun validateInvoiceCriteria(file: FileSpec) {
         val invoiceCriteria = file.classes[0]
         val addresses = invoiceCriteria.getFunctions("addresses")[0]

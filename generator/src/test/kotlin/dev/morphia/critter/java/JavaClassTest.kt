@@ -43,7 +43,7 @@ class JavaClassTest {
         CriteriaBuilder(context).build()
 
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
-        assertEquals(personClass.properties.size, 4)
+        assertEquals(personClass.properties.size, 5)
 
         val criteriaFiles = list(directory)
 
