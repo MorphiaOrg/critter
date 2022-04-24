@@ -36,7 +36,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
     private lateinit var entityName: ClassName
 
     override fun build() {
-        context.classes.values.forEach { source ->
+        context.entities().values.forEach { source ->
             this.source = source
             entityName = ClassName.bestGuess(source.qualifiedName)
             creatorName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")

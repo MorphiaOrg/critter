@@ -14,7 +14,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpec.Builder
-import com.squareup.kotlinpoet.TypeSpec.Companion
 import com.squareup.kotlinpoet.asClassName
 import dev.morphia.Datastore
 import dev.morphia.critter.CritterAnnotation
@@ -60,7 +59,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
         method.addCode("return listOf(")
         method.addCode(
-            context.classes.values
+            context.entities().values
                 .filter { !it.isAbstract() }
                 .joinToString(",\n\t\t") { source ->
                     "build${source.name.titleCase()}Model(mapper)"
@@ -80,7 +79,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                 .build()
         )
 
-        context.classes.values
+        context.entities().values
             .filter { !it.isAbstract() }
             .forEach { source ->
                 this.source = source

@@ -1,10 +1,8 @@
 package dev.morphia.critter
 
-import com.squareup.javapoet.JavaFile
-import com.squareup.javapoet.TypeSpec
-import dev.morphia.critter.java.CodecsBuilder
-import org.jboss.forge.roaster.Roaster
-import org.jboss.forge.roaster.model.source.JavaClassSource
+import dev.morphia.annotations.Embedded
+import dev.morphia.annotations.Entity
+import dev.morphia.critter.java.JavaClass
 import java.io.File
 
 abstract class CritterContext<C : CritterClass, T>(
@@ -12,14 +10,17 @@ abstract class CritterContext<C : CritterClass, T>(
     var force: Boolean = false,
     var format: Boolean = false,
     val outputDirectory: File) {
-    val classes: MutableMap<String, C> = mutableMapOf()
+    protected val classes: MutableMap<String, C> = mutableMapOf()
+
+    abstract fun add(file: File)
+
+    protected fun add(name: String, type: C) {
+        classes[name] = type
+    }
+    abstract fun entities(): Map<String, C>
 
     open fun shouldGenerate(sourceTimestamp: Long?, outputTimestamp: Long?): Boolean {
         return force || sourceTimestamp == null || outputTimestamp == null || sourceTimestamp >= outputTimestamp
-    }
-
-    open fun add(klass: C) {
-        classes["${klass.pkgName}.${klass.name}"] = klass
     }
 
     open fun resolve(currentPkg: String? = null, name: String): C? {

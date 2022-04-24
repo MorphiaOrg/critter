@@ -1,11 +1,7 @@
 package dev.morphia.critter
 
-import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.classes
 import dev.morphia.critter.java.CriteriaBuilder
-import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.java.JavaContext
-import dev.morphia.critter.kotlin.KotlinClass
 import dev.morphia.critter.kotlin.KotlinContext
 import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
 import org.testng.Assert
@@ -45,7 +41,7 @@ class CritterContextTest {
         val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
         val critterContext = JavaContext(outputDirectory = directory, force = true)
-        files.forEach { critterContext.add(JavaClass(critterContext, it)) }
+        files.forEach { critterContext.add(it) }
         val builder = CriteriaBuilder(critterContext)
         builder.build()
         val file = File(directory, "dev/morphia/critter/test/criteria/PersonCriteria.java")
@@ -74,11 +70,7 @@ class CritterContextTest {
         val directory = File("target/kotlinClassTest/")
         val context = KotlinContext(force = true, outputDirectory = directory)
         files.forEach { file ->
-            Kibble.parse(listOf(file)).forEach { fileSpec ->
-                fileSpec.classes.forEach {
-                    context.add(KotlinClass(context, fileSpec, it, file))
-                }
-            }
+            context.add(file)
         }
         val kotlinBuilder = KotlinCriteriaBuilder(context)
         kotlinBuilder.build()

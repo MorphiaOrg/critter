@@ -46,7 +46,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
         method.addCode("return List.of(")
         method.addCode(
-            context.classes.values
+            context.entities().values
                 .filter { !it.isAbstract() }
                 .joinToString(",\n\t\t") { source ->
                     "build${source.name.titleCase()}Model(mapper)"
@@ -67,7 +67,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 .build()
         )
 
-        context.classes.values
+        context.entities().values
             .filter { !it.isAbstract() }
             .forEach { source ->
                 this.source = source

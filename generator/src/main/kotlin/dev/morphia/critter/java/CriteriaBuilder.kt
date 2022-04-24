@@ -2,26 +2,25 @@ package dev.morphia.critter.java
 
 import com.squareup.javapoet.ClassName
 import dev.morphia.annotations.Reference
-import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.Critter.addMethods
 import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.FilterSieve
+import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.UpdateSieve
 import dev.morphia.critter.titleCase
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
 import java.io.PrintWriter
-import java.util.Locale
 
 class CriteriaBuilder(val context: JavaContext): SourceBuilder {
     private var nested = mutableListOf<JavaClassSource>()
 
     override fun build() {
-        context.classes.values.forEach { source ->
+        context.entities().values.forEach { source ->
             nested.clear()
             val criteriaClass = Roaster.create(JavaClassSource::class.java)
-                    .setPackage(context.criteriaPkg ?: source.pkgName + ".criteria")
+                    .setPackage(context.criteriaPkg ?: (source.pkgName + ".criteria"))
                     .setName(source.name + "Criteria")
                     .setFinal(true)
 
@@ -132,17 +131,17 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
         PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toString()) }
     }
 
-    fun CritterProperty.mappedType(): JavaClass? {
-        return context.classes[type.concreteType()]
+    private fun CritterProperty.mappedType(): JavaClass? {
+        return context.entities()[type.concreteType()]
     }
 
-    fun CritterProperty.isMappedType(): Boolean {
+    private fun CritterProperty.isMappedType(): Boolean {
         return mappedType() != null
     }
 
     private fun JavaClassSource.addFieldCriteriaMethod(criteriaClass: JavaClassSource, property: CritterProperty) {
         val concreteType = property.type.concreteType()
-        val annotations = context.classes[concreteType]?.annotations
+        val annotations = context.entities()[concreteType]?.annotations
         val fieldCriteriaName = if (annotations == null) {
             property.name.titleCase() + "FieldCriteria"
         } else {

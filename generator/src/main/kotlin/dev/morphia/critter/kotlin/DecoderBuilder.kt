@@ -33,7 +33,7 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
     private lateinit var decoderName: ClassName
     private lateinit var entityName: ClassName
     override fun build() {
-        context.classes.values.forEach { source ->
+        context.entities().values.forEach { source ->
             this.source = source
             entityName = ClassName.bestGuess(source.qualifiedName)
             decoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name}Decoder")

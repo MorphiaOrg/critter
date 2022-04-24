@@ -49,9 +49,9 @@ object Critter {
                     .filter { file -> file.extension in listOf("java", "kt") }
                     .forEach { file ->
                         if (file.name.endsWith(".java") && !file.name.endsWith("Criteria.java")) {
-                            javaContext.add(JavaClass(javaContext, file))
+                            javaContext.add(file)
                         } else if (file.name.endsWith(".kt") && !file.name.endsWith("Criteria.kt")) {
-                            kotlinContext.parse(file)
+                            kotlinContext.add(file)
                         }
                     }
             }

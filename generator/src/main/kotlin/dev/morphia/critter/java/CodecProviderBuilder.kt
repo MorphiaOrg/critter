@@ -7,7 +7,6 @@ import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeVariableName
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.EntityDecoder
@@ -45,7 +44,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
         method.beginControlFlow("if (found != null)")
         method.addStatement("return found")
 
-        context.classes.values
+        context.entities().values
             .filter { !it.isAbstract() }
             .forEachIndexed { _, javaClass ->
                 method.nextControlFlow("else if (type.equals(\$T.class))", javaClass.qualifiedName.className())
@@ -87,7 +86,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
             "MorphiaCodec<T> codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders()," +
                 " getMapper().getDiscriminatorLookup(), registry)"
         )
-        context.classes.values
+        context.entities().values
             .filter { !it.isAbstract() }
             .forEachIndexed { index, javaClass ->
                 val ifStmt = "if (type.equals(${"$"}T.class))"

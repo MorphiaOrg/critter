@@ -37,7 +37,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
     private lateinit var encoderName: ClassName
     private lateinit var entityName: ClassName
     override fun build() {
-        context.classes.values.forEach { source ->
+        context.entities().values.forEach { source ->
             this.source = source
             entityName = ClassName.get(source.pkgName, source.name)
             encoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Encoder")

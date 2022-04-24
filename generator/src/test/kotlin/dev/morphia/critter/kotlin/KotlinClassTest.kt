@@ -20,11 +20,7 @@ class KotlinClassTest {
         File("../tests/maven/kotlin/src/main/kotlin/")
             .walkTopDown()
             .forEach {
-                Kibble.parse(listOf(it)).forEach { file ->
-                    file.classes.forEach { klass ->
-                        context.add(KotlinClass(context, file, klass, it))
-                    }
-                }
+                context.add(it)
             }
 
         KotlinCriteriaBuilder(context).build()
@@ -43,24 +39,14 @@ class KotlinClassTest {
         File("../tests/maven/kotlin/src/main/kotlin/")
             .walkTopDown()
             .filter { it.name.endsWith(".kt") }
-            .forEach { context.parse(it) }
+            .forEach { context.add(it) }
         CodecsBuilder(context).build()
     }
 
     @Test
     fun parentProperties() {
-        val file = Kibble.parseSource(
-            """package properties
-
-class Parent(val name: String)
-
-class Child(val age: Int, name: String, val nickNames: List<String>): Parent(name)
-"""
-        )
         val context = KotlinContext(force = true, outputDirectory = directory)
-        file.classes.forEach { klass ->
-            context.add(KotlinClass(context, file, klass, File("")))
-        }
+        context.add(File("src/test/dev/morphia/critter/kotlin/models/Parent.kt"))
         val parent = context.resolve("properties", "Parent")!!
         val child = context.resolve("properties", "Child")!!
         Assert.assertEquals(parent.properties.size, 1, "Found: \n${parent.properties.joinToString(",\n")}")

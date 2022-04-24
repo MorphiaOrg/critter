@@ -16,12 +16,13 @@ class JavaClassTest {
     @Test
     fun parents() {
         val directory = File("target/parentTest/")
-        val context = JavaContext(outputDirectory = directory)
+        val context = JavaContext(outputDirectory = directory, force = true)
 
-        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java")))
-        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java")))
-        context.add(JavaClass(context, File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Invoice.java")))
+        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java"))
+        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java"))
+        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Invoice.java"))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
+        assertEquals(personClass.properties.map {  it.name }.toSortedSet(), sortedSetOf("age", "firstName", "id", "lastName", "ssn"))
 
         CriteriaBuilder(context).build()
 
@@ -38,7 +39,7 @@ class JavaClassTest {
         val directory = File("../tests/maven/java/target/generated-sources/critter")
         val context = JavaContext(outputDirectory = directory)
 
-        files.forEach { context.add(JavaClass(context, it)) }
+        files.forEach { context.add(it) }
         CriteriaBuilder(context).build()
 
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
@@ -56,7 +57,7 @@ class JavaClassTest {
         File("../tests/maven/java/src/main/java/")
             .walkTopDown()
             .filter { it.name.endsWith(".java") }
-            .forEach { context.add(JavaClass(context, it)) }
+            .forEach { context.add(it) }
         CodecsBuilder(context).build()
     }
 
@@ -71,10 +72,10 @@ class JavaClassTest {
     private fun validatePersonCriteria(personClass: JavaClass, personCriteria: JavaClassSource) {
         val origFields = personClass.properties
         val criteriaFields = personCriteria.fields.filter { it.isStatic && it.name != "instance" }
-        assertEquals(criteriaFields.size, origFields.size, "Criteria fields: $criteriaFields.\n " +
-                "person fields: ${origFields.joinToString("\n")}")
+        assertEquals(criteriaFields.size, origFields.size, "Criteria fields: ${criteriaFields.map { it.name }}.\n " +
+                "person fields: ${origFields.map { it.name }}")
         val names = criteriaFields.map { it.name }.sortedBy { it }
-        assertEquals(names, listOf("age", "firstName", "id", "lastName"), "Found instead:  $names")
+        assertEquals(names, listOf("age", "firstName", "id", "lastName", "ssn"), "Found instead:  $names")
         origFields.forEach {
             val field = personCriteria.getField(it.name)
             val stringInitializer = field.stringInitializer

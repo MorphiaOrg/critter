@@ -13,7 +13,6 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.EntityDecoder
@@ -60,7 +59,7 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
         method.beginControlFlow("if (found != null)")
         method.addStatement("return found")
 
-        context.classes.values
+        context.entities().values
             .filter { !it.isAbstract() }
             .forEachIndexed { _, javaClass ->
                 method.nextControlFlow("else if (type == %T::class.java)", javaClass.qualifiedName.className())
@@ -102,7 +101,7 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
 
         function.addStatement("var type = entity::class.java as Class<T>")
         function.addStatement("var model = getMapper().getEntityModel(entity::class.java)")
-        context.classes.values
+        context.entities().values
             .filter { !it.isAbstract() }
             .forEachIndexed { index, type ->
                 val ifStmt = "if (type == %T::class.java)"

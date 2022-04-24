@@ -41,7 +41,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     }
 
     override fun build() {
-        context.classes.values.forEach {
+        context.entities().values.forEach {
             build(context.outputDirectory, it)
         }
     }
@@ -138,7 +138,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
 
     private fun Builder.addFieldCriteriaMethod(field: PropertySpec) {
         val concreteType = field.type.concreteType()
-        val annotations = context.classes[concreteType.canonicalName]?.annotations
+        val annotations = context.entities()[concreteType.canonicalName]?.annotations
         val none = annotations?.none { it.type.packageName.startsWith("dev.morphia.annotations") } ?: true
         val fieldCriteriaName = if (none) {
             field.name.titleCase() + "FieldCriteria"
@@ -214,7 +214,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     }
 
     fun PropertySpec.mappedType(): KotlinClass? {
-        return context.classes[type.concreteType().canonicalName]
+        return context.entities()[type.concreteType().canonicalName]
     }
 
     fun PropertySpec.isMappedType(): Boolean {
