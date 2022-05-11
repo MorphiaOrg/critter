@@ -2,7 +2,6 @@ package dev.morphia.critter
 
 import dev.morphia.critter.OutputType.JAVA
 import dev.morphia.critter.OutputType.KOTLIN
-import dev.morphia.critter.java.JavaClass
 import dev.morphia.critter.java.JavaContext
 import dev.morphia.critter.kotlin.KotlinContext
 import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
@@ -30,15 +29,17 @@ object Critter {
         force: Boolean,
         format: Boolean,
         outputType: OutputType,
-        outputDirectory: File
+        sourceOutput: File,
+        resourceOutput: File
     ) {
-        javaContext = JavaContext(criteriaPackage, force, format, outputDirectory)
-        kotlinContext = KotlinContext(criteriaPackage, force, format, outputDirectory)
+        javaContext = JavaContext(criteriaPackage, force, format, sourceOutput, resourceOutput)
+        kotlinContext = KotlinContext(criteriaPackage, force, format, sourceOutput, resourceOutput)
         this.outputType = outputType
         sourceDirectories
             .map {
                 val file = File(it)
-                if (file.isRooted) file else File(baseDir, it)
+                val mapped = if (file.isRooted) file else File(baseDir, it)
+                mapped
             }
             .filter {
                 it.exists()

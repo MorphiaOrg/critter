@@ -11,8 +11,9 @@ import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
 
 @Suppress("UNCHECKED_CAST")
-class JavaContext(criteriaPkg: String? = null, force: Boolean = false, format: Boolean = false, outputDirectory: File):
-    CritterContext<JavaClass, TypeSpec>(criteriaPkg, force, format, outputDirectory) {
+class JavaContext(criteriaPkg: String? = null, force: Boolean = false, format: Boolean = false, sourceOutputDirectory: File,
+                  resourceOutputDirectory: File):
+    CritterContext<JavaClass, TypeSpec>(criteriaPkg, force, format, sourceOutputDirectory, resourceOutputDirectory) {
 
     override fun add(file: File) {
         val type = Roaster.parse(file)

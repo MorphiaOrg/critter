@@ -35,7 +35,7 @@ import dev.morphia.query.Sort
 import dev.morphia.query.Sort.ascending
 import dev.morphia.query.filters.Filters
 import dev.morphia.query.filters.Filters.and
-import org.testng.Assert
+import org.testng.Assert.*
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -61,50 +61,49 @@ class KotlinCriteriaTest : BottleRocketTest() {
     @DataProvider(name = "datastores")
     fun datastores(): Array<Array<Any>> {
         return arrayOf(
-            arrayOf("Standard codecs", getDatastore(false)),
-            arrayOf("Critter codecs", getDatastore(true))
+            arrayOf("Standard codecs", getDatastore(false)), arrayOf("Critter codecs", getDatastore(true))
         )
     }
 
     @Test(dataProvider = "datastores")
-    fun testInvoice(state: String, datastore: Datastore) {
+    fun testInvoice(state: String, ds: Datastore) {
+        assertTrue(!ds.getMapper().getOptions().isAutoImportModels() xor ds.getMapper().isMapped(Invoice::class.java))
         val john = Person("John", "Doe")
-        datastore.save(john)
-        datastore.save(
+        ds.save(john)
+        ds.save(
             Invoice(
-                LocalDateTime.of(2012, 12, 21, 13, 15), john, Address("New York City", "NY", "10000"),
-                Item("ball", 5.0), Item("skateboard", 17.35)
+                LocalDateTime.of(2012, 12, 21, 13, 15),
+                john,
+                Address("New York City", "NY", "10000"),
+                Item("ball", 5.0),
+                Item("skateboard", 17.35)
             )
         )
         val jeff = Person("Jeff", "Johnson")
-        datastore.save(jeff)
-        datastore.save(
+        ds.save(jeff)
+        ds.save(
             Invoice(
-                LocalDateTime.of(2006, 3, 4, 8, 7), jeff, Address("Los Angeles", "CA", "90210"),
-                Item("movie", 29.95)
+                LocalDateTime.of(2006, 3, 4, 8, 7), jeff, Address("Los Angeles", "CA", "90210"), Item("movie", 29.95)
             )
         )
         val sally = Person("Sally", "Ride")
-        datastore.save(sally)
-        datastore.save(
+        ds.save(sally)
+        ds.save(
             Invoice(
-                LocalDateTime.of(2007, 8, 16, 19, 27), sally, Address("Chicago", "IL", "99999"),
-                Item("kleenex", 3.49), Item("cough and cold syrup", 5.61)
+                LocalDateTime.of(2007, 8, 16, 19, 27),
+                sally,
+                Address("Chicago", "IL", "99999"),
+                Item("kleenex", 3.49),
+                Item("cough and cold syrup", 5.61)
             )
         )
-        val invoice = datastore.find(Invoice::class.java)
-            .filter(InvoiceCriteria.person().eq(john))
-            .first()
-        Assert.assertEquals(invoice?.person?.last, "Doe")
-        val byCity = datastore.find(Invoice::class.java)
-            .filter(addresses().city().eq("Chicago"))
-            .first()
-        Assert.assertNotNull(byCity)
-        val critter = datastore.find(Invoice::class.java)
-            .filter(addresses().city().eq("Chicago"))
-            .first()
-        Assert.assertNotNull(critter)
-        Assert.assertEquals(critter, byCity)
+        val invoice = ds.find(Invoice::class.java).filter(InvoiceCriteria.person().eq(john)).first()
+        assertEquals(invoice?.person?.last, "Doe")
+        val byCity = ds.find(Invoice::class.java).filter(addresses().city().eq("Chicago")).first()
+        assertNotNull(byCity)
+        val critter = ds.find(Invoice::class.java).filter(addresses().city().eq("Chicago")).first()
+        assertNotNull(critter)
+        assertEquals(critter, byCity)
     }
 
     @Test(dataProvider = "datastores")
@@ -114,24 +113,21 @@ class KotlinCriteriaTest : BottleRocketTest() {
 
         query.filter(first().eq("Jim"), last().eq("Beam"))
 
-        Assert.assertEquals(
-            query.update(age().set(30L))
-                .execute(UpdateOptions().multi(true)).modifiedCount, 0
+        assertEquals(
+            query.update(age().set(30L)).execute(UpdateOptions().multi(true)).modifiedCount, 0
         )
 
-        Assert.assertNotNull(
-            query.update(age().set(30L))
-                .execute(UpdateOptions().upsert(true)).upsertedId
+        assertNotNull(
+            query.update(age().set(30L)).execute(UpdateOptions().upsert(true)).upsertedId
         )
-        val update = query.update(age().inc())
-            .execute(UpdateOptions().multi(true))
-        Assert.assertEquals(update.modifiedCount, 1)
+        val update = query.update(age().inc()).execute(UpdateOptions().multi(true))
+        assertEquals(update.modifiedCount, 1)
         val get: Person = datastore.find(Person::class.java).first() as Person
-        Assert.assertEquals(get.age, 31L)
+        assertEquals(get.age, 31L)
 
-        Assert.assertNotNull(datastore.find(Person::class.java).first())
+        assertNotNull(datastore.find(Person::class.java).first())
         val delete = query.delete()
-        Assert.assertEquals(delete.deletedCount, 1)
+        assertEquals(delete.deletedCount, 1)
     }
 
     @Test(dataProvider = "datastores")
@@ -139,29 +135,25 @@ class KotlinCriteriaTest : BottleRocketTest() {
         for (i in 0..99) {
             datastore.save(Person("First$i", "Last$i"))
         }
-        var query = datastore.find(Person::class.java)
-            .filter(last().regex().pattern("Last2"))
+        var query = datastore.find(Person::class.java).filter(last().regex().pattern("Last2"))
         var result = query.delete(DeleteOptions().multi(true))
-        Assert.assertEquals(result.deletedCount, 11)
-        Assert.assertEquals(query.count(), 0)
+        assertEquals(result.deletedCount, 11)
+        assertEquals(query.count(), 0)
 
         query = datastore.find(Person::class.java)
-        Assert.assertEquals(query.count(), 89)
+        assertEquals(query.count(), 89)
 
-        query = datastore.find(Person::class.java)
-            .filter(last().regex().pattern("Last3"))
+        query = datastore.find(Person::class.java).filter(last().regex().pattern("Last3"))
         result = query.delete(
-            DeleteOptions()
-                .multi(true)
-                .writeConcern(MAJORITY)
+            DeleteOptions().multi(true).writeConcern(MAJORITY)
         )
-        Assert.assertEquals(result.deletedCount, 11)
-        Assert.assertEquals(query.count(), 0)
+        assertEquals(result.deletedCount, 11)
+        assertEquals(query.count(), 0)
     }
 
     fun paths() {
-        Assert.assertEquals(addresses().city().path, "addresses.city")
-        Assert.assertEquals(orderDate().path, "orderDate")
+        assertEquals(addresses().city().path, "addresses.city")
+        assertEquals(orderDate().path, "orderDate")
     }
 
     @Test(dataProvider = "datastores")
@@ -183,19 +175,15 @@ class KotlinCriteriaTest : BottleRocketTest() {
         invoice.add(Address("NYC", "NY", "10018"))
         datastore.save(invoice)
         val query = datastore.find(Invoice::class.java)
-        Assert.assertEquals(
-            query
-                .filter(orderDate().lte(now().plusDays(5)))
-                .iterator(
-                    FindOptions()
-                        .sort(ascending(addresses().city().path))
+        assertEquals(
+            query.filter(orderDate().lte(now().plusDays(5))).iterator(
+                    FindOptions().sort(ascending(addresses().city().path))
                 ).next().addresses!![0].city, "NYC"
         )
 
-        Assert.assertEquals(
+        assertEquals(
             query.first(
-                FindOptions()
-                    .sort(Sort.descending(addresses().city().path))
+                FindOptions().sort(Sort.descending(addresses().city().path))
             )?.addresses!![0].city, "New York City"
         )
     }
@@ -204,54 +192,43 @@ class KotlinCriteriaTest : BottleRocketTest() {
     fun orQueries(state: String, datastore: Datastore) {
         datastore.save(Person("Mike", "Bloomberg"))
         datastore.save(Person("Mike", "Tyson"))
-        val query1 = datastore.find(Person::class.java)
-            .filter(
+        val query1 = datastore.find(Person::class.java).filter(
                 Filters.or(
-                    Filters.eq("last", "Bloomberg"),
-                    Filters.eq("last", "Tyson")
+                    Filters.eq("last", "Bloomberg"), Filters.eq("last", "Tyson")
                 )
             )
-        val query2 = datastore.find(Person::class.java)
-            .filter(
+        val query2 = datastore.find(Person::class.java).filter(
                 Filters.or(
-                    last().eq("Bloomberg"),
-                    last().eq("Tyson")
+                    last().eq("Bloomberg"), last().eq("Tyson")
                 )
             )
 
-        Assert.assertEquals(query2.toList().size, 2)
-        Assert.assertEquals(query1.toList(), query2.toList())
+        assertEquals(query2.toList().size, 2)
+        assertEquals(query1.toList(), query2.toList())
     }
 
     @Test(dataProvider = "datastores")
     fun andQueries(state: String, datastore: Datastore) {
         datastore.save(Person("Mike", "Bloomberg"))
         datastore.save(Person("Mike", "Tyson"))
-        val query1 = datastore.find(Person::class.java)
-            .filter(
+        val query1 = datastore.find(Person::class.java).filter(
                 and(
-                    Filters.eq("first", "Mike"),
-                    Filters.eq("last", "Tyson")
+                    Filters.eq("first", "Mike"), Filters.eq("last", "Tyson")
                 )
             )
-        val query2 = datastore.find(Person::class.java)
-            .filter(
+        val query2 = datastore.find(Person::class.java).filter(
                 and(
-                    first().eq("Mike"),
-                    last().eq("Tyson")
+                    first().eq("Mike"), last().eq("Tyson")
                 )
             )
 
-        Assert.assertEquals(query2.toList().size, 1)
-        Assert.assertEquals(query1.toList(), query2.toList())
+        assertEquals(query2.toList().size, 1)
+        assertEquals(query1.toList(), query2.toList())
     }
 
     private fun getDatastore(useGenerated: Boolean): Datastore {
         return Morphia.createDatastore(
-            mongoClient, database.name,
-            MapperOptions.builder()
-                .autoImportModels(useGenerated)
-                .build()
+            mongoClient, database.name, MapperOptions.builder().autoImportModels(useGenerated).build()
         )
     }
 }

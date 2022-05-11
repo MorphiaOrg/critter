@@ -13,7 +13,9 @@ class CritterContextTest {
     @Test(dataProvider = "forceScenarios")
     fun force(force: Boolean, result: Boolean, sourceTimestamp: Long?, outputTimestamp: Long?) {
         Assert.assertEquals(
-            JavaContext(outputDirectory = File.createTempFile("ddd", "ddd"), force = force)
+            JavaContext(force = force,
+                sourceOutputDirectory = File.createTempFile("ddd", "ddd"),
+                resourceOutputDirectory = File.createTempFile("eee", "eee"))
                 .shouldGenerate(sourceTimestamp, outputTimestamp), result
         )
     }
@@ -40,7 +42,8 @@ class CritterContextTest {
     fun forceJava() {
         val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
-        val critterContext = JavaContext(outputDirectory = directory, force = true)
+        val resourceOutput = File("target/javaClassResource/")
+        val critterContext = JavaContext(force = true, sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
         files.forEach { critterContext.add(it) }
         val builder = CriteriaBuilder(critterContext)
         builder.build()
@@ -68,7 +71,8 @@ class CritterContextTest {
     fun forceKotlin() {
         val files = File("../tests/maven/kotlin/src/main/kotlin/").walkTopDown().filter { it.name.endsWith(".kt") }.toList()
         val directory = File("target/kotlinClassTest/")
-        val context = KotlinContext(force = true, outputDirectory = directory)
+        val resourceOutput = File("target/kotlinClassResource/")
+        val context = KotlinContext(force = true, outputDirectory = directory, resourceOutput = resourceOutput)
         files.forEach { file ->
             context.add(file)
         }

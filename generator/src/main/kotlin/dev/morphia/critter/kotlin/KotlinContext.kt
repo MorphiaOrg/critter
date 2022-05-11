@@ -18,8 +18,14 @@ import java.io.File
 import java.io.FileNotFoundException
 
 @Suppress("UNCHECKED_CAST")
-class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format: Boolean = false, outputDirectory: File)
-    : CritterContext<KotlinClass, TypeSpec>(criteriaPkg, force, format, outputDirectory) {
+class KotlinContext(
+    criteriaPkg: String? = null,
+    force: Boolean = false,
+    format: Boolean = false,
+    outputDirectory: File,
+    resourceOutput: File
+)
+    : CritterContext<KotlinClass, TypeSpec>(criteriaPkg, force, format, outputDirectory, resourceOutput) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(KotlinContext::class.java)
@@ -33,6 +39,7 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
 
     override fun add(file: File) {
         if(!file.exists()) throw FileNotFoundException(file.absolutePath)
+        println("file.absolutePath = ${file.absolutePath}")
         val fileSpec = Kibble.parse(file.absolutePath)
         fileSpec.classes.forEach {
             if (!it.isAnnotation && !it.isEnum) {

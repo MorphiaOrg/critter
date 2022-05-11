@@ -13,12 +13,12 @@ import dev.morphia.critter.CritterType
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.methodCase
 import dev.morphia.critter.titleCase
+import dev.morphia.mapping.EntityModelImporter
 import dev.morphia.mapping.Mapper
 import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.EntityModelBuilder
 import dev.morphia.mapping.codec.pojo.TypeData
-import dev.morphia.mapping.codec.pojo.experimental.EntityModelImporter
 import org.bson.codecs.pojo.PropertyAccessor
 import java.util.concurrent.atomic.AtomicInteger
 import javax.lang.model.element.Modifier
@@ -92,7 +92,9 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                 importer.addType(util.build())
             }
 
-        context.buildFile(importer.build())
+        val type = importer.build()
+        context.buildFile(type)
+        context.generateServiceLoader(EntityModelImporter::class.java, importerName.toString())
     }
 
     private fun typeData() {

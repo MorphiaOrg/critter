@@ -27,10 +27,12 @@ import dev.morphia.UpdateOptions;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
 import dev.morphia.mapping.MapperOptions;
+import dev.morphia.mapping.codec.pojo.EntityModel;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType.Object;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.testng.annotations.BeforeMethod;
@@ -89,14 +91,6 @@ public class CriteriaTest extends BottleRocketTest {
         return BottleRocket.DEFAULT_VERSION;
     }
 
-    @DataProvider(name = "datastores")
-    public Object[][] datastores() {
-        return new Object[][]{
-            new Object[]{"Standard codecs", getDatastore(false)},
-            new Object[]{"Critter codecs", getDatastore(true)},
-            };
-    }
-
     @Test(dataProvider = "datastores")
     public void embeds(String state, Datastore datastore) {
         Person person = new Person("Mike", "Bloomberg");
@@ -114,7 +108,7 @@ public class CriteriaTest extends BottleRocketTest {
         MorphiaCursor<Invoice> criteria1 = datastore.find(Invoice.class)
                                                     .filter(InvoiceCriteria.orderDate().lte(LocalDateTime.now().plusDays(5)))
                                                     .iterator(new FindOptions()
-                                                        .sort(ascending(InvoiceCriteria.addresses().city().path())));
+                                                                  .sort(ascending(InvoiceCriteria.addresses().city().path())));
         List<Invoice> list = criteria1.toList();
         assertEquals(list.get(0).getAddresses().get(0).getCity(), "NYC", list.stream().map(Invoice::getId).collect(
             Collectors.toList()).toString());
@@ -122,12 +116,13 @@ public class CriteriaTest extends BottleRocketTest {
 
         MorphiaCursor<Invoice> criteria2 = datastore.find(Invoice.class)
                                                     .iterator(new FindOptions()
-                                                        .sort(descending(InvoiceCriteria.addresses().city().path())));
+                                                                  .sort(descending(InvoiceCriteria.addresses().city().path())));
         assertEquals(criteria2.toList().get(0).getAddresses().get(0).getCity(), "New York City");
     }
 
     @Test(dataProvider = "datastores")
     public void invoice(String state, Datastore ds) {
+        assertTrue(!ds.getMapper().getOptions().isAutoImportModels() ^ ds.getMapper().isMapped(Invoice.class));
         Person john = new Person("John", "Doe");
         ds.save(john);
         ds.save(new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john,
@@ -214,7 +209,7 @@ public class CriteriaTest extends BottleRocketTest {
                                           .filter(PersonCriteria.lastName().regex()
                                                                 .pattern("Last2"));
         DeleteResult result = criteria.delete(new DeleteOptions()
-            .multi(true));
+                                                  .multi(true));
         assertEquals(result.getDeletedCount(), 11);
         assertEquals(criteria.count(), 0);
 
@@ -225,8 +220,8 @@ public class CriteriaTest extends BottleRocketTest {
                             .filter(PersonCriteria.lastName().regex()
                                                   .pattern("Last3"));
         result = criteria.delete(new DeleteOptions()
-            .multi(true)
-            .writeConcern(MAJORITY));
+                                     .multi(true)
+                                     .writeConcern(MAJORITY));
         assertEquals(result.getDeletedCount(), 11);
 
         assertEquals(criteria.count(), 0);
@@ -278,6 +273,14 @@ public class CriteriaTest extends BottleRocketTest {
 
         DeleteResult delete = datastore.find(Person.class).delete();
         assertEquals(delete.getDeletedCount(), 1);
+    }
+
+    @DataProvider(name = "datastores")
+    private Object[][] datastores() {
+        return new Object[][]{
+            new Object[]{"Standard codecs", getDatastore(false)},
+            new Object[]{"Critter codecs", getDatastore(true)},
+            };
     }
 
     private Datastore getDatastore(boolean useGenerated) {

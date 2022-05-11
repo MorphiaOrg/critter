@@ -1,15 +1,15 @@
 package dev.morphia.critter
 
-import dev.morphia.annotations.Embedded
-import dev.morphia.annotations.Entity
-import dev.morphia.critter.java.JavaClass
 import java.io.File
+import java.io.FileNotFoundException
 
 abstract class CritterContext<C : CritterClass, T>(
     val criteriaPkg: String?,
     var force: Boolean = false,
     var format: Boolean = false,
-    val outputDirectory: File) {
+    val outputDirectory: File,
+    val resourceOutput: File
+) {
     protected val classes: MutableMap<String, C> = mutableMapOf()
 
     abstract fun add(file: File)
@@ -32,4 +32,12 @@ abstract class CritterContext<C : CritterClass, T>(
     }
 
     abstract fun buildFile(typeSpec: T, vararg staticImports: Pair<Class<*>, String>)
+    fun generateServiceLoader(model: Class<*>, impl: String) {
+        val serviceFile = File(resourceOutput.canonicalFile, "META-INF/services/${model.name}")
+        val parentFile = serviceFile.parentFile.canonicalFile
+        if (!parentFile.exists() && !parentFile.mkdirs()) {
+            throw FileNotFoundException("could not create ${parentFile.absolutePath}")
+        }
+        serviceFile.writeText(impl + "\n")
+    }
 }

@@ -21,7 +21,7 @@ class CritterPlugin : Plugin<Project> {
             val rootPath = project.rootDir.absolutePath + "/"
             task.files = directories.map { it.toPath().toString().removePrefix(rootPath) }.toSet()
             task.source(task.files)
-            task.outputDirectory = outputDirectory
+            task.sourceOutputDirectory = outputDirectory
         }
 
         for(task in arrayOf("compileJava", "compileKotlin")) {

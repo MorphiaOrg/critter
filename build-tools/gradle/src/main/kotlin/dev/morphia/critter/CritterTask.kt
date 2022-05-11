@@ -15,7 +15,9 @@ open class CritterTask : SourceTask() {
     lateinit var files: Set<String>
 
     @OutputDirectory
-    var outputDirectory = File("build/generated/critter")
+    var sourceOutputDirectory = File("generated/critter")
+    @OutputDirectory
+    var resourceOutputDirectory = File("generated-resources/critter")
     @Input
     @Optional
     var criteriaPackage: String? = null
@@ -32,7 +34,9 @@ open class CritterTask : SourceTask() {
 
     @TaskAction
     fun generate() {
-        scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType), outputDirectory)
+        scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType),
+            File(project.buildDir, sourceOutputDirectory.toString()),
+            File(project.buildDir, resourceOutputDirectory.toString()))
         generateCriteria()
         generateCodecs()
     }

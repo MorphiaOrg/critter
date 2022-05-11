@@ -16,7 +16,8 @@ class JavaClassTest {
     @Test
     fun parents() {
         val directory = File("target/parentTest/")
-        val context = JavaContext(outputDirectory = directory, force = true)
+        val resourceOutput = File("target/parentTestRes/")
+        val context = JavaContext(force = true, sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
 
         context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java"))
         context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java"))
@@ -37,7 +38,8 @@ class JavaClassTest {
         val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
 
         val directory = File("../tests/maven/java/target/generated-sources/critter")
-        val context = JavaContext(outputDirectory = directory)
+        val resourceOutput = File("../tests/maven/java/target/generated-resources/critter")
+        val context = JavaContext(sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
 
         files.forEach { context.add(it) }
         CriteriaBuilder(context).build()
@@ -52,8 +54,9 @@ class JavaClassTest {
 
     @Test
     fun codecs() {
-        val context = JavaContext(format = true, force = true, outputDirectory = File("." +
-            "./tests/maven/java/target/generated-sources/critter"))
+        val context = JavaContext(force = true, format = true,
+            sourceOutputDirectory = File("../tests/maven/java/target/generated-sources/critter"),
+            resourceOutputDirectory = File("../tests/maven/java/target/generated-resources/critter"))
         File("../tests/maven/java/src/main/java/")
             .walkTopDown()
             .filter { it.name.endsWith(".java") }

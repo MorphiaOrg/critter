@@ -13,7 +13,8 @@ import java.io.File
 
 class KotlinClassTest {
     private val directory = File("../tests/kotlin/target/generated-sources/critter")
-    private var context = KotlinContext(force = true, outputDirectory = directory)
+    private val resourceOutput = File("../tests/kotlin/target/generated-resources/critter")
+    private var context = KotlinContext(force = true, outputDirectory = directory, resourceOutput = resourceOutput)
 
     @Test
     fun build() {
@@ -35,7 +36,12 @@ class KotlinClassTest {
 
     @Test
     fun codecs() {
-        val context = KotlinContext(format = true, force = true, outputDirectory = File("../tests/maven/kotlin/target/generated-sources/critter"))
+        val context = KotlinContext(
+            force = true,
+            format = true,
+            outputDirectory = File("../tests/maven/kotlin/target/generated-sources/critter"),
+            resourceOutput = resourceOutput
+        )
         File("../tests/maven/kotlin/src/main/kotlin/")
             .walkTopDown()
             .filter { it.name.endsWith(".kt") }
