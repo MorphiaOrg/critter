@@ -39,7 +39,6 @@ class KotlinContext(
 
     override fun add(file: File) {
         if(!file.exists()) throw FileNotFoundException(file.absolutePath)
-        println("file.absolutePath = ${file.absolutePath}")
         val fileSpec = Kibble.parse(file.absolutePath)
         fileSpec.classes.forEach {
             if (!it.isAnnotation && !it.isEnum) {
