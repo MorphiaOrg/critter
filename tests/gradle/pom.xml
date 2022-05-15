@@ -91,6 +91,7 @@
                                     <argument>gradle/wrapper/gradle-wrapper.jar</argument>
                                     <argument>org.gradle.wrapper.GradleWrapperMain</argument>
                                     <argument>--no-daemon</argument>
+                                    <argument>--stacktrace</argument>
                                     <argument>test</argument>
                                 </arguments>
                                 <useMavenLogger>true</useMavenLogger>

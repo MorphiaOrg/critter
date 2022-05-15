@@ -169,36 +169,31 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
     private fun accessor(property: CritterProperty): String {
         val name = "${property.name.methodCase()}Accessor"
-        try {
-            val method = builder(name)
-                .returns(PropertyAccessor::class.java.asClassName()
-                    .parameterizedBy(STAR))
-                .addCode(
-                    """
-                        return object: %T<%T> {
-                            override fun <S : Any> set(instance: S, `value`: %T?) {
-                            
-                    """.trimIndent(), PropertyAccessor::class.java, property.type.typeName(), property.type.typeName()
-                )
-            if(!property.isFinal) {
-                method.addStatement("(instance as ${source.name}).${property.name} = value as %T", property.type.typeName())
-            } else {
-                method.addStatement("throw %T(\"${property.name} is immutable.\")", IllegalStateException::class.java)
-            }
-            method.addCode(
+        val method = builder(name)
+            .returns(PropertyAccessor::class.java.asClassName()
+                .parameterizedBy(STAR))
+            .addCode(
                 """
-                    }
-                        override fun <S : Any> get(instance: S): %T? {
-                            return (instance as ${source.name}).${property.name}
-                        }
-                    }
-                """.trimIndent(), property.type.typeName()
+                    return object: %T<%T> {
+                        override fun <S : Any> set(instance: S, `value`: %T?) {
+                        
+                """.trimIndent(), PropertyAccessor::class.java, property.type.typeName(), property.type.typeName()
             )
-            util.addFunction(method.build())
-        } catch (e: NullPointerException) {
-            println("property = [${property}]")
-            throw e
+        if(!property.isFinal) {
+            method.addStatement("(instance as ${source.name}).${property.name} = value as %T", property.type.typeName())
+        } else {
+            method.addStatement("throw %T(\"${property.name} is immutable.\")", IllegalStateException::class.java)
         }
+        method.addCode(
+            """
+                }
+                    override fun <S : Any> get(instance: S): %T? {
+                        return (instance as ${source.name}).${property.name}
+                    }
+                }
+            """.trimIndent(), property.type.typeName()
+        )
+        util.addFunction(method.build())
 
         return "$utilName.$name()"
     }

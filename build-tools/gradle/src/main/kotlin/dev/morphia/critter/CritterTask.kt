@@ -34,9 +34,14 @@ open class CritterTask : SourceTask() {
 
     @TaskAction
     fun generate() {
-        scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType),
-            File(project.buildDir, sourceOutputDirectory.toString()),
-            File(project.buildDir, resourceOutputDirectory.toString()))
+        if(!sourceOutputDirectory.isAbsolute) {
+            sourceOutputDirectory = File(project.buildDir, sourceOutputDirectory.toString())
+        }
+        if(!resourceOutputDirectory.isAbsolute) {
+            resourceOutputDirectory = File(project.buildDir, resourceOutputDirectory.toString())
+        }
+        scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType), sourceOutputDirectory,
+            resourceOutputDirectory)
         generateCriteria()
         generateCodecs()
     }

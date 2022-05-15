@@ -29,7 +29,7 @@
                         </goals>
                         <configuration>
                             <args>
-                                <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
+                                <arg>-opt-in=kotlin.RequiresOptIn</arg>
                             </args>
                         </configuration>
                     </execution>

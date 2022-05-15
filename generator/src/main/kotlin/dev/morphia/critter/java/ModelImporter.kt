@@ -153,36 +153,32 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
     private fun accessor(property: CritterProperty): String {
         val name = "${property.name.methodCase()}Accessor"
-        try {
-            val method = methodBuilder(name)
-                .addModifiers(PRIVATE, STATIC)
-                .returns(PropertyAccessor::class.java)
-                .addCode(
-                    """
-                        return new ${"$"}T() {
-                            @Override
-                            public void set(Object instance, Object value) {
-                    """.trimIndent(), PropertyAccessor::class.java)
-            property.mutator?.let {
-                method.addCode("((${source.name})instance).${it.name}((${"$"}T)value);", property.type.name.className())
-            } ?: run {
-                method.addStatement("throw new \$T(\"${property.name} does not have a set method.\")", IllegalStateException::class.java)
-            }
-            method.addCode(
+        val method = methodBuilder(name)
+            .addModifiers(PRIVATE, STATIC)
+            .returns(PropertyAccessor::class.java)
+            .addCode(
                 """
-                    }
+                    return new ${"$"}T() {
                         @Override
-                        public Object get(Object instance) {
-                            return ((${source.name})instance).${property.accessor?.name}();
-                        }
-                    };
-                """.trimIndent()
+                        public void set(Object instance, Object value) {
+                """.trimIndent(), PropertyAccessor::class.java
             )
-            util.addMethod(method.build())
-        } catch (e: NullPointerException) {
-            println("property = [${property}]")
-            throw e
+        property.mutator?.let {
+            method.addCode("((${source.name})instance).${it.name}((${"$"}T)value);", property.type.name.className())
+        } ?: run {
+            method.addStatement("throw new \$T(\"${property.name} does not have a set method.\")", IllegalStateException::class.java)
         }
+        method.addCode(
+            """
+                }
+                    @Override
+                    public Object get(Object instance) {
+                        return ((${source.name})instance).${property.accessor?.name}();
+                    }
+                };
+            """.trimIndent()
+        )
+        util.addMethod(method.build())
 
         return "$utilName.$name()"
     }

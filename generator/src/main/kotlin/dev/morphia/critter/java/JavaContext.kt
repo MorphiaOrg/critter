@@ -56,12 +56,11 @@ class JavaContext(criteriaPkg: String? = null, force: Boolean = false, format: B
         staticImports.forEach {
             builder.addStaticImport(it.first, it.second)
         }
-        val javaFile = builder.indent("").build()
-        try {
-            javaFile.writeTo(outputDirectory)
-        } catch (e: IllegalArgumentException) {
-            println("javaFile = ${javaFile}")
-        }
+
+        builder
+            .indent("")
+            .build()
+            .writeTo(outputDirectory)
 
         if (format) {
             val pkgDir = File(outputDirectory, packageName.replace('.', '/'))
