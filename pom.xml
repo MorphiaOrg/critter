@@ -111,6 +111,7 @@
                 <groupId>com.antwerkz.bottlerocket</groupId>
                 <artifactId>bottlerocket</artifactId>
                 <version>${bottlerocket.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.pinterest</groupId>
