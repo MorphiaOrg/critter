@@ -58,16 +58,16 @@
                                 <value>kotlin("jvm") version "${kotlin.version}"</value>
                             </replacement>
                             <replacement>
-                                <token>(morphia.version =.*)</token>
-                                <value>morphia.version = ${morphia.version}</value>
+                                <token>(morphia.version=.*)</token>
+                                <value>morphia.version=${morphia.version}</value>
                             </replacement>
                             <replacement>
-                                <token>(testng.version =.*)</token>
-                                <value>testng.version = ${testng.version}</value>
+                                <token>(testng.version=.*)</token>
+                                <value>testng.version=${testng.version}</value>
                             </replacement>
                             <replacement>
-                                <token>(bottlerocket.version =.*)</token>
-                                <value>bottlerocket.version = ${bottlerocket.version}</value>
+                                <token>(bottlerocket.version=.*)</token>
+                                <value>bottlerocket.version=${bottlerocket.version}</value>
                             </replacement>
                         </replacements>
                     </configuration>
@@ -117,6 +117,16 @@
                             </configuration>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.2.0</version>
+                    <configuration>
+                        <resources>
+                            <resource>build/generated-resources</resource>
+                        </resources>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

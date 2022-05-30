@@ -12,8 +12,8 @@ import org.testng.annotations.Test
 import java.io.File
 
 class KotlinClassTest {
-    private val directory = File("../tests/kotlin/target/generated-sources/critter")
-    private val resourceOutput = File("../tests/kotlin/target/generated-resources/critter")
+    private val directory = File("target/testing-generated-sources/critter")
+    private val resourceOutput = File("target/testing-generated-resources/critter")
     private var context = KotlinContext(force = true, outputDirectory = directory, resourceOutput = resourceOutput)
 
     @Test

@@ -22,16 +22,8 @@ object Critter {
     private lateinit var javaContext: JavaContext
     private lateinit var outputType: OutputType
 
-    fun scan(
-        baseDir: File,
-        sourceDirectories: Set<String>,
-        criteriaPackage: String?,
-        force: Boolean,
-        format: Boolean,
-        outputType: OutputType,
-        sourceOutput: File,
-        resourceOutput: File
-    ) {
+    fun scan(baseDir: File, sourceDirectories: Set<String>, criteriaPackage: String?, force: Boolean, format: Boolean,
+             outputType: OutputType, sourceOutput: File, resourceOutput: File) {
         javaContext = JavaContext(criteriaPackage, force, format, sourceOutput, resourceOutput)
         kotlinContext = KotlinContext(criteriaPackage, force, format, sourceOutput, resourceOutput)
         this.outputType = outputType

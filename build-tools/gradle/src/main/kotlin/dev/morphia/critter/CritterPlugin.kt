@@ -13,15 +13,22 @@ class CritterPlugin : Plugin<Project> {
             .sourceSets.getByName("main")
         val directories = mainSourceSet.allJava.sourceDirectories.files
         val outputDirectory = File("${project.buildDir}/generated/critter/")
+        val resourceOutputDirectory = File("${project.buildDir}/generated/resources/critter/")
         outputDirectory.mkdirs()
 
         mainSourceSet.java.srcDirs(mainSourceSet.java.srcDirs + setOf(outputDirectory))
+        mainSourceSet.resources.srcDirs(mainSourceSet.resources.srcDirs + setOf(resourceOutputDirectory))
 
         project.tasks.create(NAME, CritterTask::class.java) { task ->
             val rootPath = project.rootDir.absolutePath + "/"
             task.files = directories.map { it.toPath().toString().removePrefix(rootPath) }.toSet()
             task.source(task.files)
             task.sourceOutputDirectory = outputDirectory
+            task.resourceOutputDirectory = resourceOutputDirectory
+
+            project.getTasksByName("processResources", false)
+                .first()
+                .dependsOn(task)
         }
 
         for(task in arrayOf("compileJava", "compileKotlin")) {

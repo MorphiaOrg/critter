@@ -29,6 +29,7 @@ import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.orderDate
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.age
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.first
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.last
+import dev.morphia.mapping.EntityModelImporter
 import dev.morphia.mapping.MapperOptions
 import dev.morphia.query.FindOptions
 import dev.morphia.query.Sort
@@ -41,6 +42,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
+import java.util.ServiceLoader
 
 @Suppress("UNUSED_PARAMETER")
 @Test
@@ -67,7 +69,10 @@ class KotlinCriteriaTest : BottleRocketTest() {
 
     @Test(dataProvider = "datastores")
     fun testInvoice(state: String, ds: Datastore) {
-        assertTrue(!ds.getMapper().getOptions().isAutoImportModels() xor ds.getMapper().isMapped(Invoice::class.java))
+        val importers = ServiceLoader.load(EntityModelImporter::class.java)
+        val entityModelImporter = importers.findFirst().orElse(null)
+        println("************************************* entityModelImporter = $entityModelImporter")
+        assertTrue(!ds.mapper.options.isAutoImportModels xor ds.mapper.isMapped(Invoice::class.java))
         val john = Person("John", "Doe")
         ds.save(john)
         ds.save(

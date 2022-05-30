@@ -26,6 +26,7 @@ import dev.morphia.Morphia;
 import dev.morphia.UpdateOptions;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
+import dev.morphia.mapping.EntityModelImporter;
 import dev.morphia.mapping.MapperOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.MorphiaCursor;
@@ -39,6 +40,7 @@ import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
 import static com.mongodb.WriteConcern.MAJORITY;
@@ -86,7 +88,8 @@ public class CriteriaTest extends BottleRocketTest {
 
     @DataProvider(name = "datastores")
     public Object[][] datastores() {
-        return new Object[][]{new Object[]{"Standard codecs", getDatastore(false)}, new Object[]{"Critter codecs", getDatastore(true)},};
+        return new Object[][]{new Object[]{"Use standard codecs", getDatastore(false)},
+                              new Object[]{"Use critter codecs", getDatastore(true)},};
     }
 
     @Test(dataProvider = "datastores")
@@ -118,6 +121,9 @@ public class CriteriaTest extends BottleRocketTest {
 
     @Test(dataProvider = "datastores")
     public void invoice(String state, Datastore ds) {
+        ServiceLoader<EntityModelImporter> importers = ServiceLoader.load(EntityModelImporter.class);
+        EntityModelImporter entityModelImporter = importers.findFirst().orElse(null);
+        System.out.println("************************************* entityModelImporter = " + entityModelImporter);
         assertTrue(!ds.getMapper().getOptions().isAutoImportModels() ^ ds.getMapper().isMapped(Invoice.class));
         Person john = new Person("John", "Doe");
         ds.save(john);
@@ -239,6 +245,9 @@ public class CriteriaTest extends BottleRocketTest {
 
     private Datastore getDatastore(boolean useGenerated) {
         return Morphia.createDatastore(getMongoClient(), getDatabase().getName(),
-            MapperOptions.builder().autoImportModels(useGenerated).build());
+            MapperOptions
+                .builder()
+                .autoImportModels(useGenerated)
+                .build());
     }
 }
