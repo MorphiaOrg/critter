@@ -17,7 +17,7 @@
     </properties>
 
     <modules>
-        <module>gradle</module>
         <module>maven</module>
+        <module>gradle</module>
     </modules>
 </project>

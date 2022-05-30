@@ -39,17 +39,6 @@ open class CritterTask : SourceTask() {
         if(!sourceOutputDirectory.isAbsolute) {
             sourceOutputDirectory = File(project.buildDir, sourceOutputDirectory.toString())
         }
-//        val convention = project.convention.getPlugin(
-//            JavaPluginConvention::class.java
-//        )
-//        val mainSourceSet: SourceSet = convention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-
-//        val resourceOutput =  mainSourceSet.resources.resourcesDir!!
-            //File(project.buildDir, "classes/${outputType}/main")
-//         File(project.buildDir,"gen-critter")
-//        mainSourceSet.java.sourceDirectories.files += resourceOutput
-        println("+++++++++++++++++++++ outputType = ${outputType}")
-        println("resourceOutput = ${resourceOutputDirectory}")
         scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType), sourceOutputDirectory,
             resourceOutputDirectory
         )

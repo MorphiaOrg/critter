@@ -50,6 +50,6 @@ open class Person : AbstractPerson {
 }
 
 @Entity
-class SSN(var content: String) {
+class SSN(var value: String) {
     private constructor() : this("")
 }

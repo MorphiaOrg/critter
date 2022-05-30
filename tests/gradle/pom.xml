@@ -14,10 +14,47 @@
     <artifactId>critter-tests-gradle</artifactId>
     <packaging>pom</packaging>
 
-
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.2.0</version>
+                    <configuration>
+                        <filesets>
+                            <fileset>
+                                <directory>src</directory>
+                            </fileset>
+                            <fileset>
+                                <directory>build</directory>
+                            </fileset>
+                        </filesets>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.2.2</version>
+                    <executions>
+                        <execution>
+                            <id>default-jar</id>
+                            <phase>none</phase>
+                        </execution>
+                        <!-- Replacing default-testCompile as it is treated specially by maven -->
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                    <executions>
+                        <execution>
+                            <id>default-install</id>
+                            <phase>none</phase>
+                        </execution>
+                        <!-- Replacing default-testCompile as it is treated specially by maven -->
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -93,25 +130,6 @@
                                     <argument>--no-daemon</argument>
                                     <argument>--stacktrace</argument>
                                     <argument>test</argument>
-                                </arguments>
-                                <useMavenLogger>true</useMavenLogger>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>clean</id>
-                            <phase>clean</phase>
-                            <goals>
-                                <goal>exec</goal>
-                            </goals>
-                            <configuration>
-                                <executable>java</executable>
-                                <workingDirectory>${project.basedir}</workingDirectory>
-                                <arguments>
-                                    <argument>-cp</argument>
-                                    <argument>gradle/wrapper/gradle-wrapper.jar</argument>
-                                    <argument>org.gradle.wrapper.GradleWrapperMain</argument>
-                                    <argument>--no-daemon</argument>
-                                    <argument>clean</argument>
                                 </arguments>
                                 <useMavenLogger>true</useMavenLogger>
                             </configuration>

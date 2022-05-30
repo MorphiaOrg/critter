@@ -17,6 +17,28 @@
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/../../gradle/kotlin/src/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/src</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>dev.morphia.critter</groupId>
                 <artifactId>critter-maven</artifactId>
                 <version>${project.version}</version>
@@ -30,6 +52,7 @@
                 </executions>
                 <configuration>
                     <force>true</force>
+                    <format>true</format>
                     <outputType>kotlin</outputType>
                 </configuration>
             </plugin>
@@ -84,6 +107,11 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

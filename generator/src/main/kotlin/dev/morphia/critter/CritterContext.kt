@@ -1,6 +1,5 @@
 package dev.morphia.critter
 
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -35,9 +34,7 @@ abstract class CritterContext<C : CritterClass, T>(
     abstract fun buildFile(typeSpec: T, vararg staticImports: Pair<Class<*>, String>)
     fun generateServiceLoader(model: Class<*>, impl: String) {
         val serviceFile = File(resourceOutput.canonicalFile, "META-INF/services/${model.name}")
-        println("serviceFile = ${serviceFile}")
         val parentFile = serviceFile.parentFile.canonicalFile
-        println("parentFile = ${parentFile}")
         if (!parentFile.exists() && !parentFile.mkdirs()) {
             throw FileNotFoundException("could not create ${parentFile.absolutePath}")
         }

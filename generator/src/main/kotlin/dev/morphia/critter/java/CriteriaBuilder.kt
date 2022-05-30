@@ -128,7 +128,7 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
 
     private fun generate(outputFile: File, criteriaClass: JavaClassSource) {
         outputFile.parentFile.mkdirs()
-        PrintWriter(outputFile).use { writer -> writer.println(criteriaClass.toString()) }
+        outputFile.writeText(criteriaClass.toString())
     }
 
     private fun CritterProperty.mappedType(): JavaClass? {
