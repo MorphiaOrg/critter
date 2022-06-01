@@ -35,7 +35,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     private lateinit var importerName: ClassName
     private val builders = AtomicInteger(1)
     override fun build() {
-        importerName = ClassName.get("dev.morphia.mapping.codec.pojo", "CritterModelImporter")
+        importerName = ClassName.get(CodecsBuilder.packageName, "CritterModelImporter")
         importer = TypeSpec.classBuilder(importerName)
             .addModifiers(PUBLIC, Modifier.FINAL)
             .addSuperinterface(EntityModelImporter::class.java)
