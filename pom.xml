@@ -31,7 +31,7 @@
         <kotlin.version>1.6.21</kotlin.version>
         <kotlinpoet.version>1.11.0</kotlinpoet.version>
         <ktlint.version>0.45.2</ktlint.version>
-        <maven.version>3.8.5</maven.version>
+        <maven.version>3.8.6</maven.version>
         <morphia.version>2.3.0-SNAPSHOT</morphia.version>
         <roaster.version>2.25.0.Final</roaster.version>
         <slf4j.version>1.7.36</slf4j.version>
