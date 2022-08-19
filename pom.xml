@@ -30,7 +30,7 @@
         <kibble.version>0.21.0</kibble.version>
         <kotlin.version>1.7.0</kotlin.version>
         <kotlinpoet.version>1.11.0</kotlinpoet.version>
-        <ktlint.version>0.45.2</ktlint.version>
+        <ktlint.version>0.47.0</ktlint.version>
         <maven.version>3.8.6</maven.version>
         <morphia.version>2.3.0-SNAPSHOT</morphia.version>
         <roaster.version>2.25.0.Final</roaster.version>
