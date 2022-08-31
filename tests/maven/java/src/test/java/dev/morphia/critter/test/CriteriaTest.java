@@ -106,7 +106,7 @@ public class CriteriaTest extends BottleRocketTest {
 
     @Test(dataProvider = "datastores")
     public void invoice(String state, Datastore ds) {
-        assertTrue(!ds.getMapper().getOptions().isAutoImportModels() ^ ds.getMapper().isMapped(Invoice.class));
+        assertTrue(!ds.getMapper().getOptions().autoImportModels() ^ ds.getMapper().isMapped(Invoice.class));
         Person john = new Person("John", "Doe");
         ds.save(john);
         ds.save(new Invoice(LocalDateTime.of(2012, 12, 21, 13, 15), john,

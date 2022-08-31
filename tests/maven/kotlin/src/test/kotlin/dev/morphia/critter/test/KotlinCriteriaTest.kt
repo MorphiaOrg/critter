@@ -120,7 +120,7 @@ class KotlinCriteriaTest : BottleRocketTest() {
 
     @Test(dataProvider = "datastores")
     fun invoice(state: String, ds: Datastore) {
-        assertTrue(!ds.mapper.options.isAutoImportModels xor ds.mapper.isMapped(Invoice::class.java))
+        assertTrue(!ds.mapper.options.autoImportModels() xor ds.mapper.isMapped(Invoice::class.java))
         val john = Person("John", "Doe")
         ds.save(john)
         ds.save(
