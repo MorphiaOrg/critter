@@ -18,7 +18,4 @@ package dev.morphia.critter.test
 import dev.morphia.annotations.Entity
 
 @Entity
-class Item(var name: String, var price: Double) {
-
-    constructor() : this("", 0.0)
-}
+data class Item(var name: String, var price: Double)

@@ -44,6 +44,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
+import java.time.LocalDateTime.of
 import java.util.stream.Collectors
 
 @Test
@@ -125,7 +126,7 @@ class KotlinCriteriaTest : BottleRocketTest() {
         ds.save(john)
         ds.save(
             Invoice(
-                LocalDateTime.of(2012, 12, 21, 13, 15),
+                of(2012, 12, 21, 13, 15),
                 john,
                 Address("New York City", "NY", "10000"),
                 Item("ball", 5.0),
@@ -136,14 +137,14 @@ class KotlinCriteriaTest : BottleRocketTest() {
         ds.save(jeff)
         ds.save(
             Invoice(
-                LocalDateTime.of(2006, 3, 4, 8, 7), jeff, Address("Los Angeles", "CA", "90210"), Item("movie", 29.95)
+                of(2006, 3, 4, 8, 7), jeff, Address("Los Angeles", "CA", "90210"), Item("movie", 29.95)
             )
         )
         val sally = Person("Sally", "Ride")
         ds.save(sally)
         ds.save(
             Invoice(
-                LocalDateTime.of(2007, 8, 16, 19, 27),
+                of(2007, 8, 16, 19, 27),
                 sally,
                 Address("Chicago", "IL", "99999"),
                 Item("kleenex", 3.49),
@@ -165,7 +166,7 @@ class KotlinCriteriaTest : BottleRocketTest() {
         assertNotNull(critter)
         assertEquals(critter, invoice)
         val created = Invoice(
-            LocalDateTime.of(2012, 12, 21, 13, 15),
+            of(2012, 12, 21, 13, 15),
             john,
             Address("New York City", "NY", "10000"),
             Item("ball", 5.0),
