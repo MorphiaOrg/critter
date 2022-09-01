@@ -18,9 +18,7 @@ class JavaClassTest {
         val resourceOutput = File("${outputRoot("parents")}/parentTestRes/")
         val context = JavaContext(force = true, sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
 
-        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/AbstractPerson.java"))
-        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Person.java"))
-        context.add(File("../tests/maven/java/src/main/java/dev/morphia/critter/test/Invoice.java"))
+        context.scan(File("../tests/maven/java/src/main/java"))
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
         assertEquals(personClass.properties.map { it.name }.toSortedSet(), sortedSetOf("age", "firstName", "id", "lastName", "ssn"))
 
@@ -33,12 +31,11 @@ class JavaClassTest {
 
     @Test
     fun build() {
-        val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val directory = File("${outputRoot("build")}/generated-sources/critter")
         val resourceOutput = File("/${outputRoot("build")}/generated-resources/critter")
         val context = JavaContext(sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
+        context.scan(File("../tests/maven/java/src/main/java/"))
 
-        files.forEach { context.add(it) }
         CriteriaBuilder(context).build()
         val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
         assertEquals(personClass.properties.size, 5)
@@ -51,29 +48,23 @@ class JavaClassTest {
 
     @Test
     fun codecs() {
-        val context = JavaContext(
-            force = true, format = true,
+        val context = JavaContext(force = true,
             sourceOutputDirectory = File("${outputRoot("codecs")}/generated-sources/critter"),
             resourceOutputDirectory = File("${outputRoot("codecs")}/generated-resources/critter")
         )
-        File("../tests/maven/java/src/main/java/")
-            .walkTopDown()
-            .filter { it.name.endsWith(".java") }
-            .forEach { context.add(it) }
+
+        context.scan(File("../tests/maven/java/src/main/java/"))
         CodecsBuilder(context).build()
     }
 
     @Test
     fun modelImporter() {
-        val context = JavaContext(
-            force = true, format = true,
+        val context = JavaContext(force = true,
             sourceOutputDirectory = File("${outputRoot("modelImporter")}/generated-sources/critter"),
             resourceOutputDirectory = File("${outputRoot("modelImporter")}/generated-resources/critter")
         )
-        File("../tests/maven/java/src/main/java/")
-            .walkTopDown()
-            .filter { it.name.endsWith(".java") }
-            .forEach { context.add(it) }
+        context.scan(File("../tests/maven/java/src/main/java/"))
+
         ModelImporter(context).build()
         val spi = File(context.resourceOutput, "META-INF/services/${dev.morphia.mapping.EntityModelImporter::class.java.name}")
         val source = File(context.outputDirectory, "dev/morphia/critter/codec/CritterModelImporter.java")

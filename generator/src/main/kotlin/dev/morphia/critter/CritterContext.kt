@@ -5,14 +5,12 @@ import java.io.FileNotFoundException
 
 abstract class CritterContext<C : CritterClass, T>(
     val criteriaPkg: String?,
-    var force: Boolean = false,
-    var format: Boolean = false,
+    var force: Boolean,
+    var format: Boolean,
     val outputDirectory: File,
     val resourceOutput: File
 ) {
     protected val classes: MutableMap<String, C> = mutableMapOf()
-
-    abstract fun add(file: File)
 
     protected fun add(name: String, type: C) {
         classes[name] = type
@@ -40,4 +38,5 @@ abstract class CritterContext<C : CritterClass, T>(
         }
         serviceFile.writeText(impl + "\n")
     }
+    abstract fun scan(directory: File)
 }

@@ -18,14 +18,10 @@ import java.io.File
 import java.io.FileNotFoundException
 
 @Suppress("UNCHECKED_CAST")
-class KotlinContext(
-    criteriaPkg: String? = null,
-    force: Boolean = false,
-    format: Boolean = false,
-    outputDirectory: File,
-    resourceOutput: File
-)
-    : CritterContext<KotlinClass, TypeSpec>(criteriaPkg, force, format, outputDirectory, resourceOutput) {
+class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format: Boolean = true,
+                    sourceOutputDirectory: File = File("target/generated-sources/critter"),
+                    resourceOutputDirectory: File = File("target/generated-resources/critter"))
+    : CritterContext<KotlinClass, TypeSpec>(criteriaPkg, force, format, sourceOutputDirectory, resourceOutputDirectory) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(KotlinContext::class.java)
@@ -37,16 +33,23 @@ class KotlinContext(
 */
     }
 
-    override fun add(file: File) {
-        if(!file.exists()) throw FileNotFoundException(file.absolutePath)
-        val fileSpec = Kibble.parse(file.absolutePath)
-        fileSpec.classes.forEach {
-            if (!it.isAnnotation && !it.isEnum) {
-                with(KotlinClass(this, fileSpec, it, file)) {
-                    add("${pkgName}.${name}", this)
+    override fun scan(directory: File) {
+        if (!directory.exists()) {
+            throw FileNotFoundException(directory.toString())
+        }
+        directory
+            .walkTopDown()
+            .filter { it.name.endsWith(".kt") }
+            .map { it to Kibble.parse(it.absolutePath) }
+            .forEach { (file, fileSpec) ->
+                fileSpec.classes.forEach {
+                    if (!it.isAnnotation && !it.isEnum) {
+                        with(KotlinClass(this, fileSpec, it, file)) {
+                            add("${pkgName}.${name}", this)
+                        }
+                    }
                 }
             }
-        }
     }
 
     override fun entities(): Map<String, KotlinClass> = classes.filter {
@@ -88,7 +91,7 @@ class KotlinContext(
             }
         }
         LOG.debug("Formatting generated file: $sourceFile")
-        sourceFile.writeText(KtLint.format(sourceFile.readText(), ruleSets, mapOf(), cb))
+        sourceFile.writeText(com.pinterest.ktlint.core.KtLint.format(sourceFile.readText(), ruleSets, mapOf(), cb))
 */
     }
 }

@@ -7,46 +7,55 @@ import com.antwerkz.kibble.getFunctions
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
+import org.jboss.forge.roaster.Roaster
+import org.jboss.forge.roaster.model.JavaClass
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
 
-class KotlinClassTest {
-    private val directory = File("target/testing-generated-sources/critter")
-    private val resourceOutput = File("target/testing-generated-resources/critter")
-    private var context = KotlinContext(force = true, outputDirectory = directory, resourceOutput = resourceOutput)
+private const val GENERATED_ROOT = "target/testing-generated"
 
+class KotlinClassTest {
     @Test
     fun build() {
-        File("../tests/maven/kotlin/src/main/kotlin/")
-            .walkTopDown()
-            .forEach {
-                context.add(it)
-            }
+        val generatedSources = File("${GENERATED_ROOT}/critter-sources")
+        val context = KotlinContext(force = true, sourceOutputDirectory = generatedSources,
+            resourceOutputDirectory = File("${GENERATED_ROOT}/critter-resources")
+        )
+        context.scan(File("../tests/maven/kotlin/src/main/kotlin/"))
 
         KotlinCriteriaBuilder(context).build()
         val personClass = context.resolve("dev.morphia.critter.test", "Person")
         Assert.assertNotNull(personClass)
         personClass as KotlinClass
         Assert.assertEquals(personClass.properties.map {  it.name }.toSortedSet(), sortedSetOf("age", "first", "id", "last", "ssn"))
-        val criteriaFiles = Kibble.parse(listOf(directory))
+        val criteriaFiles = Kibble.parse(listOf(generatedSources))
         validatePersonCriteria(criteriaFiles.first { it.name == "PersonCriteria.kt" })
         validateInvoiceCriteria(criteriaFiles.first { it.name == "InvoiceCriteria.kt" })
     }
 
     @Test
     fun codecs() {
-        val context = KotlinContext(
-            force = true,
-            format = true,
-            outputDirectory = File("../tests/maven/kotlin/target/generated-sources/critter"),
-            resourceOutput = resourceOutput
+        val context = KotlinContext(force = true, sourceOutputDirectory = File("${GENERATED_ROOT}/codecs-sources"),
+            resourceOutputDirectory = File("${GENERATED_ROOT}/codecs-resources")
         )
-        File("../tests/maven/kotlin/src/main/kotlin/")
-            .walkTopDown()
-            .filter { it.name.endsWith(".kt") }
-            .forEach { context.add(it) }
+        context.scan(File("../tests/maven/kotlin/src/main/kotlin/"))
+
         CodecsBuilder(context).build()
+    }
+
+    @Test
+    fun modelImporter() {
+        val context = KotlinContext(force = true,
+            sourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-source"),
+            resourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-resource")
+        )
+        context.scan(File("../tests/maven/kotlin/src/main/kotlin/"))
+        ModelImporter(context).build()
+        val spi = File(context.resourceOutput, "META-INF/services/${dev.morphia.mapping.EntityModelImporter::class.java.name}")
+        val source = File(context.outputDirectory, "dev/morphia/critter/codec/CritterModelImporter.kt")
+        val parse: JavaClass<*> = Roaster.parse(source) as JavaClass<*>
+        Assert.assertEquals(spi.readText().trim(), parse.qualifiedName)
     }
 
     private fun validateInvoiceCriteria(file: FileSpec) {

@@ -9,17 +9,23 @@ import dev.morphia.critter.CritterContext
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.io.File
+import java.io.FileNotFoundException
 
 @Suppress("UNCHECKED_CAST")
-class JavaContext(criteriaPkg: String? = null, force: Boolean = false, format: Boolean = false, sourceOutputDirectory: File,
-                  resourceOutputDirectory: File):
+class JavaContext(criteriaPkg: String? = null, force: Boolean = false, format: Boolean = true,
+                  sourceOutputDirectory: File = File("target/generated-sources/critter"),
+                  resourceOutputDirectory: File = File("target/generated-resources/critter")):
     CritterContext<JavaClass, TypeSpec>(criteriaPkg, force, format, sourceOutputDirectory, resourceOutputDirectory) {
-
-    override fun add(file: File) {
-        val type = Roaster.parse(file)
-        if (type is JavaClassSource) {
-            add(file, type)
+    override fun scan(directory: File) {
+        if (!directory.exists()) {
+            throw FileNotFoundException(directory.toString())
         }
+        directory
+            .walkTopDown()
+            .filter { it.name.endsWith(".java") }
+            .map { it to Roaster.parse(it) }
+            .filter { it.second is JavaClassSource }
+            .forEach { add(it.first, it.second as JavaClassSource) }
     }
 
     private fun add(file: File, type: JavaClassSource) {

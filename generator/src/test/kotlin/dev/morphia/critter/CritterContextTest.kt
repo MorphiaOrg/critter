@@ -40,11 +40,11 @@ class CritterContextTest {
 
     @Test
     fun forceJava() {
-        val files = File("../tests/maven/java/src/main/java/").walkTopDown().filter { it.name.endsWith(".java") }
         val directory = File("target/javaClassTest/")
-        val resourceOutput = File("target/javaClassResource/")
-        val critterContext = JavaContext(force = true, sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
-        files.forEach { critterContext.add(it) }
+        val critterContext = JavaContext(force = true, sourceOutputDirectory = directory,
+            resourceOutputDirectory = File("target/javaClassResource/"))
+        critterContext.scan(File("../tests/maven/java/src/main/java/"))
+
         val builder = CriteriaBuilder(critterContext)
         builder.build()
         val file = File(directory, "dev/morphia/critter/test/criteria/PersonCriteria.java")
@@ -69,13 +69,13 @@ class CritterContextTest {
 
     @Test
     fun forceKotlin() {
-        val files = File("../tests/maven/kotlin/src/main/kotlin/").walkTopDown().filter { it.name.endsWith(".kt") }.toList()
         val directory = File("target/kotlinClassTest/")
-        val resourceOutput = File("target/kotlinClassResource/")
-        val context = KotlinContext(force = true, outputDirectory = directory, resourceOutput = resourceOutput)
-        files.forEach { file ->
-            context.add(file)
-        }
+        val context = KotlinContext(
+            force = true, sourceOutputDirectory = directory,
+            resourceOutputDirectory = File("target/kotlinClassResource/")
+        )
+        context.scan(File("../tests/maven/kotlin/src/main/kotlin/"))
+
         val kotlinBuilder = KotlinCriteriaBuilder(context)
         kotlinBuilder.build()
         val file = File(directory, "dev/morphia/critter/test/criteria/PersonCriteria.kt")
