@@ -121,6 +121,16 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>com.pinterest.ktlint</groupId>
+                <artifactId>ktlint-core</artifactId>
+                <version>${ktlint.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pinterest.ktlint</groupId>
+                <artifactId>ktlint-ruleset-standard</artifactId>
+                <version>${ktlint.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.pinterest</groupId>
                 <artifactId>ktlint</artifactId>
                 <version>${ktlint.version}</version>

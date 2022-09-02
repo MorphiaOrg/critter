@@ -2,6 +2,11 @@ package dev.morphia.critter.kotlin
 
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
+import com.pinterest.ktlint.core.KtLint.ExperimentalParams
+import com.pinterest.ktlint.core.KtLint.format
+import com.pinterest.ktlint.core.LintError
+import com.pinterest.ktlint.core.RuleSetProviderV2
+import com.pinterest.ktlint.ruleset.standard.StandardRuleSetProvider
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -31,6 +36,10 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
                 .sortedWith(Comparator.comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }.thenComparing(RuleSet::id))
         }
 */
+    }
+
+    private val ruleProvider: RuleSetProviderV2 by lazy {
+        StandardRuleSetProvider()
     }
 
     override fun scan(directory: File) {
@@ -84,15 +93,20 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
 
     @Suppress("UNUSED_PARAMETER")
     private fun formatSource(sourceFile: File) {
-/*
         val cb: (LintError, Boolean) -> Unit = { (line, col, ruleId, detail), corrected ->
             if (!corrected) {
                 LOG.debug("Could not correct formatting error: ($line:$col) [$ruleId] $sourceFile: $detail")
             }
         }
         LOG.debug("Formatting generated file: $sourceFile")
-        sourceFile.writeText(com.pinterest.ktlint.core.KtLint.format(sourceFile.readText(), ruleSets, mapOf(), cb))
-*/
+        sourceFile.writeText(
+            format(
+                ExperimentalParams(
+                    text = sourceFile.readText(),
+                    cb = cb,
+                    ruleProviders = ruleProvider.getRuleProviders()
+                )
+            ))
     }
 }
 

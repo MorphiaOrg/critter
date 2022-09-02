@@ -119,6 +119,14 @@
             <version>${javapoet.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.pinterest.ktlint</groupId>
+            <artifactId>ktlint-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pinterest.ktlint</groupId>
+            <artifactId>ktlint-ruleset-standard</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.pinterest</groupId>
             <artifactId>ktlint</artifactId>
         </dependency>
