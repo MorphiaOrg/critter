@@ -52,10 +52,6 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         val method = builder("getModels")
             .addModifiers(OVERRIDE)
             .addParameter("mapper", Mapper::class.java)
-//            .returns(
-//                List::class.java.asClassName()
-//                    .parameterizedBy(EntityModel::class.java.asClassName())
-//            )
 
         method.addCode("return listOf(")
         method.addCode(
@@ -93,7 +89,8 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                     .returns(EntityModel::class.java)
 
                 builder
-                    .addCode("var modelBuilder = %T(mapper, %T::class.java)\n", EntityModelBuilder::class.java, source.qualifiedName.className())
+                    .addCode("val modelBuilder = %T(mapper, %T::class.java)\n", EntityModelBuilder::class.java, source.qualifiedName
+                        .className())
 
                 annotations(builder)
                 properties(builder)
@@ -121,7 +118,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             .returns(TypeData::class.java.asClassName()
                 .parameterizedBy(STAR))
 
-        method.addStatement("var builder = %T.builder(type)", TypeData::class.java)
+        method.addStatement("val builder = %T.builder(type)", TypeData::class.java)
         method.beginControlFlow("for(argument in arguments)")
         method.addStatement("builder.addTypeParameter(argument)", TypeData::class.java)
         method.endControlFlow()
@@ -169,30 +166,29 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
     private fun accessor(property: CritterProperty): String {
         val name = "${property.name.methodCase()}Accessor"
+        val propertyType = property.type.typeName()
+            .copy(nullable = property.type.nullable)
         val method = builder(name)
             .returns(PropertyAccessor::class.java.asClassName()
                 .parameterizedBy(STAR))
-            .addCode(
-                """
+            .addCode("""
                     return object: %T<%T> {
-                        override fun <S : Any> set(instance: S, `value`: %T?) {
+                        override fun <S : Any> set(instance: S, newValue: %T) {
                         
-                """.trimIndent(), PropertyAccessor::class.java, property.type.typeName(), property.type.typeName()
-            )
+                """.trimIndent(), PropertyAccessor::class.java, propertyType, propertyType)
         if(!property.isFinal) {
-            method.addStatement("(instance as ${source.name}).${property.name} = value as %T", property.type.typeName())
+            method.addStatement("(instance as ${source.name}).${property.name} = newValue")
         } else {
             method.addStatement("throw %T(\"${property.name} is immutable.\")", IllegalStateException::class.java)
         }
         method.addCode(
             """
                 }
-                    override fun <S : Any> get(instance: S): %T? {
+                    override fun <S : Any> get(instance: S): %T {
                         return (instance as ${source.name}).${property.name}
                     }
                 }
-            """.trimIndent(), property.type.typeName()
-        )
+            """.trimIndent(), propertyType)
         util.addFunction(method.build())
 
         return "$utilName.$name()"
@@ -256,7 +252,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             .addModifiers(PRIVATE)
             .returns(annotation.type.name.className())
 
-        builder.addStatement("var builder = %T.${builderName.simpleName.methodCase()}()", builderName)
+        builder.addStatement("val builder = %T.${builderName.simpleName.methodCase()}()", builderName)
         annotation.values
             .forEach { pair ->
                 val name = pair.key

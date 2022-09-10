@@ -61,13 +61,13 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             .addParameter("model", EntityModel::class.java)
             .addParameter("decoderContext", DecoderContext::class.java)
             .returns(entityName)
-            .addStatement("var codec = morphiaCodec")
-            .addStatement("var mapper = codec.mapper")
-            .addStatement("var document = codec.registry[%T::class.java].decode(reader, decoderContext)",
+            .addStatement("val codec = morphiaCodec")
+            .addStatement("val mapper = codec.mapper")
+            .addStatement("val document = codec.registry[%T::class.java].decode(reader, decoderContext)",
                 Document::class.java
             )
-            .addStatement("var instanceCreator = ${entityName.simpleName.titleCase()}InstanceCreator()")
-            .addStatement("var instance = instanceCreator.instance")
+            .addStatement("val instanceCreator = ${entityName.simpleName.titleCase()}InstanceCreator()")
+            .addStatement("val instance = instanceCreator.instance")
         source.functions(PreLoad::class.java).forEach {
             val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
             function.addStatement("instance.${it.name}${params}\n")
@@ -100,7 +100,7 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             .addParameter("reader", BsonReader::class.java)
             .addParameter("decoderContext", DecoderContext::class.java)
             .returns(entityName)
-            .addStatement("var model = morphiaCodec.entityModel")
+            .addStatement("val model = morphiaCodec.entityModel")
 
 
         method.beginControlFlow("if (decoderContext.hasCheckedDiscriminator())")
@@ -110,13 +110,12 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             method.beginControlFlow("if (morphiaCodec.mapper.hasInterceptors())")
                 .addStatement("return lifecycle(reader, model, decoderContext)")
                 .nextControlFlow(" else ")
-                .addStatement("var instanceCreator = ${entityName.simpleName.titleCase()}InstanceCreator()")
+                .addStatement("val instanceCreator = ${entityName.simpleName.titleCase()}InstanceCreator()")
                 .addStatement("decodeProperties(reader, decoderContext, instanceCreator, model)")
                 .addStatement("return instanceCreator.instance")
                 .endControlFlow()
         }
         method.nextControlFlow("else")
-            .addStatement("var morphiaCodec = morphiaCodec")
             .addStatement(
                 """return getCodecFromDocument(reader, model.useDiscriminator(), model.discriminatorKey,
                                 morphiaCodec.registry, morphiaCodec.discriminatorLookup, morphiaCodec)

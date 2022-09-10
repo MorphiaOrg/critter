@@ -111,8 +111,8 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             val initializer = defaultValues[it.type.name]
             var type = it.type.typeName()
 
+            val ctorParam = params.firstOrNull { param -> param.name == it.name }
             if (it.type.nullable) {
-                val ctorParam = params.firstOrNull { param -> param.name == it.name }
                 //?.type?.nullable == true
                 type = type.copy(nullable = (ctorParam == null || ctorParam.type.nullable))
             }
@@ -129,7 +129,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
                 }
             }
             property.build().also { propertySpec ->
-                entityProperties += propertySpec
+                if (ctorParam == null) entityProperties += propertySpec
                 creator.addProperty(propertySpec)
             }
         }
@@ -141,13 +141,9 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             .addParameter("value", ClassName("kotlin", "Any").copy(nullable = true))
             .addParameter("model", PropertyModel::class.java)
 
+        method.beginControlFlow("when(model.name)")
         source.properties.forEachIndexed { index, property ->
-            val ifStmt = "if (\"${property.name}\" == model.name)"
-            if (index == 0) {
-                method.beginControlFlow(ifStmt)
-            } else {
-                method.nextControlFlow("else $ifStmt")
-            }
+            method.beginControlFlow("\"${property.name}\" ->")
             method.addStatement("this.${property.name} = value as %T", property.type.typeName())
             method.beginControlFlow("if(::instance.isInitialized)")
             if (!property.isFinal) {
@@ -155,6 +151,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             } else {
                 method.addStatement("""throw %T("${property.name} is immutable.")""", IllegalStateException::class.java)
             }
+            method.endControlFlow()
             method.endControlFlow()
         }
         method.endControlFlow()

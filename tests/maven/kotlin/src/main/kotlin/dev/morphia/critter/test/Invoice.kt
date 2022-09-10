@@ -17,7 +17,7 @@ import java.util.StringJoiner
 @Entity
 class Invoice() {
     @Id
-    var id: ObjectId = ObjectId()
+    var id: ObjectId? = null
 
     var orderDate: LocalDateTime? = null
         set(value: LocalDateTime?) {

@@ -97,15 +97,15 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
             .returns(Codec::class.java.asClassName().parameterizedBy(TypeVariableName("T"))
                 .copy(nullable = true))
 
-        function.addStatement("var type = entity::class.java as Class<T>")
-        function.addStatement("var model = mapper.getEntityModel(entity::class.java)")
+        function.addStatement("val type = entity::class.java as Class<T>")
+        function.addStatement("val model = mapper.getEntityModel(entity::class.java)")
         function.beginControlFlow("when (type)")
         context.entities().values
             .filter { !it.isAbstract() }
             .forEachIndexed { index, type ->
                 function.beginControlFlow("%T::class.java ->", type.qualifiedName.className())
                 function.addStatement(
-                    "var codec: MorphiaCodec<%T> = MorphiaCodec(datastore, model, propertyCodecProviders," +
+                    "val codec: MorphiaCodec<%T> = MorphiaCodec(datastore, model, propertyCodecProviders," +
                         " mapper.discriminatorLookup, registry)", type.qualifiedName.className()
                 )
                 function.addCode(

@@ -5,6 +5,7 @@ import com.antwerkz.kibble.classes
 import com.pinterest.ktlint.core.KtLint.ExperimentalParams
 import com.pinterest.ktlint.core.KtLint.format
 import com.pinterest.ktlint.core.LintError
+import com.pinterest.ktlint.core.ParseException
 import com.pinterest.ktlint.core.RuleSetProviderV2
 import com.pinterest.ktlint.ruleset.standard.StandardRuleSetProvider
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -99,14 +100,18 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
             }
         }
         LOG.debug("Formatting generated file: $sourceFile")
-        sourceFile.writeText(
-            format(
+        try {
+            val formatted = format(
                 ExperimentalParams(
                     text = sourceFile.readText(),
                     cb = cb,
                     ruleProviders = ruleProvider.getRuleProviders()
                 )
-            ))
+            )
+            sourceFile.writeText(formatted)
+        } catch (e: ParseException) {
+            throw RuntimeException("Formatting failed for $sourceFile[${e.line}:${e.col}]")
+        }
     }
 }
 

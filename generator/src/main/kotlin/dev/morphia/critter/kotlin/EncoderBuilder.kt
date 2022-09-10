@@ -109,9 +109,9 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
                 .addParameter("encoderContext", EncoderContext::class.java)
                 .addCode(
                     """
-                    document(writer, {
+                    document(writer) {
                         ${outputProperties()}
-                    })
+                    }
                     """.trimIndent()
                 ).build()
         )
@@ -123,8 +123,8 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
             .addParameter("writer", BsonWriter::class.java)
             .addParameter(ParameterSpec.builder("instance", entityName).build())
             .addParameter("encoderContext", EncoderContext::class.java)
-        builder.addStatement("var codec = morphiaCodec")
-        builder.addStatement("var mapper = codec.mapper")
+        builder.addStatement("val codec = morphiaCodec")
+        builder.addStatement("val mapper = codec.mapper")
         builder.addStatement("var document = %T()", Document::class.java)
         builder.addCode("// call PrePersist methods\n")
         source.functions(PrePersist::class.java).forEach {
@@ -134,7 +134,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         builder.beginControlFlow("mapper.interceptors.forEach", EntityInterceptor::class.java)
         builder.addStatement("it.prePersist(instance, document, codec.datastore)")
         builder.endControlFlow()
-        builder.addStatement("var documentWriter = %T(mapper, document)", DocumentWriter::class.java)
+        builder.addStatement("val documentWriter = %T(mapper, document)", DocumentWriter::class.java)
         builder.addStatement("encodeProperties(documentWriter, instance, encoderContext)")
         builder.addStatement("document = documentWriter.document")
         builder.addCode("// call PostPersist methods\n")
@@ -152,7 +152,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
 
     private fun outputProperties(): String {
         val lines = mutableListOf<String>()
-        lines += "var model = morphiaCodec.entityModel"
+        lines += "val model = morphiaCodec.entityModel"
         if (idProperty() != null) {
             lines += "encodeId(writer, instance, encoderContext)"
         }
@@ -175,7 +175,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
     fun encodeId() {
         idProperty()?.let {
             val method = FunSpec.builder("encodeId")
-                .addModifiers(PROTECTED)
+                .addModifiers(PRIVATE)
                 .addParameter("writer", BsonWriter::class.java)
                 .addParameter(ParameterSpec.builder("instance", entityName).build())
                 .addParameter("encoderContext", EncoderContext::class.java)
