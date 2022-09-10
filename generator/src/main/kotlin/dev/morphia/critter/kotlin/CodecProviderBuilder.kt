@@ -54,26 +54,24 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
                     .parameterizedBy(TypeVariableName("T"))
                     .copy(nullable = true)
             )
-            .addStatement("var found: %T<T>? = getCodecs().get(type) as MorphiaCodec<T>?", MorphiaCodec::class.java)
+            .addCode("return (codecs[type] ?:")
 
-        method.beginControlFlow("if (found != null)")
-        method.addStatement("return found")
-
+        method.beginControlFlow("when (type)")
         context.entities().values
             .filter { !it.isAbstract() }
-            .forEachIndexed { _, javaClass ->
-                method.nextControlFlow("else if (type == %T::class.java)", javaClass.qualifiedName.className())
-                method.addStatement("val model = getMapper().getEntityModel(type)")
+            .forEach { javaClass ->
+                method.beginControlFlow("%T::class.java ->", javaClass.qualifiedName.className())
                 method.addStatement(
-                    "val codec: MorphiaCodec<%T> = MorphiaCodec(getDatastore(), model, getPropertyCodecProviders(), " +
-                        "getMapper().getDiscriminatorLookup(), registry)", javaClass.qualifiedName.className()
-                )
-                method.addStatement("codec.setEncoder(${javaClass.name}Encoder(codec))")
-                method.addStatement("codec.setDecoder(${javaClass.name}Decoder(codec))")
-                method.addStatement("return codec as MorphiaCodec<T>")
+                    "val codec = MorphiaCodec<%T>(datastore, mapper.getEntityModel(type), propertyCodecProviders, mapper" +
+                        ".discriminatorLookup, registry)", javaClass.qualifiedName.className())
+                method.addStatement("""codec.setEncoder(${javaClass.name}Encoder(codec))
+                    |.setDecoder(${javaClass.name}Decoder(codec))""".trimMargin())
+                method.addStatement("codec")
+                method.endControlFlow()
             }
+        method.addStatement("else -> null")
         method.endControlFlow()
-        method.addStatement("return null")
+        method.addCode(") as %T<T>?", MorphiaCodec::class.java)
 
         provider.addFunction(method.build())
     }
@@ -100,19 +98,15 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
                 .copy(nullable = true))
 
         function.addStatement("var type = entity::class.java as Class<T>")
-        function.addStatement("var model = getMapper().getEntityModel(entity::class.java)")
+        function.addStatement("var model = mapper.getEntityModel(entity::class.java)")
+        function.beginControlFlow("when (type)")
         context.entities().values
             .filter { !it.isAbstract() }
             .forEachIndexed { index, type ->
-                val ifStmt = "if (type == %T::class.java)"
-                if (index == 0) {
-                    function.beginControlFlow(ifStmt, type.qualifiedName.className())
-                } else {
-                    function.nextControlFlow("else $ifStmt", type.qualifiedName.className())
-                }
+                function.beginControlFlow("%T::class.java ->", type.qualifiedName.className())
                 function.addStatement(
-                    "var codec: MorphiaCodec<%T> = MorphiaCodec(getDatastore(), model, getPropertyCodecProviders()," +
-                        " getMapper().getDiscriminatorLookup(), registry)", type.qualifiedName.className()
+                    "var codec: MorphiaCodec<%T> = MorphiaCodec(datastore, model, propertyCodecProviders," +
+                        " mapper.discriminatorLookup, registry)", type.qualifiedName.className()
                 )
                 function.addCode(
                     """
@@ -129,6 +123,7 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
                     return codec as Codec<T>
                 """.trimIndent(), EntityDecoder::class.java, type.qualifiedName.className(), MorphiaInstanceCreator::class.java
                 )
+                function.endControlFlow()
             }
 
         function.endControlFlow()

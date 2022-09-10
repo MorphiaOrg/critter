@@ -73,7 +73,7 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             function.addStatement("instance.${it.name}${params}\n")
         }
         function.beginControlFlow("for (ei in mapper.interceptors)")
-        function.addStatement("ei.preLoad(instance, document, mapper)")
+        function.addStatement("ei.preLoad(instance, document, codec.datastore)")
         function.endControlFlow()
 
         function
@@ -86,7 +86,7 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             function.addStatement("instance.${it.name}${params}\n")
         }
         function.beginControlFlow("for (ei in mapper.interceptors)")
-        function.addStatement("ei.postLoad(instance, document, mapper)")
+        function.addStatement("ei.postLoad(instance, document, codec.datastore)")
         function.endControlFlow()
 
         function.addStatement("return instanceCreator.instance")

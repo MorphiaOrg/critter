@@ -142,7 +142,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             .addParameter("model", PropertyModel::class.java)
 
         source.properties.forEachIndexed { index, property ->
-            val ifStmt = "if (\"${property.name}\" == model.getName())"
+            val ifStmt = "if (\"${property.name}\" == model.name)"
             if (index == 0) {
                 method.beginControlFlow(ifStmt)
             } else {

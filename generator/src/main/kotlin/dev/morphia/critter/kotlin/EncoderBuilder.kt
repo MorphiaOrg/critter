@@ -132,7 +132,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
             builder.addStatement("instance.${it.name}${params}\n")
         }
         builder.beginControlFlow("mapper.interceptors.forEach", EntityInterceptor::class.java)
-        builder.addStatement("it.prePersist(instance, document, mapper)")
+        builder.addStatement("it.prePersist(instance, document, codec.datastore)")
         builder.endControlFlow()
         builder.addStatement("var documentWriter = %T(mapper, document)", DocumentWriter::class.java)
         builder.addStatement("encodeProperties(documentWriter, instance, encoderContext)")
@@ -144,7 +144,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         }
 
         builder.beginControlFlow("mapper.interceptors.forEach", EntityInterceptor::class.java)
-        builder.addStatement("it.postPersist(instance, document, mapper)")
+        builder.addStatement("it.postPersist(instance, document, codec.datastore)")
         builder.endControlFlow()
         builder.addStatement("codec.registry[Document::class.java].encode(writer, document, encoderContext)")
         encoder.addFunction(builder.build())
@@ -183,7 +183,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
             method.addCode(
                 """
                 val id: %T? = instance.${it.name}
-                if (id == null && encoderContext.isEncodingCollectibleDocument()) {
+                if (id == null && encoderContext.isEncodingCollectibleDocument) {
                     instance.${it.name} = idGenerator?.generate() as %T
                 }
                 val idModel = morphiaCodec.entityModel.idProperty!!
