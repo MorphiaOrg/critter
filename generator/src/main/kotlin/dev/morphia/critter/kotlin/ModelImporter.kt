@@ -281,7 +281,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
     private fun annotationBuilderName(it: CritterAnnotation): ClassName {
         var name = it.type.name
-        name = name.substringBeforeLast('.') + ".builders." + name.substringAfterLast('.')
+        name = name.substringBeforeLast('.') + ".internal." + name.substringAfterLast('.')
         return (name + "Builder").className()
     }
 }

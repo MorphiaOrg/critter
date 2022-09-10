@@ -85,14 +85,14 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         if (eventMethods.isNotEmpty()) {
             builder.addStatement("lifecycle(writer, instance, encoderContext)")
         } else {
-            builder.beginControlFlow("if (getMorphiaCodec().getMapper().hasInterceptors())")
+            builder.beginControlFlow("if (morphiaCodec.mapper.hasInterceptors())")
             builder.addStatement("lifecycle(writer, instance, encoderContext)")
             builder.nextControlFlow(" else ")
             builder.addStatement("encodeProperties(writer, instance, encoderContext)")
             builder.endControlFlow()
         }
         builder.nextControlFlow(" else ")
-        builder.addStatement("val codec = getMorphiaCodec().getRegistry().get(instance::class.java) as %T<%T>", Codec::class, entityName)
+        builder.addStatement("val codec = morphiaCodec.registry[instance::class.java] as %T<%T>", Codec::class, entityName)
         builder.addStatement("codec.encode(writer, instance, encoderContext)")
         builder.endControlFlow()
 
@@ -123,42 +123,42 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
             .addParameter("writer", BsonWriter::class.java)
             .addParameter(ParameterSpec.builder("instance", entityName).build())
             .addParameter("encoderContext", EncoderContext::class.java)
-        builder.addStatement("var codec = getMorphiaCodec()")
-        builder.addStatement("var mapper = codec.getMapper()")
+        builder.addStatement("var codec = morphiaCodec")
+        builder.addStatement("var mapper = codec.mapper")
         builder.addStatement("var document = %T()", Document::class.java)
         builder.addCode("// call PrePersist methods\n")
         source.functions(PrePersist::class.java).forEach {
             val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
             builder.addStatement("instance.${it.name}${params}\n")
         }
-        builder.beginControlFlow("mapper.getInterceptors().forEach", EntityInterceptor::class.java)
+        builder.beginControlFlow("mapper.interceptors.forEach", EntityInterceptor::class.java)
         builder.addStatement("it.prePersist(instance, document, mapper)")
         builder.endControlFlow()
         builder.addStatement("var documentWriter = %T(mapper, document)", DocumentWriter::class.java)
         builder.addStatement("encodeProperties(documentWriter, instance, encoderContext)")
-        builder.addStatement("document = documentWriter.getDocument()")
+        builder.addStatement("document = documentWriter.document")
         builder.addCode("// call PostPersist methods\n")
         source.functions(PostPersist::class.java).forEach {
             val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
             builder.addStatement("instance.${it.name}${params}\n")
         }
 
-        builder.beginControlFlow("mapper.getInterceptors().forEach", EntityInterceptor::class.java)
+        builder.beginControlFlow("mapper.interceptors.forEach", EntityInterceptor::class.java)
         builder.addStatement("it.postPersist(instance, document, mapper)")
         builder.endControlFlow()
-        builder.addStatement("codec.getRegistry().get(Document::class.java).encode(writer, document, encoderContext)")
+        builder.addStatement("codec.registry[Document::class.java].encode(writer, document, encoderContext)")
         encoder.addFunction(builder.build())
     }
 
     private fun outputProperties(): String {
         val lines = mutableListOf<String>()
-        lines += "var model = getMorphiaCodec().getEntityModel()"
+        lines += "var model = morphiaCodec.entityModel"
         if (idProperty() != null) {
             lines += "encodeId(writer, instance, encoderContext)"
         }
         lines += """
             if (model.useDiscriminator()) {
-                writer.writeString(model.getDiscriminatorKey(), model.getDiscriminator())
+                writer.writeString(model.discriminatorKey, model.discriminator)
             }
         """.trimIndent()
         source.properties.forEach { field ->
@@ -184,9 +184,9 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
                 """
                 val id: %T? = instance.${it.name}
                 if (id == null && encoderContext.isEncodingCollectibleDocument()) {
-                    instance.${it.name} = getIdGenerator()?.generate() as %T
+                    instance.${it.name} = idGenerator?.generate() as %T
                 }
-                val idModel = getMorphiaCodec().getEntityModel().getIdProperty()!!
+                val idModel = morphiaCodec.entityModel.idProperty!!
                 encodeValue(writer, encoderContext, idModel, instance.${it.name})
                 """.trimIndent(), idType, idType)
             encoder.addFunction(method.build())

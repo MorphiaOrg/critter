@@ -139,11 +139,6 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         builder.endControlFlow()
         builder.addStatement("codec.getRegistry().get(Document.class).encode(writer, document, encoderContext)")
 
-
-        //          ;
-
-        //        ;
-
         encoder.addMethod(builder.build())
     }
 

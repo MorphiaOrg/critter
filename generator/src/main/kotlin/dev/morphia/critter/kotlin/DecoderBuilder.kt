@@ -61,18 +61,18 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             .addParameter("model", EntityModel::class.java)
             .addParameter("decoderContext", DecoderContext::class.java)
             .returns(entityName)
-            .addStatement("var codec = getMorphiaCodec()")
-            .addStatement("var mapper = codec.getMapper()")
-            .addStatement("var document = codec.getRegistry().get(%T::class.java).decode(reader, decoderContext)",
+            .addStatement("var codec = morphiaCodec")
+            .addStatement("var mapper = codec.mapper")
+            .addStatement("var document = codec.registry[%T::class.java].decode(reader, decoderContext)",
                 Document::class.java
             )
             .addStatement("var instanceCreator = ${entityName.simpleName.titleCase()}InstanceCreator()")
-            .addStatement("var instance = instanceCreator.getInstance()")
+            .addStatement("var instance = instanceCreator.instance")
         source.functions(PreLoad::class.java).forEach {
             val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
             function.addStatement("instance.${it.name}${params}\n")
         }
-        function.beginControlFlow("for (ei in mapper.getInterceptors())")
+        function.beginControlFlow("for (ei in mapper.interceptors)")
         function.addStatement("ei.preLoad(instance, document, mapper)")
         function.endControlFlow()
 
@@ -85,11 +85,11 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
             function.addStatement("instance.${it.name}${params}\n")
         }
-        function.beginControlFlow("for (ei in mapper.getInterceptors())")
+        function.beginControlFlow("for (ei in mapper.interceptors)")
         function.addStatement("ei.postLoad(instance, document, mapper)")
         function.endControlFlow()
 
-        function.addStatement("return instanceCreator.getInstance()")
+        function.addStatement("return instanceCreator.instance")
         decoder.addFunction(function.build())
     }
 
@@ -100,26 +100,26 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             .addParameter("reader", BsonReader::class.java)
             .addParameter("decoderContext", DecoderContext::class.java)
             .returns(entityName)
-            .addStatement("var model = getMorphiaCodec().getEntityModel()")
+            .addStatement("var model = morphiaCodec.entityModel")
 
 
         method.beginControlFlow("if (decoderContext.hasCheckedDiscriminator())")
         if (eventMethods.isNotEmpty()) {
             method.addStatement("return lifecycle(reader, model, decoderContext)")
         } else {
-            method.beginControlFlow("if (getMorphiaCodec().getMapper().hasInterceptors())")
+            method.beginControlFlow("if (morphiaCodec.mapper.hasInterceptors())")
                 .addStatement("return lifecycle(reader, model, decoderContext)")
                 .nextControlFlow(" else ")
                 .addStatement("var instanceCreator = ${entityName.simpleName.titleCase()}InstanceCreator()")
                 .addStatement("decodeProperties(reader, decoderContext, instanceCreator, model)")
-                .addStatement("return instanceCreator.getInstance()")
+                .addStatement("return instanceCreator.instance")
                 .endControlFlow()
         }
         method.nextControlFlow("else")
-            .addStatement("var morphiaCodec = getMorphiaCodec()")
+            .addStatement("var morphiaCodec = morphiaCodec")
             .addStatement(
-                """return getCodecFromDocument(reader, model.useDiscriminator(), model.getDiscriminatorKey(),
-                                morphiaCodec.getRegistry(), morphiaCodec.getDiscriminatorLookup(), morphiaCodec)
+                """return getCodecFromDocument(reader, model.useDiscriminator(), model.discriminatorKey,
+                                morphiaCodec.registry, morphiaCodec.discriminatorLookup, morphiaCodec)
                                      .decode(reader, DecoderContext.builder().checkedDiscriminator(true).build())""")
             .endControlFlow()
 
