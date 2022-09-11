@@ -121,6 +121,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.4.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>com.pinterest.ktlint</groupId>
                 <artifactId>ktlint-core</artifactId>
                 <version>${ktlint.version}</version>
@@ -134,16 +140,6 @@
                 <groupId>com.pinterest</groupId>
                 <artifactId>ktlint</artifactId>
                 <version>${ktlint.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-nop</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>ch.qos.logback</groupId>
-                        <artifactId>logback-classic</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
@@ -162,16 +158,6 @@
                 <artifactId>kotlin-test</artifactId>
                 <version>${kotlin.version}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>2.18.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
