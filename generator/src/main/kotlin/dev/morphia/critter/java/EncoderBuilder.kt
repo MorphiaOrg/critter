@@ -143,7 +143,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
             builder.addStatement("instance.${it.name}${params}\n")
         }
         builder.beginControlFlow("for (\$T ei : mapper.getInterceptors())", EntityInterceptor::class.java)
-        builder.addStatement("ei.prePersist(instance, document, mapper)")
+        builder.addStatement("ei.prePersist(instance, document, codec.getDatastore())")
         builder.endControlFlow()
         builder.addStatement("var documentWriter = new \$T(mapper, document)", DocumentWriter::class.java)
         builder.addStatement("encodeProperties(documentWriter, instance, encoderContext)")
@@ -155,7 +155,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         }
 
         builder.beginControlFlow("for (\$T ei : mapper.getInterceptors())", EntityInterceptor::class.java)
-        builder.addStatement("ei.postPersist(instance, document, mapper)")
+        builder.addStatement("ei.postPersist(instance, document, codec.getDatastore())")
         builder.endControlFlow()
         builder.addStatement("codec.getRegistry().get(Document.class).encode(writer, document, encoderContext)")
 

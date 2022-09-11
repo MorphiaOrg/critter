@@ -77,7 +77,7 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
             method.addStatement("instance.${it.name}${params}\n")
         }
         method.beginControlFlow("for (var ei : mapper.getInterceptors())")
-        method.addStatement("ei.preLoad(instance, document, mapper)")
+        method.addStatement("ei.preLoad(instance, document, codec.getDatastore())")
         method.endControlFlow()
 
         method
@@ -90,7 +90,7 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
             method.addStatement("instance.${it.name}${params}\n")
         }
         method.beginControlFlow("for (var ei : mapper.getInterceptors())")
-        method.addStatement("ei.postLoad(instance, document, mapper)")
+        method.addStatement("ei.postLoad(instance, document, codec.getDatastore())")
         method.endControlFlow()
 
         method.addStatement("return instanceCreator.getInstance()")
