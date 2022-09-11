@@ -2,7 +2,10 @@
 
 package dev.morphia.critter.java
 
+import com.mongodb.lang.NonNull
+import com.squareup.javapoet.AnnotationSpec
 import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
@@ -18,6 +21,7 @@ import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
+import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import dev.morphia.mapping.codec.writer.DocumentWriter
@@ -25,6 +29,7 @@ import org.bson.BsonWriter
 import org.bson.Document
 import org.bson.codecs.EncoderContext
 import org.bson.codecs.IdGenerator
+import org.jetbrains.kotlin.diagnostics.rendering.ContextDependentRenderer
 import java.io.File
 import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PRIVATE
@@ -43,6 +48,13 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
             encoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Encoder")
             encoder = TypeSpec.classBuilder(encoderName)
                 .addModifiers(PUBLIC, FINAL)
+
+            encoder.addAnnotation(
+                AnnotationSpec.builder(SuppressWarnings::class.java)
+                    .addMember("value", CodeBlock.of("""{"unchecked", "rawtypes"}"""))
+                    .build()
+            )
+
             val sourceTimestamp = source.lastModified()
             val encoderFile = File(context.outputDirectory, encoderName.canonicalName().replace('.', '/') + ".java")
 
@@ -67,9 +79,17 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         val builder = MethodSpec.methodBuilder("encode")
             .addModifiers(PUBLIC)
             .addAnnotation(Override::class.java)
-            .addParameter(BsonWriter::class.java, "writer")
+            .addParameter(
+                ParameterSpec.builder(BsonWriter::class.java, "writer")
+                    .addAnnotation(NonNull::class.java)
+                    .build()
+            )
             .addParameter(ParameterSpec.builder(entityName, "instance").build())
-            .addParameter(EncoderContext::class.java, "encoderContext")
+            .addParameter(
+                ParameterSpec.builder(EncoderContext::class.java, "encoderContext")
+                    .addAnnotation(NonNull::class.java)
+                    .build()
+            )
         builder.beginControlFlow("if (areEquivalentTypes(instance.getClass(), \$T.class))", source.qualifiedName.className())
         val eventMethods = source.methods(PrePersist::class.java) + source.methods(PostPersist::class.java)
         if (eventMethods.isNotEmpty()) {
@@ -167,7 +187,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
     private fun encodeId() {
         idProperty()?.let {
             val method = MethodSpec.methodBuilder("encodeId")
-                .addModifiers(PROTECTED)
+                .addModifiers(PRIVATE)
                 .addParameter(BsonWriter::class.java, "writer")
                 .addParameter(ParameterSpec.builder(entityName, "instance").build())
                 .addParameter(EncoderContext::class.java, "encoderContext")
@@ -206,10 +226,11 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
     private fun encoderClassMethod() {
         encoder.addMethod(
             MethodSpec.methodBuilder("getEncoderClass")
+                .addAnnotation(NonNull::class.java)
+                .addAnnotation(Override::class.java)
                 .addModifiers(PUBLIC)
                 .addStatement("return ${source.name}.class")
-                .returns(Class::class.java)
-                .addAnnotation(Override::class.java)
+                .returns(ParameterizedTypeName.get(ClassName.get(Class::class.java), entityName))
                 .build()
         )
     }

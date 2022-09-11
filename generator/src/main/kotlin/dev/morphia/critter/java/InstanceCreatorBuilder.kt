@@ -1,11 +1,13 @@
 package dev.morphia.critter.java
 
+import com.mongodb.lang.NonNull
+import com.squareup.javapoet.AnnotationSpec
 import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeSpec
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import java.io.File
@@ -24,6 +26,14 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
             creatorName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")
             creator = TypeSpec.classBuilder(creatorName)
                 .addModifiers(PUBLIC)
+
+            creator.addAnnotation(
+                AnnotationSpec.builder(SuppressWarnings::class.java)
+                    .addMember("value", CodeBlock.of("""{"rawtypes"}"""))
+                    .build()
+            )
+
+
             val sourceTimestamp = source.lastModified()
             val decoderFile = File(context.outputDirectory, creatorName.canonicalName().replace('.', '/') + ".java")
 
@@ -33,7 +43,7 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
                 getInstance()
                 set()
 
-                context.buildFile(creator.build(), Conversions::class.java to "convert")
+                context.buildFile(creator.build())
             }
         }
     }
@@ -52,6 +62,8 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
             .toMutableList()
         properties.removeIf { it.name in params }
         val method = methodBuilder("getInstance")
+            .addAnnotation(NonNull::class.java)
+            .addAnnotation(Override::class.java)
             .addModifiers(PUBLIC)
             .returns(entityName)
             .beginControlFlow("if (instance == null)")
@@ -72,13 +84,9 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
             .addParameter(Object::class.java, "value")
             .addParameter(PropertyModel::class.java, "model")
 
+        method.beginControlFlow("switch (model.getName())")
         source.properties.forEachIndexed { index, property ->
-            val ifStmt = "if (\"${property.name}\".equals(model.getName()))"
-            if (index == 0) {
-                method.beginControlFlow(ifStmt)
-            } else {
-                method.nextControlFlow("else $ifStmt")
-            }
+            method.addCode("case \"${property.name}\":")
             method.addStatement("${property.name} = (\$T)value", property.type.name.className())
             method.beginControlFlow("if(instance != null)")
             val mutator = property.mutator
@@ -90,6 +98,7 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
                     IllegalStateException::class.java)
             }
             method.endControlFlow()
+            method.addStatement("break")
         }
         method.endControlFlow()
 

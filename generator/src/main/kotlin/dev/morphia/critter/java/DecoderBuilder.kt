@@ -1,15 +1,17 @@
 package dev.morphia.critter.java
 
+import com.mongodb.lang.NonNull
+import com.squareup.javapoet.AnnotationSpec
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
+import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import dev.morphia.annotations.PostLoad
 import dev.morphia.annotations.PreLoad
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.titleCase
-import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.EntityDecoder
 import dev.morphia.mapping.codec.pojo.EntityModel
@@ -39,13 +41,19 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
             val sourceTimestamp = source.lastModified()
             val decoderFile = File(context.outputDirectory, decoderName.canonicalName().replace('.', '/') + ".java")
 
+            decoder.addAnnotation(
+                AnnotationSpec.builder(SuppressWarnings::class.java)
+                    .addMember("value", "\"unchecked\"")
+                    .build()
+            )
+
             if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
                 decoder.superclass(ParameterizedTypeName.get(ClassName.get(EntityDecoder::class.java), entityName))
                 buildConstructor()
                 decodeMethod()
                 getInstanceCreator()
                 lifecycle()
-                context.buildFile(decoder.build(), Conversions::class.java to "convert")
+                context.buildFile(decoder.build())
             }
         }
     }
@@ -93,8 +101,13 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
         val eventMethods = source.methods(PreLoad::class.java) + source.methods(PostLoad::class.java)
         val method = methodBuilder("decode")
             .addModifiers(PUBLIC)
+            .addAnnotation(NonNull::class.java)
             .addAnnotation(Override::class.java)
-            .addParameter(BsonReader::class.java, "reader")
+            .addParameter(
+                ParameterSpec.builder(BsonReader::class.java, "reader")
+                    .addAnnotation(NonNull::class.java)
+                    .build()
+            )
             .addParameter(DecoderContext::class.java, "decoderContext")
             .returns(entityName)
             .addStatement("var model = getMorphiaCodec().getEntityModel()")
@@ -127,6 +140,7 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
         decoder.addMethod(
             methodBuilder("getInstanceCreator")
                 .addModifiers(PROTECTED)
+                .addAnnotation(NonNull::class.java)
                 .addAnnotation(Override::class.java)
                 .returns(MorphiaInstanceCreator::class.java)
                 .addStatement("return  new ${entityName.simpleName().titleCase()}InstanceCreator()")

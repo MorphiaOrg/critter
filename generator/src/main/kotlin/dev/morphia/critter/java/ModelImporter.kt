@@ -1,8 +1,12 @@
 package dev.morphia.critter.java
 
+import com.mongodb.lang.NonNull
+import com.squareup.javapoet.AnnotationSpec
 import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
+import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeSpec.Builder
@@ -39,9 +43,20 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         importer = TypeSpec.classBuilder(importerName)
             .addModifiers(PUBLIC, Modifier.FINAL)
             .addSuperinterface(EntityModelImporter::class.java)
+        importer.addAnnotation(
+            AnnotationSpec.builder(SuppressWarnings::class.java)
+                .addMember("value", CodeBlock.of("""{"unchecked", "rawtypes"}"""))
+                .build()
+        )
+
         val method = methodBuilder("getModels")
+            .addAnnotation(NonNull::class.java)
             .addModifiers(PUBLIC)
-            .addParameter(Mapper::class.java, "mapper")
+            .addParameter(
+                ParameterSpec.builder(Mapper::class.java, "mapper")
+                    .addAnnotation(NonNull::class.java)
+                    .build()
+            )
             .returns(ParameterizedTypeName.get(List::class.java, EntityModel::class.java))
 
         method.addCode("return List.of(")
@@ -59,9 +74,13 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
         importer.addMethod(
             methodBuilder("getCodecProvider")
+                .addAnnotation(NonNull::class.java)
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override::class.java)
-                .addParameter(Datastore::class.java, "datastore")
+                .addParameter(ParameterSpec.builder(Datastore::class.java, "datastore")
+                    .addAnnotation(NonNull::class.java)
+                    .build()
+                )
                 .addStatement("return new CritterCodecProvider(datastore)")
                 .returns(MorphiaCodecProvider::class.java)
                 .build()

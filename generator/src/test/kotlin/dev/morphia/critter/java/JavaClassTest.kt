@@ -8,14 +8,61 @@ import org.jboss.forge.roaster.model.JavaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.testng.Assert
 import org.testng.Assert.assertEquals
+import org.testng.Assert.fail
 import org.testng.annotations.Test
 import java.io.File
 
+private const val GENERATED_ROOT = "target/java/testing-generated"
+
 class JavaClassTest {
     @Test
+    fun build() {
+        val directory = File("${GENERATED_ROOT}/critter-sources")
+        val context = JavaContext(force= true, sourceOutputDirectory = directory,
+            resourceOutputDirectory = File("${GENERATED_ROOT}/critter-resources")
+        )
+        context.scan(File("../tests/maven/java/src/main/java/"))
+
+        CriteriaBuilder(context).build()
+        val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
+        assertEquals(personClass.properties.map { it.name }.toSortedSet(), sortedSetOf("age", "firstName", "id", "lastName", "ssn"))
+        val criteriaFiles = list(directory)
+
+        validatePersonCriteria(personClass, criteriaFiles.find { it.name == "PersonCriteria" } as JavaClassSource)
+        validateInvoiceCriteria(criteriaFiles.find { it.name == "InvoiceCriteria" } as JavaClassSource)
+    }
+
+    @Test
+    fun codecs() {
+        val context = JavaContext(force = true,
+            sourceOutputDirectory = File("${GENERATED_ROOT}/codecs-sources"),
+            resourceOutputDirectory = File("${GENERATED_ROOT}/codecs-resources")
+        )
+
+        context.scan(File("../tests/maven/java/src/main/java/"))
+        CodecsBuilder(context).build()
+    }
+
+    @Test
+    fun modelImporter() {
+        val context = JavaContext(
+            force = true,
+            sourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-source"),
+            resourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-resource")
+        )
+        context.scan(File("../tests/maven/java/src/main/java/"))
+
+        ModelImporter(context).build()
+        val spi = File(context.resourceOutput, "META-INF/services/${dev.morphia.mapping.EntityModelImporter::class.java.name}")
+        val source = File(context.outputDirectory, "dev/morphia/critter/codec/CritterModelImporter.java")
+        val parse = Roaster.parse(source)
+        assertEquals(spi.readText().trim(), parse.qualifiedName)
+    }
+
+    @Test
     fun parents() {
-        val directory = File("${outputRoot("parents")}/parentTest/")
-        val resourceOutput = File("${outputRoot("parents")}/parentTestRes/")
+        val directory = File("${GENERATED_ROOT}/parentTest/")
+        val resourceOutput = File("${GENERATED_ROOT}/parentTestRes/")
         val context = JavaContext(force = true, sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
 
         context.scan(File("../tests/maven/java/src/main/java"))
@@ -29,49 +76,6 @@ class JavaClassTest {
         validateInvoiceCriteria(criteriaFiles.first { it.name == "InvoiceCriteria" } as JavaClassSource)
     }
 
-    @Test
-    fun build() {
-        val directory = File("${outputRoot("build")}/generated-sources/critter")
-        val resourceOutput = File("/${outputRoot("build")}/generated-resources/critter")
-        val context = JavaContext(sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
-        context.scan(File("../tests/maven/java/src/main/java/"))
-
-        CriteriaBuilder(context).build()
-        val personClass = context.resolve("dev.morphia.critter.test", "Person") as JavaClass
-        assertEquals(personClass.properties.size, 5)
-        val criteriaFiles = list(directory)
-
-        validatePersonCriteria(personClass, criteriaFiles.find { it.name == "PersonCriteria" } as JavaClassSource)
-    }
-
-    private fun outputRoot(sub: String) = "target/unittests/${sub}"
-
-    @Test
-    fun codecs() {
-        val context = JavaContext(force = true,
-            sourceOutputDirectory = File("${outputRoot("codecs")}/generated-sources/critter"),
-            resourceOutputDirectory = File("${outputRoot("codecs")}/generated-resources/critter")
-        )
-
-        context.scan(File("../tests/maven/java/src/main/java/"))
-        CodecsBuilder(context).build()
-    }
-
-    @Test
-    fun modelImporter() {
-        val context = JavaContext(force = true,
-            sourceOutputDirectory = File("${outputRoot("modelImporter")}/generated-sources/critter"),
-            resourceOutputDirectory = File("${outputRoot("modelImporter")}/generated-resources/critter")
-        )
-        context.scan(File("../tests/maven/java/src/main/java/"))
-
-        ModelImporter(context).build()
-        val spi = File(context.resourceOutput, "META-INF/services/${dev.morphia.mapping.EntityModelImporter::class.java.name}")
-        val source = File(context.outputDirectory, "dev/morphia/critter/codec/CritterModelImporter.java")
-        val parse = Roaster.parse(source)
-        assertEquals(spi.readText().trim(), parse.qualifiedName)
-    }
-
     private fun list(directory: File): List<JavaType<*>> {
         return directory.walkTopDown().filter { it.name.endsWith(".java") }.map { Roaster.parse(it) }.toList()
     }
@@ -83,8 +87,9 @@ class JavaClassTest {
     private fun validatePersonCriteria(personClass: JavaClass, personCriteria: JavaClassSource) {
         val origFields = personClass.properties
         val criteriaFields = personCriteria.fields.filter { it.isStatic && it.name != "instance" }
-        assertEquals(criteriaFields.size, origFields.size, "Criteria fields: ${criteriaFields.map { it.name }}.\n " +
-            "person fields: ${origFields.map { it.name }}"
+        assertEquals(
+            criteriaFields.size, origFields.size, "Criteria fields: ${criteriaFields.map { it.name }}.\n " +
+                "person fields: ${origFields.map { it.name }}"
         )
         val names = criteriaFields.map { it.name }.sortedBy { it }
         assertEquals(names, listOf("age", "firstName", "id", "lastName", "ssn"), "Found instead:  $names")
