@@ -33,7 +33,6 @@ jobs:
     if: ${{ github.repository == 'MorphiaOrg/critter' && github.ref == 'refs/heads/master' }}
     needs:
       - critter
-      - Quality
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
