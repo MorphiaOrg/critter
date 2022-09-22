@@ -1,7 +1,8 @@
 = Critter
 
 Critter will look at your source code and generate type safe criteria builders for each model object.  It will also, by default,
-generate codecs specific to your entities removing the need for most reflections at run time.
+generate model and codec code specific to your entities removing the need for most reflections at run time.  Morphia 2.3+ will
+automatically import these.
 
 == What difference does it make?
 
