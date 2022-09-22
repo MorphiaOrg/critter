@@ -8,13 +8,14 @@ abstract class CritterContext<C : CritterClass, T>(
     var force: Boolean,
     var format: Boolean,
     val outputDirectory: File,
-    val resourceOutput: File
+    val resourceOutput: File,
 ) {
     protected val classes: MutableMap<String, C> = mutableMapOf()
 
     protected fun add(name: String, type: C) {
         classes[name] = type
     }
+
     abstract fun entities(): Map<String, C>
 
     open fun shouldGenerate(sourceTimestamp: Long?, outputTimestamp: Long?): Boolean {
@@ -38,5 +39,6 @@ abstract class CritterContext<C : CritterClass, T>(
         }
         serviceFile.writeText(impl + "\n")
     }
+
     abstract fun scan(directory: File)
 }

@@ -4,7 +4,7 @@ import dev.morphia.critter.SourceBuilder
 
 class CodecsBuilder(val context: JavaContext) : SourceBuilder {
     companion object {
-        val packageName = "dev.morphia.critter.codec"
+        val CODECS_PACKAGE = "codecs"
     }
 
     override fun build() {

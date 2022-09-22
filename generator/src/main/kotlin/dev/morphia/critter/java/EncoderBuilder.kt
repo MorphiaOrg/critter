@@ -21,7 +21,6 @@ import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
-import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import dev.morphia.mapping.codec.writer.DocumentWriter
@@ -29,11 +28,9 @@ import org.bson.BsonWriter
 import org.bson.Document
 import org.bson.codecs.EncoderContext
 import org.bson.codecs.IdGenerator
-import org.jetbrains.kotlin.diagnostics.rendering.ContextDependentRenderer
 import java.io.File
 import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PRIVATE
-import javax.lang.model.element.Modifier.PROTECTED
 import javax.lang.model.element.Modifier.PUBLIC
 
 class EncoderBuilder(val context: JavaContext) : SourceBuilder {

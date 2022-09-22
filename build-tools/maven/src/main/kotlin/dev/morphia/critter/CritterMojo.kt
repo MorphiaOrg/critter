@@ -24,6 +24,7 @@ class CritterMojo : AbstractMojo() {
         required = true
     )
     private lateinit var sourceOutput: File
+
     @Parameter(
         property = "critter.resource.directory",
         defaultValue = "\${project.build.directory}/generated-resources/critter",
@@ -35,16 +36,16 @@ class CritterMojo : AbstractMojo() {
     @Parameter(property = "critter.codecs", defaultValue = "true")
     private var generateCodecs: Boolean = true
 
-    @Parameter(property = "critter.criteria.package")
+    @Parameter(property = "critter.package")
     private var criteriaPackage: String? = null
 
     @Parameter(property = "critter.force", defaultValue = "false")
     private var force: Boolean = false
 
-    @Parameter(property = "critter.format", defaultValue = "false")
-    private var format: Boolean = false
+    @Parameter(property = "critter.format", defaultValue = "true")
+    private var format: Boolean = true
 
-    @Parameter(property = "critter.output.type", name = "outputType", required = true)
+    @Parameter(property = "critter.type", name = "outputType", required = true)
     lateinit var outputType: String
 
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)

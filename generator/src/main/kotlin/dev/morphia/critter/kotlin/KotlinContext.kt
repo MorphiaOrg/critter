@@ -19,9 +19,9 @@ import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Entity
 import dev.morphia.critter.CritterContext
 import dev.morphia.critter.CritterType
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
+import org.slf4j.LoggerFactory
 
 @Suppress("UNCHECKED_CAST")
 class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format: Boolean = true,
@@ -73,7 +73,7 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
     }
 
     override fun buildFile(typeSpec: TypeSpec, vararg staticImports: Pair<Class<*>, String>) {
-        val packageName = CodecsBuilder.packageName
+        val packageName = "dev.morphia.critter.codecs"
         val builder = FileSpec
             .builder(packageName, "${typeSpec.name}")
             .addType(typeSpec)

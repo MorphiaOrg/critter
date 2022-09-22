@@ -53,6 +53,7 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
                 decodeMethod()
                 getInstanceCreator()
                 lifecycle()
+
                 context.buildFile(decoder.build())
             }
         }

@@ -3,6 +3,8 @@ package dev.morphia.critter.java
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.critter.CritterProperty
+import dev.morphia.critter.kotlin.assertFilePath
+import dev.morphia.critter.kotlin.readPackage
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
@@ -34,29 +36,35 @@ class JavaClassTest {
 
     @Test
     fun codecs() {
-        val context = JavaContext(force = true,
+        val context = JavaContext(criteriaPkg = "abc.def", force = true,
             sourceOutputDirectory = File("${GENERATED_ROOT}/codecs-sources"),
             resourceOutputDirectory = File("${GENERATED_ROOT}/codecs-resources")
         )
 
         context.scan(File("../tests/maven/java/src/main/java/"))
         CodecsBuilder(context).build()
+        for (name in listOf("Encoder", "Decoder", "InstanceCreator")) {
+            assertFilePath(context.outputDirectory, File(context.outputDirectory, "dev/morphia/critter/codecs/Address${name}.java"))
+        }
     }
 
     @Test
     fun modelImporter() {
-        val context = JavaContext(
+        val context = JavaContext(criteriaPkg = "abc.def",
             force = true,
             sourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-source"),
-            resourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-resource")
+            resourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-resource"),
+
         )
         context.scan(File("../tests/maven/java/src/main/java/"))
 
         ModelImporter(context).build()
         val spi = File(context.resourceOutput, "META-INF/services/${dev.morphia.mapping.EntityModelImporter::class.java.name}")
-        val source = File(context.outputDirectory, "dev/morphia/critter/codec/CritterModelImporter.java")
-        val parse = Roaster.parse(source)
-        assertEquals(spi.readText().trim(), parse.qualifiedName)
+        val source = File(context.outputDirectory, "dev/morphia/critter/codecs/CritterModelImporter.java")
+        assertFilePath(context.outputDirectory, source)
+        
+        assertEquals(spi.readText().trim(), "dev.morphia.critter.codecs.CritterModelImporter")
+
     }
 
     @Test

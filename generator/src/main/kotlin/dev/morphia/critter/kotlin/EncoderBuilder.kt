@@ -9,7 +9,6 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.FINAL
 import com.squareup.kotlinpoet.KModifier.OVERRIDE
 import com.squareup.kotlinpoet.KModifier.PRIVATE
-import com.squareup.kotlinpoet.KModifier.PROTECTED
 import com.squareup.kotlinpoet.KModifier.PUBLIC
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -73,6 +72,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
 
         context.buildFile(encoder.build(), ExpressionHelper::class.java to "document")
     }
+
 
     private fun encodeMethod() {
         val builder = FunSpec.builder("encode")

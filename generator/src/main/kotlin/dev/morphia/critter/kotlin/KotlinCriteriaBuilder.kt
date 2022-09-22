@@ -114,7 +114,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
             source.properties.forEach { field ->
                 addProperty(
                     PropertySpec.builder(field.name, STRING)
-                        .initializer("""${field.mappedName()}""")
+                        .initializer(field.mappedName())
                         .build()
                 )
                 addFunction(
@@ -145,7 +145,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
         } else {
             concreteType.simpleName + "Criteria"
         }
-        var path = """extendPath(path, "${field.name}")"""
+        val path = """extendPath(path, "${field.name}")"""
         addFunction(
             FunSpec.builder(field.name)
                 .addCode(CodeBlock.of("return ${fieldCriteriaName}(${path})"))
@@ -213,11 +213,11 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
         addFieldCriteriaClass(field, criteriaClass)
     }
 
-    fun PropertySpec.mappedType(): KotlinClass? {
+    private fun PropertySpec.mappedType(): KotlinClass? {
         return context.entities()[type.concreteType().canonicalName]
     }
 
-    fun PropertySpec.isMappedType(): Boolean {
+    private fun PropertySpec.isMappedType(): Boolean {
         val mappedType = mappedType()
         return mappedType != null && mappedType.annotations.any {
             it.type.packageName in listOf(Entity::class.java.simpleName, Embedded::class.java.simpleName)

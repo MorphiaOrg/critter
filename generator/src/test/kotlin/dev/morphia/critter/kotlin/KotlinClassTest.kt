@@ -5,11 +5,9 @@ import com.antwerkz.kibble.classes
 import com.antwerkz.kibble.companion
 import com.antwerkz.kibble.getFunctions
 import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaClass
-import org.testng.Assert
 import org.testng.Assert.*
 import org.testng.annotations.Test
 import java.io.File
@@ -35,27 +33,36 @@ class KotlinClassTest {
 
     @Test
     fun codecs() {
-        val context = KotlinContext(force = true, sourceOutputDirectory = File("${GENERATED_ROOT}/codecs-sources"),
-            resourceOutputDirectory = File("${GENERATED_ROOT}/codecs-resources")
+        val context = KotlinContext(force = true,
+            sourceOutputDirectory = File("${GENERATED_ROOT}/codecs-sources"),
+            resourceOutputDirectory = File("${GENERATED_ROOT}/codecs-resources"),
+            criteriaPkg = "abc.def"
         )
 
         context.scan(File("../tests/maven/kotlin/src/main/kotlin/"))
         CodecsBuilder(context).build()
+        for (name in listOf("Encoder", "Decoder", "InstanceCreator")) {
+            assertFilePath(context.outputDirectory, File(context.outputDirectory, "dev/morphia/critter/codecs/Address${name}.kt"))
+        }
     }
 
     @Test
     fun modelImporter() {
         val context = KotlinContext(force = true,
             sourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-source"),
-            resourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-resource")
+            resourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-resource"),
+            criteriaPkg = "abc.def"
         )
         context.scan(File("../tests/maven/kotlin/src/main/kotlin/"))
 
         ModelImporter(context).build()
+
+        val source = File(context.outputDirectory, "dev/morphia/critter/codecs/CritterModelImporter.kt")
+        assertFilePath(context.outputDirectory, source)
+
         val spi = File(context.resourceOutput, "META-INF/services/${dev.morphia.mapping.EntityModelImporter::class.java.name}")
-        val source = File(context.outputDirectory, "dev/morphia/critter/codec/CritterModelImporter.kt")
-        val parse: JavaClass<*> = Roaster.parse(source) as JavaClass<*>
-        assertEquals(spi.readText().trim(), parse.qualifiedName)
+        assertEquals(spi.readText().trim(), "dev.morphia.critter.codecs.CritterModelImporter")
+
     }
 
     private fun validateInvoiceCriteria(file: FileSpec) {
@@ -77,3 +84,19 @@ class KotlinClassTest {
         }
     }
 }
+
+fun assertFilePath(root: File, target: File) {
+    fun find(root: File, name: String) = root
+        .walkTopDown()
+        .first { it.name == name }
+
+    assertEquals(find(root, target.name), target)
+    val packageName = readPackage(target)
+    assertEquals(packageName, target.parentFile.relativeTo(root).path.replace(File.separator, "."))
+}
+
+fun readPackage(target: File) =
+    target.readLines()
+        .first()
+        .substringAfter(" ")
+        .substringBefore(";")

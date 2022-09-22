@@ -26,7 +26,6 @@ import dev.morphia.UpdateOptions
 import dev.morphia.critter.test.criteria.InvoiceCriteria
 import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.addresses
 import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.orderDate
-import dev.morphia.critter.test.criteria.PersonCriteria
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.first
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.last
 import dev.morphia.critter.test.criteria.UserCriteria.Companion.age
@@ -37,15 +36,13 @@ import dev.morphia.query.Sort
 import dev.morphia.query.Sort.ascending
 import dev.morphia.query.filters.Filters
 import dev.morphia.query.filters.Filters.and
-import org.testng.Assert
+import java.time.LocalDateTime.now
+import java.time.LocalDateTime.of
+import java.util.stream.Collectors
 import org.testng.Assert.*
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
-import java.time.LocalDateTime
-import java.time.LocalDateTime.now
-import java.time.LocalDateTime.of
-import java.util.stream.Collectors
 
 @Test
 @Suppress("UNUSED_PARAMETER")

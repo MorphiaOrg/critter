@@ -56,7 +56,7 @@ class JavaContext(criteriaPkg: String? = null, force: Boolean = false, format: B
     }
 
     override fun buildFile(typeSpec: TypeSpec, vararg staticImports: Pair<Class<*>, String>) {
-        val packageName = CodecsBuilder.packageName
+        val packageName = "dev.morphia.critter.codecs"
         val builder = JavaFile
             .builder(packageName, typeSpec)
         staticImports.forEach {
