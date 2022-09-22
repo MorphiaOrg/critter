@@ -50,7 +50,7 @@
         <maven.version>3.5.2</maven.version>
         <morphia.version>2.0.0-RC1</morphia.version>
         <roaster.version>2.21.1.Final</roaster.version>
-        <slf4j.version>1.7.25</slf4j.version>
+        <slf4j.version>2.0.2</slf4j.version>
         <testng.version>7.6.1</testng.version>
     </properties>
 
