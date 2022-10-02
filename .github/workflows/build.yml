@@ -11,5 +11,7 @@ jobs:
     needs:
       - critter
     uses: evanchooly/workflows/.github/workflows/snapshots.yml@master
-    with:
-      gpg_passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+    secrets:
+      MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+      MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASSWORD }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
