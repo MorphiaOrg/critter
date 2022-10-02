@@ -10,4 +10,4 @@ jobs:
     if: ${{ github.repository == 'MorphiaOrg/critter' && github.ref == 'refs/heads/master' }}
     needs:
       - critter
-    uses: evanchooly/workflows/.github/workflows/snapshot.yml@master
+    uses: evanchooly/workflows/.github/workflows/snapshots.yml@master
