@@ -12,6 +12,8 @@ jobs:
       - critter
     uses: evanchooly/workflows/.github/workflows/snapshots.yml@master
     secrets:
-      MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-      MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASSWORD }}
+      SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+      SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
       MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
