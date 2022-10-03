@@ -7,4 +7,4 @@ on:
 
 jobs:
   Build:
-    uses: evanchooly/workflows/.github/workflows/build.yml@master
+    uses: evanchooly/workflows/.github/workflows/pull-request.yml@master
