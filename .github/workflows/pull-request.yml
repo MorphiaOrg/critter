@@ -8,7 +8,3 @@ on:
 jobs:
   Build:
     uses: evanchooly/workflows/.github/workflows/build.yml@master
-  dependabot:
-    needs:
-      - Build
-    uses: evanchooly/workflows/.github/workflows/pull-request.yml@master

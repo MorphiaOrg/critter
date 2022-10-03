@@ -14,3 +14,4 @@ jobs:
       MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_OAUTH: ${{ secrets.GH_OAUTH }}
