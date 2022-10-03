@@ -27,7 +27,7 @@
         <dokka.version>0.10.0</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <bottlerocket.version>0.13</bottlerocket.version>
-        <kibble.version>0.16</kibble.version>
+        <kibble.version>0.21.0</kibble.version>
         <kotlin.version>1.7.20</kotlin.version>
         <kotlinpoet.version>1.5.0</kotlinpoet.version>
         <ktlint.version>0.31.0</ktlint.version>
