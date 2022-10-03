@@ -35,13 +35,12 @@ class KotlinClass(var context: KotlinContext, val fileSpec: FileSpec, val source
 
     fun isEnum() = source.isEnum
 
-    fun lastModified(): Long? {
+    fun lastModified(): Long {
         val sourceMod = fileSpec.toJavaFileObject().lastModified
         val list = listOf(source.superclass) + source.superinterfaces.keys
                 .filter { it != ANY }
-        val max = list
-                .mapNotNull { context.resolveFile(it.toString())?.lastModified() }
-                .max()
+        val longs = list.mapNotNull { context.resolveFile(it.toString())?.lastModified() }
+        val max = if(longs.isEmpty()) null else longs.max()
         return Math.max(sourceMod, max ?: Long.MIN_VALUE)
     }
 

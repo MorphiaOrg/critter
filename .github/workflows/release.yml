@@ -1,17 +1,12 @@
-name: Build Project
+name: Release
 
 on:
   push:
-    tags-ignore:
+    tags:
       - r[0-9]*
-  workflow_dispatch:
 
 jobs:
-  critter:
-    uses: evanchooly/workflows/.github/workflows/build.yml@master
-  Snapshots:
-    needs:
-      - critter
+  release:
     uses: evanchooly/workflows/.github/workflows/release.yml@master
     secrets:
       SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
