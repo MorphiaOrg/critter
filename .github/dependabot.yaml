@@ -8,4 +8,4 @@ updates:
     directory: "/"
     schedule:
       interval: daily
-    target-branch: 4.0.x
+    target-branch: 4.1.x
