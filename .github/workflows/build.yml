@@ -4,13 +4,11 @@ on: [ push, workflow_dispatch ]
 
 jobs:
   critter:
-    uses: evanchooly/workflows/.github/workflows/build-project.yml@master
-
+    uses: evanchooly/workflows/.github/workflows/build.yml@master
   Snapshots:
-    if: ${{ github.repository == 'MorphiaOrg/critter' && github.ref == 'refs/heads/master' }}
     needs:
       - critter
-    uses: evanchooly/workflows/.github/workflows/snapshots.yml@master
+    uses: evanchooly/workflows/.github/workflows/release.yml@master
     secrets:
       SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
       SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
