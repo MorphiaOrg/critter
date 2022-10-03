@@ -1,9 +1,5 @@
 package dev.morphia.critter.kotlin
 
-import com.github.shyiko.ktlint.core.KtLint
-import com.github.shyiko.ktlint.core.LintError
-import com.github.shyiko.ktlint.core.RuleSet
-import com.github.shyiko.ktlint.core.RuleSetProvider
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -30,10 +26,8 @@ import dev.morphia.critter.UpdateSieve
 import dev.morphia.critter.java.toTitleCase
 import dev.morphia.query.experimental.filters.Filters
 import dev.morphia.query.experimental.updates.UpdateOperators
-import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.Comparator.comparingInt
-import java.util.ServiceLoader
+import org.slf4j.LoggerFactory
 
 class KotlinBuilder(val context: KotlinContext) {
     companion object {
@@ -46,11 +40,6 @@ class KotlinBuilder(val context: KotlinContext) {
         context.classes.values.forEach {
             build(directory, it)
         }
-    }
-
-    private val ruleSets: List<RuleSet> by lazy {
-        ServiceLoader.load(RuleSetProvider::class.java).map<RuleSetProvider, RuleSet> { it.get() }
-            .sortedWith(comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }.thenComparing(RuleSet::id))
     }
 
     private fun build(directory: File, source: KotlinClass) {
@@ -159,18 +148,6 @@ class KotlinBuilder(val context: KotlinContext) {
                 .addCode(CodeBlock.of("return ${fieldCriteriaName}(${path})"))
                 .build()
         )
-    }
-
-    private fun formatOutput(directory: File, fileSpec: FileSpec) {
-        val path = fileSpec.toJavaFileObject().toUri().path
-        val file = File(directory, path)
-        val cb: (LintError, Boolean) -> Unit = { (line, col, ruleId, detail), corrected ->
-            if (!corrected) {
-                LOG.debug("Could not correct formatting error: ($line:$col) [$ruleId] $path: $detail")
-            }
-        }
-        LOG.debug("Formatting generated file: $file")
-        file.writeText(KtLint.format(file.readText(), ruleSets, mapOf(), cb))
     }
 
     private fun addField(criteriaClass: Builder, field: PropertySpec) {

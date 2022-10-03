@@ -173,7 +173,7 @@ private fun JavaClassSource.attachUpdates(field: CritterField) {
 }
 
 fun String.toTitleCase(): String {
-    return substring(0, 1).toUpperCase() + substring(1)
+    return substring(0, 1).uppercase() + substring(1)
 }
 
 fun String.toMethodCase(): String {

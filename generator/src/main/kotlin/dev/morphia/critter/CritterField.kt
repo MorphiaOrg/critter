@@ -84,5 +84,5 @@ class CritterField(val name: String, val type: String) {
 }
 
 fun String.nameCase(): String {
-    return substring(0, 1).toUpperCase() + substring(1)
+    return substring(0, 1).uppercase() + substring(1)
 }
