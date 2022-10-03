@@ -226,7 +226,7 @@
                 <plugin>
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.12</version>
+                    <version>1.6.13</version>
                     <configuration>
                         <serverId>central</serverId>
                         <nexusUrl>${nexus.url}</nexusUrl>
@@ -396,7 +396,7 @@
                         <plugin>
                             <groupId>org.sonatype.plugins</groupId>
                             <artifactId>nexus-staging-maven-plugin</artifactId>
-                            <version>1.6.12</version>
+                            <version>1.6.13</version>
                             <extensions>true</extensions>
                             <configuration>
                                 <serverId>central</serverId>
@@ -441,7 +441,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.0.0</version>
+                        <version>3.1.0</version>
                         <inherited>false</inherited>
                         <executions>
                             <execution>
