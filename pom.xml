@@ -23,7 +23,7 @@
     </scm>
 
     <properties>
-        <bottlerocket.version>0.31.0</bottlerocket.version>
+        <bottlerocket.version>0.37.0</bottlerocket.version>
         <dokka.version>1.6.10</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.18</kibble.version>
@@ -226,7 +226,7 @@
                 <plugin>
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.12</version>
+                    <version>1.6.13</version>
                     <configuration>
                         <serverId>central</serverId>
                         <nexusUrl>${nexus.url}</nexusUrl>
@@ -396,7 +396,7 @@
                         <plugin>
                             <groupId>org.sonatype.plugins</groupId>
                             <artifactId>nexus-staging-maven-plugin</artifactId>
-                            <version>1.6.12</version>
+                            <version>1.6.13</version>
                             <extensions>true</extensions>
                             <configuration>
                                 <serverId>central</serverId>
