@@ -1,77 +1,21 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+name: Build Project
 
-name: Critter Build
-
-on: [ push, pull_request, workflow_dispatch ]
+on:
+  push:
+    tags-ignore:
+      - r[0-9]*
+  workflow_dispatch:
 
 jobs:
-  Critter:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java: [ 11, 17 ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v2
-        with:
-          java-version: ${{ matrix.java }}
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Build with Maven
-        run: mvn clean install
-
+  critter:
+    uses: evanchooly/workflows/.github/workflows/build.yml@master
   Snapshots:
-    name: Publish Snapshot Artifacts
-    if: "github.repository == 'MorphiaOrg/critter' && github.event_name == 'push'"
     needs:
-      - Critter
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Java
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'temurin'
-          java-version: 11
-          cache: 'maven'
-          server-id: central
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_CENTRAL_TOKEN
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
-
-      - name: Configure the job
-        run: |
-          mkdir -p ~/.m2
-          curl -o github.properties https://ghactions:${{ secrets.GH_PASSWD }}@evanchooly.com/private/files/github.properties
-      - name: Publish
-        run: |
-          export GPG_TTY=$(tty)
-          mvn --no-transfer-progress -B --file pom.xml -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }} \
-            -Drepository.url=https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git \
-            -Dmaven.site.skip=true -Drelease=true -DskipTests deploy
-        env:
-          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-  Docs:
-    name: Update Documentation
-    needs:
-      - Snapshots
-    runs-on: ubuntu-latest
-    steps:
-      - name: Invoke antora build
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: Docs
-          repo: MorphiaOrg/morphia-docs
-          token: ${{ secrets.PUSH_TOKEN }}
-          ref: refs/heads/master
+      - critter
+    uses: evanchooly/workflows/.github/workflows/release.yml@master
+    secrets:
+      SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+      SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

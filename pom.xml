@@ -41,6 +41,13 @@
         <nexus.url>https://oss.sonatype.org</nexus.url>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>central snapshots</id>
+            <url>${nexus.url}/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -94,22 +101,39 @@
                 <groupId>com.antwerkz.bottlerocket</groupId>
                 <artifactId>bottlerocket</artifactId>
                 <version>${bottlerocket.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>com.github.shyiko</groupId>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.4.1</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.pinterest.ktlint</groupId>
+                <artifactId>ktlint-core</artifactId>
+                <version>${ktlint.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pinterest.ktlint</groupId>
+                <artifactId>ktlint-ruleset-standard</artifactId>
+                <version>${ktlint.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pinterest</groupId>
                 <artifactId>ktlint</artifactId>
                 <version>${ktlint.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-nop</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.webjars</groupId>
+                        <artifactId>jquery</artifactId>
+                    </exclusion>
+                </exclusions>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -117,16 +141,6 @@
                 <artifactId>kotlin-test</artifactId>
                 <version>${kotlin.version}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>2.17.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -237,28 +251,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-
-        <plugins>
-            <plugin>
-                <groupId>com.antwerkz.github</groupId>
-                <artifactId>issues-maven-plugin</artifactId>
-                <version>1.1.7</version>
-                <executions>
-                    <execution>
-                        <id>issues</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>deploy</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <repository>MorphiaOrg/critter</repository>
-                    <docsUrl>https://morphia.dev/critter/4.1</docsUrl>
-                    <javadocUrl>https://morphia.dev/critter/4.1/javadoc</javadocUrl>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 
     <distributionManagement>
@@ -489,8 +481,8 @@
     </profiles>
 
     <modules>
-        <module>build-tools</module>
         <module>generator</module>
+        <module>build-tools</module>
         <module>tests</module>
     </modules>
 
