@@ -32,7 +32,7 @@
         <maven.version>3.8.6</maven.version>
         <morphia.version>2.2.9</morphia.version>
         <roaster.version>2.26.0.Final</roaster.version>
-        <slf4j.version>1.7.36</slf4j.version>
+        <slf4j.version>2.0.3</slf4j.version>
         <testng.version>7.6.1</testng.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
