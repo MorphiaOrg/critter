@@ -23,7 +23,7 @@
     </scm>
 
     <properties>
-        <bottlerocket.version>0.37.0</bottlerocket.version>
+        <bottlerocket.version>0.41.0</bottlerocket.version>
         <dokka.version>1.7.10</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.18</kibble.version>
@@ -273,7 +273,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>3.0.0</version>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
                                 <id>enforce-environment-variable-is-set</id>
@@ -428,7 +428,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-clean-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.2.0</version>
                         <inherited>false</inherited>
                         <configuration>
                             <filesets>
