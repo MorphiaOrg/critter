@@ -2,16 +2,15 @@ name: Build Project
 
 on:
   push:
-    tags-ignore:
-      - r[0-9]*
   workflow_dispatch:
 
 jobs:
-  critter:
+  Build:
     uses: evanchooly/workflows/.github/workflows/build.yml@master
   Snapshots:
+    if: github.ref_type == 'branch'
     needs:
-      - critter
+      - Build
     uses: evanchooly/workflows/.github/workflows/release.yml@master
     secrets:
       SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
