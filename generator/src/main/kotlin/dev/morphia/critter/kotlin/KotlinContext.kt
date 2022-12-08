@@ -2,12 +2,6 @@ package dev.morphia.critter.kotlin
 
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
-import com.pinterest.ktlint.core.KtLint.ExperimentalParams
-import com.pinterest.ktlint.core.KtLint.format
-import com.pinterest.ktlint.core.LintError
-import com.pinterest.ktlint.core.ParseException
-import com.pinterest.ktlint.core.RuleSetProviderV2
-import com.pinterest.ktlint.ruleset.standard.StandardRuleSetProvider
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -31,17 +25,9 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
 
     companion object {
         private val LOG = LoggerFactory.getLogger(KotlinContext::class.java)
-/*
-        val ruleSets: List<RuleSet> by lazy {
-            ServiceLoader.load(RuleSetProvider::class.java).map<RuleSetProvider, RuleSet> { it.get() }
-                .sortedWith(Comparator.comparingInt<RuleSet> { if (it.id == "standard") 0 else 1 }.thenComparing(RuleSet::id))
-        }
-*/
     }
 
-    private val ruleProvider: RuleSetProviderV2 by lazy {
-        StandardRuleSetProvider()
-    }
+    val formatter = SpotlessFormatter(Kotlin())
 
     override fun scan(directory: File) {
         if (!directory.exists()) {
@@ -73,6 +59,18 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
     }
 
     override fun buildFile(typeSpec: TypeSpec, vararg staticImports: Pair<Class<*>, String>) {
+        buildFile(buildFileSpec(typeSpec, staticImports))
+    }
+
+    fun buildFile(file: FileSpec) {
+        file.writeTo(outputDirectory)
+
+        if (format) {
+            format(file)
+        }
+    }
+
+    private fun buildFileSpec(typeSpec: TypeSpec, staticImports: Array<out Pair<Class<*>, String>>): FileSpec {
         val packageName = "dev.morphia.critter.codecs"
         val builder = FileSpec
             .builder(packageName, "${typeSpec.name}")
@@ -81,37 +79,14 @@ class KotlinContext(criteriaPkg: String? = null, force: Boolean = false, format:
         staticImports.forEach {
             builder.addImport(it.first, it.second)
         }
-
-        val file = builder
-            .build()
-        file.writeTo(outputDirectory)
-
-        if (format) {
-            val pkgDir = File(outputDirectory, packageName.replace('.', '/'))
-            formatSource(File(pkgDir, typeSpec.name + ".kt"))
-        }
+        return builder.build()
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun formatSource(sourceFile: File) {
-        val cb: (LintError, Boolean) -> Unit = { (line, col, ruleId, detail), corrected ->
-            if (!corrected) {
-                LOG.debug("Could not correct formatting error: ($line:$col) [$ruleId] $sourceFile: $detail")
-            }
-        }
-        LOG.debug("Formatting generated file: $sourceFile")
-        try {
-            val formatted = format(
-                ExperimentalParams(
-                    text = sourceFile.readText(),
-                    cb = cb,
-                    ruleProviders = ruleProvider.getRuleProviders()
-                )
-            )
-            sourceFile.writeText(formatted)
-        } catch (e: ParseException) {
-            throw RuntimeException("Formatting failed for $sourceFile[${e.line}:${e.col}]")
-        }
+    fun format(typeSpec: FileSpec) {
+        val pkgDir = File(outputDirectory, typeSpec.packageName.replace('.', '/'))
+        val sourceFile = File(pkgDir, typeSpec.name + ".kt")
+        LOG.debug("Formatting generated file: ${sourceFile}")
+        formatter.format(sourceFile)
     }
 }
 

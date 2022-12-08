@@ -85,12 +85,11 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                 }
 
                 fileBuilder.addType(criteriaClass.build())
-                val fileSpec = fileBuilder
-                    .addImport(Filters::class.java.packageName, "Filters", "Filter")
-                    .addImport(UpdateOperators::class.java.packageName, "UpdateOperators", "UpdateOperator")
-                    .build()
-                fileSpec.writeTo(directory)
-//                formatOutput(directory, fileSpec)
+                context.buildFile(fileBuilder
+                        .addImport(Filters::class.java.packageName, "Filters", "Filter")
+                        .addImport(UpdateOperators::class.java.packageName, "UpdateOperators", "UpdateOperator")
+                        .build()
+                )
             }
         } catch (e: Exception) {
             LOG.error("Failed to process ${source.fileSpec.packageName}.${source.name}")
