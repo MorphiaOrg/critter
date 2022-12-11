@@ -36,7 +36,7 @@
         <roaster.version>2.28.0.Final</roaster.version>
         <slf4j.version>2.0.5</slf4j.version>
         <spotless.version>2.31.0</spotless.version>
-        <testng.version>7.6.1</testng.version>
+        <testng.version>7.7.0</testng.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
