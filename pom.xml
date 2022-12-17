@@ -17,9 +17,9 @@
     <url>https://github.com/MorphiaOrg/critter</url>
 
     <scm>
-        <connection>scm:git:git@github.com:evanchooly/gradle-plugin-maven-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:evanchooly/gradle-plugin-maven-plugin.git</developerConnection>
-        <url>git@github.com:evanchooly/gradle-plugin-maven-plugin.git</url>
+        <connection>scm:git:git@github.com:MorphiaOrg/critter.git</connection>
+        <developerConnection>scm:git:git@github.com:MorphiaOrg/critter.git</developerConnection>
+        <url>git@github.com:MorphiaOrg/critter.git</url>
     </scm>
 
     <properties>
