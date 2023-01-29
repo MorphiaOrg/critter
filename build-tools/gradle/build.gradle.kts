@@ -13,7 +13,7 @@ repositories {
     }
 }
 
-project.version = MavenXpp3Reader().read(file("pom.xml").inputStream())
+project.version = org.gradle.internal.impldep.org.apache.maven.model.io.xpp3.MavenXpp3Reader().read(file("pom.xml").inputStream())
     .parent.version
 
 plugins {
