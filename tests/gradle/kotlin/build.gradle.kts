@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.8.0"
+    kotlin("jvm") version "1.8.10"
     id("dev.morphia.critter") version "4.3.0-SNAPSHOT"
 }
 

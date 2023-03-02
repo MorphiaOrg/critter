@@ -23,15 +23,15 @@
     </scm>
 
     <properties>
-        <bottlerocket.version>0.41.0</bottlerocket.version>
+        <bottlerocket.version>0.44.0</bottlerocket.version>
         <dokka.version>1.7.20</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
         <kibble.version>0.21.0</kibble.version>
-        <kotlin.version>1.8.0</kotlin.version>
+        <kotlin.version>1.8.10</kotlin.version>
         <kotlinpoet.version>1.12.0</kotlinpoet.version>
         <ktlint.version>0.47.1</ktlint.version>
-        <maven.version>3.8.7</maven.version>
+        <maven.version>3.9.0</maven.version>
         <morphia.version>2.3.0</morphia.version>
         <roaster.version>2.28.0.Final</roaster.version>
         <slf4j.version>2.0.6</slf4j.version>
@@ -188,7 +188,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.10.1</version>
+                    <version>3.11.0</version>
                     <configuration>
                         <source>11</source>
                         <target>11</target>
@@ -307,7 +307,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.2.1</version>
                         <executions>
                             <execution>
                                 <id>enforce-environment-variable-is-set</id>
@@ -352,7 +352,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.4.1</version>
+                        <version>3.5.0</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
