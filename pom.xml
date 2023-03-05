@@ -23,8 +23,9 @@
     </scm>
 
     <properties>
-        <bottlerocket.version>0.44.0</bottlerocket.version>
+        <testcontainers.version>1.17.6</testcontainers.version>
         <dokka.version>1.7.20</dokka.version>
+        <gradle.version>7.5.1</gradle.version>
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
         <kibble.version>0.21.0</kibble.version>
@@ -116,9 +117,9 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.antwerkz.bottlerocket</groupId>
-                <artifactId>bottlerocket</artifactId>
-                <version>${bottlerocket.version}</version>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>mongodb</artifactId>
+                <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

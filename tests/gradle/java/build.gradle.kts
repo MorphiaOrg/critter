@@ -14,7 +14,7 @@ repositories {
 dependencies {
     implementation("dev.morphia.morphia:morphia-core:${findProperty("morphia.version")}")
     testImplementation("org.testng:testng:${findProperty("testng.version")}")
-    testImplementation("com.antwerkz.bottlerocket:bottlerocket:${findProperty("bottlerocket.version")}")
+    testImplementation("org.testcontainers:mongodb:${findProperty("testcontainers.version")}")
 }
 
 tasks {
@@ -30,5 +30,4 @@ tasks {
 
 tasks.withType(JavaCompile::class.java) {
     options.compilerArgs = listOf("-parameters")
-    options.forkOptions.executable = "javac"
 }

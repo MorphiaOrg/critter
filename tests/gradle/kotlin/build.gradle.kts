@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "1.8.10"
     id("dev.morphia.critter") version "4.3.0-SNAPSHOT"
@@ -21,8 +23,8 @@ sourceSets.test {
 
 dependencies {
     implementation("dev.morphia.morphia:morphia-core:${findProperty("morphia.version")}")
-    testImplementation("org.testng:testng:7.4.0")
-    testImplementation("com.antwerkz.bottlerocket:bottlerocket:0.14")
+    testImplementation("org.testng:testng:${findProperty("testng.version")}")
+    testImplementation("org.testcontainers:mongodb:${findProperty("testcontainers.version")}")
 }
 
 tasks {
@@ -37,5 +39,13 @@ tasks {
 
 tasks.withType(JavaCompile::class.java) {
     options.compilerArgs = listOf("-parameters")
-    options.forkOptions.executable = "javac"
+}
+
+configure<JavaPluginConvention> {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "11"
 }

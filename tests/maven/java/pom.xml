@@ -82,8 +82,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.antwerkz.bottlerocket</groupId>
-            <artifactId>bottlerocket</artifactId>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
         </dependency>
 
         <!-- tests -->

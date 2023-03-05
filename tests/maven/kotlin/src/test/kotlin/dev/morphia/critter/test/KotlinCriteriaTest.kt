@@ -15,10 +15,12 @@
  */
 package dev.morphia.critter.test
 
-import com.antwerkz.bottlerocket.BottleRocket.DEFAULT_VERSION
-import com.antwerkz.bottlerocket.BottleRocketTest
-import com.github.zafarkhaja.semver.Version
+import com.mongodb.ConnectionString
+import com.mongodb.MongoClientSettings
 import com.mongodb.WriteConcern.MAJORITY
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoClients
+import com.mongodb.client.MongoDatabase
 import dev.morphia.Datastore
 import dev.morphia.DeleteOptions
 import dev.morphia.Morphia
@@ -39,14 +41,51 @@ import dev.morphia.query.filters.Filters.and
 import java.time.LocalDateTime.now
 import java.time.LocalDateTime.of
 import java.util.stream.Collectors
-import org.testng.Assert.*
+import org.bson.UuidRepresentation.STANDARD
+import org.testcontainers.containers.MongoDBContainer
+import org.testng.Assert.assertEquals
+import org.testng.Assert.assertFalse
+import org.testng.Assert.assertNotNull
+import org.testng.Assert.assertTrue
+import org.testng.annotations.AfterTest
 import org.testng.annotations.BeforeMethod
+import org.testng.annotations.BeforeTest
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 @Test
 @Suppress("UNUSED_PARAMETER")
-class KotlinCriteriaTest : BottleRocketTest() {
+class KotlinCriteriaTest {
+    companion object {
+        var mongoDBContainer: MongoDBContainer? = null
+        lateinit var  database: MongoDatabase
+        lateinit var mongoClient: MongoClient
+        lateinit var datastore: Datastore
+
+        @BeforeTest
+        fun setup() {
+            mongoDBContainer = MongoDBContainer("mongo:6.0.4")
+            mongoDBContainer?.let {
+                it.start()
+
+                mongoClient = MongoClients.create(
+                    MongoClientSettings.builder()
+                        .uuidRepresentation(STANDARD)
+                        .applyConnectionString(ConnectionString(it.replicaSetUrl))
+                        .build()
+                )
+
+                datastore = Morphia.createDatastore(mongoClient, "test")
+                database = datastore.database
+            }
+        }
+
+        @AfterTest
+        fun shutdown() {
+            mongoDBContainer?.close()
+        }
+    }
+
     @Test(dataProvider = "datastores")
     fun andQueries(state: String, datastore: Datastore) {
         datastore.save(Person("Mike", "Bloomberg"))
@@ -66,10 +105,6 @@ class KotlinCriteriaTest : BottleRocketTest() {
     @BeforeMethod
     fun clean() {
         database.drop()
-    }
-
-    override fun databaseName(): String {
-        return "critter"
     }
 
     @DataProvider(name = "datastores")
@@ -265,9 +300,5 @@ class KotlinCriteriaTest : BottleRocketTest() {
         assertNotNull(datastore.find(Person::class.java)?.first()?.first)
         val delete = datastore.find(Person::class.java).delete()
         assertEquals(delete.deletedCount, 1)
-    }
-
-    override fun version(): Version {
-        return DEFAULT_VERSION
     }
 }

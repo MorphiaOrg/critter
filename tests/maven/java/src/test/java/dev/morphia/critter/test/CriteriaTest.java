@@ -1,8 +1,10 @@
 package dev.morphia.critter.test;
 
-import com.antwerkz.bottlerocket.BottleRocket;
-import com.antwerkz.bottlerocket.BottleRocketTest;
-import com.github.zafarkhaja.semver.Version;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import dev.morphia.Datastore;
@@ -12,14 +14,14 @@ import dev.morphia.UpdateOptions;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
 import dev.morphia.mapping.MapperOptions;
-import dev.morphia.mapping.codec.pojo.EntityModel;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -32,13 +34,38 @@ import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.or;
+import static org.bson.UuidRepresentation.STANDARD;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 @Test
-public class CriteriaTest extends BottleRocketTest {
+public class CriteriaTest {
+    private MongoDBContainer mongoDBContainer;
+    private MongoClient mongoClient;
+    private Datastore datastore;
+
+    @BeforeTest
+    void setup() {
+        mongoDBContainer = new MongoDBContainer("mongo:6.0.4");
+        mongoDBContainer.start();
+
+        mongoClient = MongoClients.create(
+            MongoClientSettings.builder()
+                               .uuidRepresentation(STANDARD)
+                               .applyConnectionString(new ConnectionString(mongoDBContainer.getReplicaSetUrl()))
+                               .build()
+                                         );
+    }
+
+    @AfterTest
+    void shutdown() {
+        if (mongoDBContainer != null ) {
+            mongoDBContainer.close();
+        }
+    }
+
 
     @Test(dataProvider = "datastores")
     public void andQueries(String state, Datastore datastore) {
@@ -60,19 +87,7 @@ public class CriteriaTest extends BottleRocketTest {
 
     @BeforeMethod
     public void clean() {
-        getDatabase().drop();
-    }
-
-    @NotNull
-    @Override
-    public String databaseName() {
-        return "critter";
-    }
-
-    @Nullable
-    @Override
-    public Version version() {
-        return BottleRocket.DEFAULT_VERSION;
+        datastore.getDatabase().drop();
     }
 
     @Test(dataProvider = "datastores")
@@ -268,7 +283,7 @@ public class CriteriaTest extends BottleRocketTest {
     }
 
     private Datastore getDatastore(boolean useGenerated) {
-        return Morphia.createDatastore(getMongoClient(), getDatabase().getName(),
+        return datastore = Morphia.createDatastore(mongoClient, "test",
             MapperOptions.builder()
                          .autoImportModels(useGenerated)
                          .build());

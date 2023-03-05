@@ -84,7 +84,7 @@
                         </execution>
                     </executions>
                     <configuration>
-                        <filesToInclude>${project.basedir}/build.gradle.kts, ${project.basedir}/gradle.properties</filesToInclude>
+                        <filesToInclude>${project.basedir}/build.gradle.kts, ${project.basedir}/gradle.properties, ${project.basedir}/gradle/wrapper/gradle-wrapper.properties</filesToInclude>
                         <replacements>
                             <replacement>
                                 <token>(id\("dev.morphia.critter"\).*)</token>
@@ -103,8 +103,12 @@
                                 <value>testng.version=${testng.version}</value>
                             </replacement>
                             <replacement>
-                                <token>(bottlerocket.version=.*)</token>
-                                <value>bottlerocket.version=${bottlerocket.version}</value>
+                                <token>(testcontainers.version=.*)</token>
+                                <value>testcontainers.version=${testcontainers.version}</value>
+                            </replacement>
+                            <replacement>
+                                <token>distributionUrl=.*</token>
+                                <value>distributionUrl=https\\://services.gradle.org/distributions/gradle-${gradle.version}-bin.zip</value>
                             </replacement>
                         </replacements>
                     </configuration>
