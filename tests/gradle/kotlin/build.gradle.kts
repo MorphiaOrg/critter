@@ -34,6 +34,8 @@ tasks {
 
     critter {
         force = true
+        format = true
+        outputType = "kotlin"
     }
 }
 
@@ -48,4 +50,5 @@ configure<JavaPluginConvention> {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
+    kotlinOptions.javaParameters = true
 }
