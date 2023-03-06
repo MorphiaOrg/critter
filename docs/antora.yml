@@ -1,7 +1,6 @@
 name: critter
 title: Critter
-version: 4.2
-prerelease: -SNAPSHOT
+version: 4.3
 
 nav:
 - modules/ROOT/nav.adoc
@@ -9,4 +8,4 @@ nav:
 asciidoc:
   attributes:
     artifactId: critter
-    version: 4.2.0-SNAPSHOT
+    version: 4.3.0
