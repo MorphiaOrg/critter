@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.8.10"
-    id("dev.morphia.critter") version "4.3.0-SNAPSHOT"
+    id("dev.morphia.critter") version "4.3.2-SNAPSHOT"
 }
 
 repositories {

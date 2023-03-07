@@ -5,8 +5,9 @@
 
     <parent>
         <groupId>dev.morphia.critter</groupId>
-        <artifactId>build-tools</artifactId>
+        <artifactId>critter</artifactId>
         <version>4.3.2-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>dev.morphia.critter.gradle.plugin</artifactId>
