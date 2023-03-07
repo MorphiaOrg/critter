@@ -23,9 +23,8 @@
     </scm>
 
     <properties>
-        <testcontainers.version>1.17.6</testcontainers.version>
         <dokka.version>1.7.20</dokka.version>
-        <gradle.version>7.5.1</gradle.version>
+        <gradle.version>7.6.1</gradle.version>
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
         <kibble.version>0.21.0</kibble.version>
@@ -37,11 +36,13 @@
         <roaster.version>2.28.0.Final</roaster.version>
         <slf4j.version>2.0.6</slf4j.version>
         <spotless.version>2.31.0</spotless.version>
+        <testcontainers.version>1.17.6</testcontainers.version>
         <testng.version>7.7.0</testng.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
         <nexus.url>https://oss.sonatype.org</nexus.url>
+        <local.repository.path>target/local-deploys/</local.repository.path>
     </properties>
 
     <repositories>
@@ -198,6 +199,16 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.13</version>
+                    <configuration>
+                        <serverId>central</serverId>
+                        <nexusUrl>${nexus.url}</nexusUrl>
+<!--                        <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>com.mycila.maven-license-plugin</groupId>
                     <artifactId>maven-license-plugin</artifactId>
                     <version>1.10.b1</version>
@@ -256,16 +267,6 @@
                     </executions>
                     <configuration>
                         <jvmTarget>11</jvmTarget>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.13</version>
-                    <configuration>
-                        <serverId>central</serverId>
-                        <nexusUrl>${nexus.url}</nexusUrl>
-                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
                     </configuration>
                 </plugin>
             </plugins>
@@ -484,8 +485,8 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <target>
-                                        <mkdir dir="${local.repository.path}/snapshot" />
-                                        <mkdir dir="${local.repository.path}/release" />
+                                        <mkdir dir="${local.repository.path}/snapshot"/>
+                                        <mkdir dir="${local.repository.path}/release"/>
                                     </target>
                                 </configuration>
                                 <goals>
