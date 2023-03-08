@@ -2,7 +2,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 
 buildscript {
     dependencies {
-        classpath("org.apache.maven:maven-model:3.9.0")
+        classpath("org.apache.maven:maven-model:3.8.1")
     }
 }
 repositories {
