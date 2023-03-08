@@ -203,9 +203,10 @@
                     <artifactId>nexus-staging-maven-plugin</artifactId>
                     <version>1.6.13</version>
                     <configuration>
+                        <showReleased>true</showReleased>
                         <serverId>central</serverId>
                         <nexusUrl>${nexus.url}</nexusUrl>
-<!--                        <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
+                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
                     </configuration>
                 </plugin>
                 <plugin>
