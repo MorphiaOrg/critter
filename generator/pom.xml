@@ -12,6 +12,10 @@
     <artifactId>critter-generator</artifactId>
     <version>4.4.0-SNAPSHOT</version>
 
+    <properties>
+        <symbol-processing-api.version>1.7.22-1.0.8</symbol-processing-api.version>
+    </properties>
+
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
@@ -99,12 +103,31 @@
             <artifactId>roaster-jdt</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.antwerkz.kibble</groupId>
-            <artifactId>kibble</artifactId>
+            <groupId>com.google.devtools.ksp</groupId>
+            <artifactId>symbol-processing-api</artifactId>
+            <version>${symbol-processing-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.devtools.ksp</groupId>
+            <artifactId>symbol-processing-cmdline</artifactId>
+            <version>${symbol-processing-api.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.squareup</groupId>
             <artifactId>kotlinpoet</artifactId>
+            <version>${kotlinpoet.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib-jdk8</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>kotlinpoet-ksp</artifactId>
             <version>${kotlinpoet.version}</version>
             <exclusions>
                 <exclusion>
@@ -152,7 +175,21 @@
         <dependency>
             <groupId>com.facebook</groupId>
             <artifactId>ktfmt</artifactId>
-            <version>0.42</version>
+            <version>0.43</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib-jdk7</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-compiler-embeddable</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-test</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

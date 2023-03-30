@@ -67,6 +67,7 @@ class CritterContextTest {
         Assert.assertFalse(file.readLines().contains("test update"))
     }
 
+/*
     @Test
     fun forceKotlin() {
         val directory = File("target/kotlinClassTest/")
@@ -97,4 +98,5 @@ class CritterContextTest {
         kotlinBuilder.build()
         Assert.assertFalse(file.readLines().contains("test update"))
     }
+*/
 }

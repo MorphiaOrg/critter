@@ -48,7 +48,7 @@ class Invoice() {
     var isPostPersist: Boolean = false
         private set
 
-    constructor(orderDate: LocalDateTime, person: Person, addresses: MutableList<Address>, items: MutableList<Item>) : this() {
+    constructor(orderDate: LocalDateTime?, person: Person?, addresses: MutableList<Address>, items: MutableList<Item>) : this() {
         this.orderDate = orderDate
         this.person = person
         this.addresses.addAll(addresses)

@@ -3,13 +3,15 @@ package dev.morphia.critter
 import java.io.File
 import java.io.FileNotFoundException
 
-abstract class CritterContext<C : CritterClass, T>(
+abstract class CritterContext<C, T>(
     val criteriaPkg: String?,
     var force: Boolean,
     var format: Boolean,
     val outputDirectory: File,
     val resourceOutput: File,
 ) {
+    constructor(config: CritterConfig) : this(config.criteriaPkg, config.force, config.format, config.outputDirectory, config.resourceOutput)
+
     protected val classes: MutableMap<String, C> = mutableMapOf()
 
     protected fun add(name: String, type: C) {
@@ -27,7 +29,8 @@ abstract class CritterContext<C : CritterClass, T>(
     }
 
     open fun resolveFile(name: String): File? {
-        return classes[name]?.file
+        TODO()
+//        return classes[name]?.file
     }
 
     abstract fun buildFile(typeSpec: T, vararg staticImports: Pair<Class<*>, String>)
@@ -40,5 +43,5 @@ abstract class CritterContext<C : CritterClass, T>(
         serviceFile.writeText(impl + "\n")
     }
 
-    abstract fun scan(directory: File)
+    open fun scan(directory: File) {}
 }

@@ -1,10 +1,10 @@
 package dev.morphia.critter
 
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.VARARG
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
@@ -15,11 +15,11 @@ import dev.morphia.critter.kotlin.isText
 import dev.morphia.query.filters.Filter
 import dev.morphia.query.filters.Filters
 import dev.morphia.query.filters.RegexFilter
-import org.jboss.forge.roaster.model.source.JavaClassSource
 import java.util.TreeSet
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSupertypeOf
+import org.jboss.forge.roaster.model.source.JavaClassSource
 
 object FilterSieve {
     internal val functions = filters()
@@ -33,16 +33,16 @@ object FilterSieve {
 
     fun handlers(property: CritterProperty, target: JavaClassSource) {
         val handlers = TreeSet(Handler.common())
-        if (property.type.isNumeric()) {
+        if (property.type.isNumeric) {
             handlers.addAll(Handler.numerics())
         }
-        if (property.type.isText()) {
+        if (property.type.isText) {
             handlers.addAll(Handler.strings())
         }
-        if (property.type.isContainer()) {
+        if (property.type.isContainer) {
             handlers.addAll(Handler.containers())
         }
-        if (property.type.isGeoCompatible()) {
+        if (property.type.isGeoCompatible) {
             handlers.addAll(Handler.geoFilters())
         }
         handlers.forEach {
@@ -50,20 +50,20 @@ object FilterSieve {
         }
     }
 
-    fun handlers(field: PropertySpec, target: Builder) {
+    fun handlers(property: KSPropertyDeclaration, target: Builder) {
         val handlers = TreeSet(Handler.common())
-        if (field.isNumeric()) {
+        if (property.isNumeric()) {
             handlers.addAll(Handler.numerics())
         }
-        if (field.isText()) {
+        if (property.isText()) {
             handlers.addAll(Handler.strings())
         }
-        if (field.isContainer()) {
+        if (property.isContainer()) {
             handlers.addAll(Handler.containers())
         }
 
         handlers.forEach {
-            it.handle(field, target)
+            it.handle(property, target)
         }
     }
 }
@@ -79,7 +79,7 @@ enum class Handler : OperationGenerator {
     center,
     centerSphere,
     elemMatch {
-        override fun handle(field: PropertySpec, target: Builder) {
+        override fun handle(property: KSPropertyDeclaration, target: Builder) {
             target.addFunction(
                 FunSpec
                     .builder(name)
@@ -100,7 +100,7 @@ enum class Handler : OperationGenerator {
             )
         }
 
-        override fun handle(field: PropertySpec, target: Builder) {
+        override fun handle(property: KSPropertyDeclaration, target: Builder) {
             target.addFunction(
                 FunSpec
                     .builder(name)
@@ -115,7 +115,7 @@ enum class Handler : OperationGenerator {
     gt,
     gte,
     `in` {
-        override fun handle(field: PropertySpec, target: Builder) {
+        override fun handle(property: KSPropertyDeclaration, target: Builder) {
             target.addFunction(
                 FunSpec
                     .builder(name)
@@ -126,7 +126,7 @@ enum class Handler : OperationGenerator {
         }
     },
     jsonSchema {
-        override fun handle(field: PropertySpec, target: Builder) {}
+        override fun handle(property: KSPropertyDeclaration, target: Builder) {}
         override fun handle(target: JavaClassSource, property: CritterProperty) {}
     },
     lt,
@@ -149,7 +149,7 @@ enum class Handler : OperationGenerator {
             )
         }
 
-        override fun handle(field: PropertySpec, target: Builder) {
+        override fun handle(property: KSPropertyDeclaration, target: Builder) {
             target.addFunction(
                 FunSpec
                     .builder(name)
@@ -164,7 +164,7 @@ enum class Handler : OperationGenerator {
 
     companion object {
         fun get(name: String) = valueOf(name)
-        fun numerics(): List<Handler> = listOf(gt, gte, lt, lte, mod, bitsAllClear, bitsAllSet, bitsAnyClear, bitsAnySet)
+        fun numerics(): Set<Handler> = setOf(gt, gte, lt, lte, mod, bitsAllClear, bitsAllSet, bitsAnyClear, bitsAnySet)
         fun strings() = listOf(regex)
         fun containers() = listOf(all, elemMatch, size)
         fun geoFilters() = listOf(
@@ -179,7 +179,7 @@ enum class Handler : OperationGenerator {
         handle(target, property, name, FilterSieve.functions, "Filters")
     }
 
-    open fun handle(field: PropertySpec, target: Builder) {
-        handle(target, field, name, FilterSieve.functions, "Filters")
+    open fun handle(property: KSPropertyDeclaration, target: Builder) {
+        handle(target, property, name, FilterSieve.functions, "Filters")
     }
 }

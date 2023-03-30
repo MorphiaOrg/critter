@@ -1,31 +1,24 @@
 package dev.morphia.critter
 
-import dev.morphia.critter.OutputType.JAVA
-import dev.morphia.critter.OutputType.KOTLIN
 import dev.morphia.critter.java.JavaContext
-import dev.morphia.critter.kotlin.KotlinContext
-import dev.morphia.critter.kotlin.KotlinCriteriaBuilder
+import java.io.File
+import java.util.Locale
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.MethodSource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.util.Locale
 import dev.morphia.critter.java.CodecsBuilder as JavaCodecsBuilder
 import dev.morphia.critter.java.CriteriaBuilder as JavaCriteriaBuilder
-import dev.morphia.critter.kotlin.CodecsBuilder as KotlinCodecsBuilder
 
 object Critter {
     private val LOG: Logger = LoggerFactory.getLogger(Critter::class.java)
-    private lateinit var kotlinContext: KotlinContext
     private lateinit var javaContext: JavaContext
     private lateinit var outputType: OutputType
 
     fun scan(baseDir: File, sourceDirectories: Set<String>, criteriaPackage: String?, force: Boolean, format: Boolean,
              outputType: OutputType, sourceOutput: File, resourceOutput: File) {
         javaContext = JavaContext(criteriaPackage, force, format, sourceOutput, resourceOutput)
-        kotlinContext = KotlinContext(criteriaPackage, force, format, sourceOutput, resourceOutput)
         this.outputType = outputType
         sourceDirectories
             .map {
@@ -39,26 +32,19 @@ object Critter {
             .forEach { dir ->
                 LOG.info("Scanning $dir for classes")
                 dir.walk()
-                    .filter { file -> file.extension in listOf("java", "kt") }
+                    .filter { file -> file.extension in listOf("java") }
                     .forEach { file ->
                         javaContext.scan(file)
-                        kotlinContext.scan(file)
                     }
             }
     }
 
     fun generateCriteria() {
-        when (outputType) {
-            JAVA -> JavaCriteriaBuilder(javaContext).build()
-            KOTLIN -> KotlinCriteriaBuilder(kotlinContext).build()
-        }
+        JavaCriteriaBuilder(javaContext).build()
     }
 
     fun generateCodecs() {
-        when (outputType) {
-            JAVA -> JavaCodecsBuilder(javaContext).build()
-            KOTLIN -> KotlinCodecsBuilder(kotlinContext).build()
-        }
+        JavaCodecsBuilder(javaContext).build()
     }
 
     fun JavaClassSource.addMethods(methods: String): List<MethodSource<JavaClassSource>> {

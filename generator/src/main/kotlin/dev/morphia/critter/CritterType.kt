@@ -2,12 +2,11 @@ package dev.morphia.critter
 
 import com.mongodb.client.model.geojson.Geometry
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.ClassName.Companion
 import dev.morphia.mapping.Mapper
-import org.bson.Document
-import org.jboss.forge.roaster.model.Type
 import java.time.temporal.Temporal
 import java.util.Date
+import org.bson.Document
+import org.jboss.forge.roaster.model.Type
 
 data class CritterType(val name: String, val typeParameters: List<CritterType> = listOf(), val nullable: Boolean = false) {
     companion object {
@@ -21,22 +20,9 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
         internal val TEXT_TYPES = listOf("String").explodeTypes()
         private fun List<String>.explodeTypes(): List<String> {
             return flatMap {
-                listOf(it, "$it?", "java.lang.$it", "java.lang.$it?", "kotlin.$it", "kotlin.$it?")
+                listOf(it, "java.lang.$it", "kotlin.$it")
             }
         }
-
-        fun isNumeric(type: String): Boolean {
-            return NUMERIC_TYPES.contains(type)
-                || try {
-                val clazz = Class.forName(type)
-                Temporal::class.java.isAssignableFrom(clazz)
-                    || Date::class.java.isAssignableFrom(clazz)
-            } catch (_: Exception) {
-                false
-            }
-        }
-
-        fun isText(type: String) = TEXT_TYPES.contains(type)
     }
 
     private val className: ClassName by lazy {
@@ -49,17 +35,33 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
         className.simpleName
     }
 
-    fun isContainer() = name in CONTAINER_TYPES
-    fun isGeoCompatible(): Boolean {
-        return name in GEO_TYPES || return try {
+    val isContainer: Boolean by lazy {
+        name in CONTAINER_TYPES
+    }
+
+    val isGeoCompatible: Boolean by lazy {
+        name in GEO_TYPES || try {
             Geometry::class.java.isAssignableFrom(Class.forName(name))
         } catch (_: Exception) {
             false
         }
     }
 
-    fun isNumeric() = isNumeric(name)
-    fun isText() = isText(name)
+    val isNumeric: Boolean by lazy {
+        NUMERIC_TYPES.contains(name)
+            || try {
+            val clazz = Class.forName(name)
+            Temporal::class.java.isAssignableFrom(clazz)
+                || Date::class.java.isAssignableFrom(clazz)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    val isText: Boolean by lazy {
+        TEXT_TYPES.contains(name)
+    }
+
     fun concreteType() = typeParameters.lastOrNull()?.name ?: name
     fun isParameterized(): Boolean {
         return typeParameters.isNotEmpty()
@@ -74,3 +76,4 @@ fun Type<*>.toCritter(): CritterType {
     val name = if (name != "void") qualifiedName else name
     return CritterType(name, typeArguments.map { it.toCritter() }, nullable = true)
 }
+

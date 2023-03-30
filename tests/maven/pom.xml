@@ -38,8 +38,8 @@
     </build>
 
     <modules>
-        <module>java</module>
         <module>kotlin</module>
+        <module>java</module>
     </modules>
 
 </project>

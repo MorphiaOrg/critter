@@ -42,7 +42,6 @@ class JavaClass(
                     javaField.type.toCritter(),
                     javaField.annotations.map { it.toCritter() },
                     javaField.isFinal,
-                    javaField.literalInitializer,
                 ).also {
                     it.accessor = sourceClass.methods.firstOrNull { isGetter(it, javaField) }
                         ?.toCritter()

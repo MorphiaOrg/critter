@@ -118,7 +118,7 @@ class JavaClassTest {
         return if (property.hasAnnotation(Id::class.java)) {
             "_id"
         } else {
-            (property.getAnnotation(Property::class.java)?.literalValue("value") ?: property.name).replace("\"", "")
+            (property.getAnnotation(Property::class.java)?.valueAsString() ?: property.name).replace("\"", "")
         }
     }
 }

@@ -1,5 +1,12 @@
 package dev.morphia.critter.kotlin
 
+import com.google.devtools.ksp.isAbstract
+import com.google.devtools.ksp.isOpen
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
@@ -10,16 +17,17 @@ import com.squareup.kotlinpoet.KModifier.OVERRIDE
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.KModifier.VARARG
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.Datastore
-import dev.morphia.critter.CritterAnnotation
-import dev.morphia.critter.CritterProperty
-import dev.morphia.critter.CritterType
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.critter.methodCase
 import dev.morphia.critter.titleCase
 import dev.morphia.mapping.EntityModelImporter
@@ -30,13 +38,14 @@ import dev.morphia.mapping.codec.pojo.EntityModelBuilder
 import dev.morphia.mapping.codec.pojo.TypeData
 import org.bson.codecs.pojo.PropertyAccessor
 import java.util.concurrent.atomic.AtomicInteger
+import nullable
 
 @OptIn(DelicateKotlinPoetApi::class)
 class ModelImporter(val context: KotlinContext) : SourceBuilder {
     private lateinit var utilName: String
     private lateinit var util: Builder
-    private lateinit var source: KotlinClass
-    private lateinit var properties: List<CritterProperty>
+    private lateinit var source: KSDeclaration
+    private lateinit var properties: List<KSPropertyDeclaration>
     private lateinit var importer: Builder
     private lateinit var importerName: ClassName
     private val builders = AtomicInteger(1)
@@ -58,7 +67,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             context.entities().values
                 .filter { !it.isAbstract() }
                 .joinToString(",\n\t\t") { source ->
-                    "build${source.name.titleCase()}Model(mapper)"
+                    "build${source.name().titleCase()}Model(mapper)"
                 }
         )
         method.addCode(")")
@@ -79,18 +88,17 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             .filter { !it.isAbstract() }
             .forEach { source ->
                 this.source = source
-                this.properties = source.properties
-                this.utilName = "${source.name}Util"
+                this.properties = source.getAllProperties().toList()
+                this.utilName = "${source.name()}Util"
                 this.util = TypeSpec.objectBuilder(utilName)
                     .addModifiers(INTERNAL)
-                val builder = builder("build${source.name.titleCase()}Model")
+                val builder = builder("build${source.name().titleCase()}Model")
                     .addModifiers(PRIVATE)
                     .addParameter("mapper", Mapper::class.java)
                     .returns(EntityModel::class.java)
 
                 builder
-                    .addCode("val modelBuilder = %T(mapper, %T::class.java)\n", EntityModelBuilder::class.java, source.qualifiedName
-                        .className())
+                    .addCode("val modelBuilder = %T(mapper, %T::class.java)\n", EntityModelBuilder::class.java, source.toTypeName())
 
                 annotations(builder)
                 properties(builder)
@@ -146,13 +154,13 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             .forEach { property ->
                 builder.addCode(
                     """modelBuilder.addProperty()
-                    .name("${property.name}")
+                    .name("${property.name()}")
                     .accessor(${accessor(property)} as PropertyAccessor<in Any>)
                 """
                 )
                 typeData(builder, property)
                 property.annotations.forEach {
-                    if (it.values.isNotEmpty()) {
+                    if (it.arguments.isNotEmpty()) {
                         val name = buildAnnotation(it)
                         builder.addCode(".annotation($name())\n")
                     } else {
@@ -164,10 +172,10 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             }
     }
 
-    private fun accessor(property: CritterProperty): String {
-        val name = "${property.name.methodCase()}Accessor"
-        val propertyType = property.type.typeName()
-            .copy(nullable = property.type.nullable)
+    private fun accessor(property: KSPropertyDeclaration): String {
+        val name = "${property.name().methodCase()}Accessor"
+        val propertyType = property.type.toTypeName()
+            .copy(nullable = property.type.nullable())
         val method = builder(name)
             .returns(PropertyAccessor::class.java.asClassName()
                 .parameterizedBy(STAR))
@@ -176,16 +184,16 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                         override fun <S : Any> set(instance: S, newValue: %T) {
                         
                 """.trimIndent(), PropertyAccessor::class.java, propertyType, propertyType)
-        if(!property.isFinal) {
-            method.addStatement("(instance as ${source.name}).${property.name} = newValue")
+        if(property.isOpen()) {
+            method.addStatement("(instance as ${source.name()}).${property.name()} = newValue")
         } else {
-            method.addStatement("throw %T(\"${property.name} is immutable.\")", IllegalStateException::class.java)
+            method.addStatement("throw %T(\"${property.name()} is immutable.\")", IllegalStateException::class.java)
         }
         method.addCode(
             """
                 }
                     override fun <S : Any> get(instance: S): %T {
-                        return (instance as ${source.name}).${property.name}
+                        return (instance as ${source.name()}).${property.name()}
                     }
                 }
             """.trimIndent(), propertyType)
@@ -194,47 +202,57 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         return "$utilName.$name()"
     }
 
-    private fun methodName(property: CritterProperty) = (property.name).methodCase()
-    private fun typeData(builder: FunSpec.Builder, property: CritterProperty) {
+    private fun methodName(property: KSPropertyDeclaration) = (property.name()).methodCase()
+    private fun typeData(builder: FunSpec.Builder, property: KSPropertyDeclaration) {
         if (!property.type.isParameterized()) {
-            builder.addCode(".typeData(%T.builder(%T::class.java).build())\n", TypeData::class.java, property.type.typeName())
+            var type = property.type.toTypeName()
+            if ( type.isNullable ) {
+                 type = type.copy(nullable = false)
+            }
+            builder.addCode(".typeData(%T.builder(%T::class.java).build())\n", TypeData::class.java, type)
         } else {
             builder.addCode(".typeData(${typeDataGenerics(property)})")
         }
     }
 
-    private fun typeDataGenerics(property: CritterProperty): String {
+    private fun typeDataGenerics(property: KSPropertyDeclaration): String {
         val name = "${methodName(property)}TypeData"
         val method = builder(name)
             .addModifiers(INTERNAL)
             .returns(TypeData::class.java.asClassName()
                 .parameterizedBy(STAR))
-        val typeCount = AtomicInteger(0)
         val argument = property.type
 
         method.addCode("return ")
-        emitTypeData(method, typeCount, argument)
+        emitTypeData(method, argument.toTypeName())
 
         util.addFunction(method.build())
         return "$utilName.$name()"
     }
 
-    private fun emitTypeData(method: FunSpec.Builder, typeCount: AtomicInteger, type: CritterType) {
-        method.addCode("typeData(%T::class.java", type.name.className())
+    private fun emitTypeData(method: FunSpec.Builder, typeName: TypeName) {
+        val typeArguments = mutableListOf<TypeName>()
+        var baseType = typeName
+        if (typeName is ParameterizedTypeName) {
+            typeArguments += typeName.typeArguments
+            baseType = typeName.rawType
+        }
 
-        type.typeParameters.forEach {
+        method.addCode("typeData(%T::class.java", baseType)
+
+        typeArguments.forEach {
             method.addCode(", ")
-            emitTypeData(method, typeCount, it)
+            emitTypeData(method, it)
         }
         method.addCode(")")
     }
 
     private fun annotations(builder: FunSpec.Builder) {
         source.annotations
-            .filter { it.type.packageName.startsWith("dev.morphia") }
+            .filter { it.annotationType.packageName().startsWith("dev.morphia") }
             .forEach {
-                if (it.values.isNotEmpty()) {
-                    builder.addCode("\n.annotation(${buildAnnotation(it)}())")
+                if (it.arguments.isNotEmpty()) {
+                    builder.addCode(".annotation(${buildAnnotation(it)}())\n")
                 } else {
                     val name = annotationBuilderName(it)
                     builder.addCode(
@@ -245,28 +263,28 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             }
     }
 
-    private fun buildAnnotation(annotation: CritterAnnotation): String {
+    private fun buildAnnotation(annotation: KSAnnotation): String {
         val builderName = annotationBuilderName(annotation)
-        val methodName = "annotation${annotation.type.simpleName}${builders.getAndIncrement()}"
+        val methodName = "annotation${annotation.annotationType.simpleName()}${builders.getAndIncrement()}"
         val builder = builder(methodName)
-            .addModifiers(PRIVATE)
-            .returns(annotation.type.name.className())
+            .returns(annotation.annotationType.toTypeName())
 
         builder.addStatement("val builder = %T.${builderName.simpleName.methodCase()}()", builderName)
-        annotation.values
-            .forEach { pair ->
-                val name = pair.key
-                var value = annotation.literalValue(name)
-                val arrayValue = annotation.annotationArrayValue()
-                val annotationValue = annotation.annotationValue(name)
-                if (annotationValue != null) {
-                    value = buildAnnotation(annotationValue) + "()"
-                } else if (arrayValue != null) {
-                    value = arrayValue.joinToString(", ") {
-                        buildAnnotation(it) + "()"
+        annotation.arguments
+            .forEach { argument ->
+                val name = argument.name?.asString() ?: "value"
+                var value = argument.value
+                value = when (value) {
+                    is String -> "\"${value}\""
+                    is KSAnnotation -> buildAnnotation(value) + "()"
+                    is Array<*> -> value.joinToString(", ") {
+                        buildAnnotation(it as KSAnnotation) + "()"
                     }
+
+                    is KSType -> "${value.declaration.className()}::class.java"
+                    else -> value
                 }
-                builder.addStatement("builder.$name($value)")
+                builder.addStatement(".$name($value)")
             }
 
         builder.addStatement("return builder.build()")
@@ -275,9 +293,11 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         return "$utilName.$methodName"
     }
 
-    private fun annotationBuilderName(it: CritterAnnotation): ClassName {
-        var name = it.type.name
+    private fun annotationBuilderName(it: KSAnnotation): ClassName {
+        var name = it.annotationType.className()
         name = name.substringBeforeLast('.') + ".internal." + name.substringAfterLast('.')
         return (name + "Builder").className()
     }
 }
+
+fun KSTypeReference.isParameterized() = element?.typeArguments?.isNotEmpty() ?: false

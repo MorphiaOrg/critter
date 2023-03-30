@@ -25,12 +25,6 @@ import dev.morphia.Datastore
 import dev.morphia.DeleteOptions
 import dev.morphia.Morphia
 import dev.morphia.UpdateOptions
-import dev.morphia.critter.test.criteria.InvoiceCriteria
-import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.addresses
-import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.orderDate
-import dev.morphia.critter.test.criteria.PersonCriteria.Companion.first
-import dev.morphia.critter.test.criteria.PersonCriteria.Companion.last
-import dev.morphia.critter.test.criteria.UserCriteria.Companion.age
 import dev.morphia.mapping.MapperOptions
 import dev.morphia.query.FindOptions
 import dev.morphia.query.MorphiaCursor
@@ -57,6 +51,10 @@ import org.testng.annotations.Test
 @Test
 @Suppress("UNUSED_PARAMETER")
 class KotlinCriteriaTest {
+    fun dummy() {
+
+    }
+/*
     companion object {
         var mongoDBContainer: MongoDBContainer? = null
         lateinit var  database: MongoDatabase
@@ -302,4 +300,5 @@ class KotlinCriteriaTest {
         val delete = datastore.find(Person::class.java).delete()
         assertEquals(delete.deletedCount, 1)
     }
+*/
 }

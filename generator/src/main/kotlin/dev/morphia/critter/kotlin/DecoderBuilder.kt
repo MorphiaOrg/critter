@@ -1,5 +1,7 @@
 package dev.morphia.critter.kotlin
 
+import com.google.devtools.ksp.isAbstract
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FunSpec
@@ -14,6 +16,8 @@ import com.squareup.kotlinpoet.asClassName
 import dev.morphia.annotations.PostLoad
 import dev.morphia.annotations.PreLoad
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.functions
 import dev.morphia.critter.titleCase
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
@@ -24,25 +28,22 @@ import dev.morphia.mapping.codec.reader.DocumentReader
 import org.bson.BsonReader
 import org.bson.Document
 import org.bson.codecs.DecoderContext
-import java.io.File
 
 @OptIn(DelicateKotlinPoetApi::class)
 class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
-    private lateinit var source: KotlinClass
+    private lateinit var source: KSClassDeclaration
     private lateinit var decoder: TypeSpec.Builder
     private lateinit var decoderName: ClassName
     private lateinit var entityName: ClassName
     override fun build() {
         context.entities().values.forEach { source ->
             this.source = source
-            entityName = ClassName.bestGuess(source.qualifiedName)
-            decoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name}Decoder")
+            entityName = ClassName.bestGuess(source.className())
+            decoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name()}Decoder")
             decoder = TypeSpec.classBuilder(decoderName)
                 .addModifiers(PUBLIC, FINAL)
-            val sourceTimestamp = source.lastModified()
-            val decoderFile = File(context.outputDirectory, decoderName.canonicalName.replace('.', '/') + ".java")
 
-            if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
+            if (!source.isAbstract()) {
                 decoder.superclass(EntityDecoder::class.java.asClassName()
                     .parameterizedBy(entityName))
                 buildConstructor()
@@ -69,8 +70,8 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             .addStatement("val instanceCreator = ${entityName.simpleName.titleCase()}InstanceCreator()")
             .addStatement("val instance = instanceCreator.instance")
         source.functions(PreLoad::class.java).forEach {
-            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
-            function.addStatement("instance.${it.name}${params}\n")
+            val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")")
+            function.addStatement("instance.${it.name()}${params}\n")
         }
         function.beginControlFlow("for (ei in mapper.interceptors)")
         function.addStatement("ei.preLoad(instance, document, codec.datastore)")
@@ -82,8 +83,8 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
                 DocumentReader::class.java
             )
         source.functions(PostLoad::class.java).forEach {
-            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
-            function.addStatement("instance.${it.name}${params}\n")
+            val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")")
+            function.addStatement("instance.${it.name()}${params}\n")
         }
         function.beginControlFlow("for (ei in mapper.interceptors)")
         function.addStatement("ei.postLoad(instance, document, codec.datastore)")
@@ -144,4 +145,6 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
             .addSuperclassConstructorParameter("codec")
 
     }
+
 }
+

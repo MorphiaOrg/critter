@@ -16,8 +16,8 @@ repositories {
 project.version = MavenXpp3Reader().read(file("pom.xml").inputStream()).parent.version
 
 plugins {
-    id("com.gradle.plugin-publish") version "0.13.0"
-    kotlin("jvm") version "1.8.10"
+    id("com.gradle.plugin-publish") version "1.1.0"
+    kotlin("jvm") version "1.7.22"
     `java-gradle-plugin`
 }
 
@@ -31,17 +31,28 @@ gradlePlugin {
             id = "dev.morphia.critter"
             implementationClass = "dev.morphia.critter.CritterPlugin"
             displayName = "Critter Plugin"
-            description = "Process Morphia entities and generates type safe criteria classes"
+            description = "Processes Morphia entities and generates type safe criteria classes"
         }
     }
 }
 
-pluginBundle {
-    mavenCoordinates {
-        groupId = "dev.morphia.critter"
-        artifactId = "critter-gradle"
+
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "dev.morphia.critter"
+            artifactId = "critter-gradle"
+
+/*
+            pom {
+                website.set("https://morphia.dev/")
+                vcsUrl = "https://github.com/MorphiaOrg/critter"
+                tags = listOf("morphia", "java", "kotlin")
+            }
+*/
+
+            from(components["java"])
+        }
     }
-    website = "https://morphia.dev/"
-    vcsUrl = "https://github.com/MorphiaOrg/critter"
-    tags = listOf("morphia", "java", "kotlin")
 }

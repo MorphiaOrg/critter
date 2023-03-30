@@ -37,25 +37,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>dev.morphia.critter</groupId>
-                <artifactId>critter-maven</artifactId>
-                <version>${project.version}</version>
-                <executions>
-                    <execution>
-                        <id>critter</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <force>true</force>
-                    <format>true</format>
-                    <outputType>kotlin</outputType>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
@@ -79,7 +60,23 @@
                 <configuration>
                     <javaParameters>true</javaParameters>
                     <jvmTarget>11</jvmTarget>
+                    <compilerPlugins>
+                        <compilerPlugin>ksp</compilerPlugin>
+                    </compilerPlugins>
+
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.dyescape</groupId>
+                        <artifactId>kotlin-maven-symbol-processing</artifactId>
+                        <version>1.4</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>dev.morphia.critter</groupId>
+                        <artifactId>critter-maven</artifactId>
+                        <version>4.4.0-SNAPSHOT</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

@@ -2,7 +2,7 @@ package dev.morphia.critter.kotlin
 
 import dev.morphia.critter.SourceBuilder
 
-class CodecsBuilder(val context: KotlinContext) : SourceBuilder {
+class KotlinCodecsBuilder(val context: KotlinContext) : SourceBuilder {
     companion object {
         val CODECS_PACKAGE = "codecs"
     }

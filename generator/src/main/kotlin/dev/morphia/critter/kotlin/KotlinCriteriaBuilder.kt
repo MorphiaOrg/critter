@@ -2,6 +2,13 @@
 
 package dev.morphia.critter.kotlin
 
+import com.google.devtools.ksp.hasAnnotation
+import com.google.devtools.ksp.isAbstract
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.mongodb.client.model.geojson.Geometry
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -10,9 +17,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.INTERNAL
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
@@ -23,15 +28,16 @@ import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
 import dev.morphia.critter.CritterType
-import dev.morphia.critter.CritterType.Companion.isNumeric
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.UpdateSieve
 import dev.morphia.critter.titleCase
 import dev.morphia.query.filters.Filters
 import dev.morphia.query.updates.UpdateOperators
+import java.time.temporal.Temporal
+import java.util.Date
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.internal.compiler.parser.Parser.name
 import org.slf4j.LoggerFactory
-import java.io.File
 
 class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     companion object {
@@ -42,21 +48,17 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
 
     override fun build() {
         context.entities().values.forEach {
-            build(context.outputDirectory, it)
+            build(it)
         }
     }
 
-    private fun build(directory: File, source: KotlinClass) {
-        val criteriaPkg = context.criteriaPkg ?: "${source.fileSpec.packageName}.criteria"
-        val fileBuilder = FileSpec.builder(criteriaPkg, "${source.name}Criteria")
-        val replace = criteriaPkg.replace('.', '/')
-        val outputFile = File(directory, "$replace/${fileBuilder.name}.kt")
+    private fun build(source: KSClassDeclaration) {
+        val criteriaPkg = context.criteriaPkg ?: "${source.packageName.asString()}.criteria"
+        val fileBuilder = FileSpec.builder(criteriaPkg, "${source.name()}Criteria")
 
         try {
-            val srcMod = source.lastModified()
-            val outMod = outputFile.lastModified()
-            if (!source.isAbstract() && !source.isEnum() && context.shouldGenerate(srcMod, outMod)) {
-                val criteriaName = "${source.name}Criteria"
+            if (!source.isAbstract()) {
+                val criteriaName = "${source.name()}Criteria"
                 val criteriaClass = TypeSpec.classBuilder(criteriaName)
 
                 criteriaClass.primaryConstructor(
@@ -75,13 +77,13 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                         .initializer("path")
                         .build()
                 )
-
-                if (source.properties.isNotEmpty()) {
+                val properties = source.getAllProperties().iterator()
+                if (properties.hasNext()) {
                     buildCompanionObject(criteriaName, source, criteriaClass)
                 }
 
-                source.fields.forEach { field ->
-                    addField(criteriaClass, field)
+                properties.forEach { property ->
+                    addField(criteriaClass, property)
                 }
 
                 fileBuilder.addType(criteriaClass.build())
@@ -92,14 +94,14 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                 )
             }
         } catch (e: Exception) {
-            LOG.error("Failed to process ${source.fileSpec.packageName}.${source.name}")
+            LOG.error("Failed to process ${source.packageName.asString()}.${source.name()}")
             throw e
         }
     }
 
     private fun buildCompanionObject(
         criteriaName: String,
-        source: KotlinClass,
+        source: KSClassDeclaration,
         criteriaClass: Builder
     ) {
         TypeSpec.companionObjectBuilder().apply {
@@ -110,15 +112,16 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                     .build()
             )
 
-            source.properties.forEach { field ->
+            source.getAllProperties().forEach { property ->
+                val mappedName = property.mappedName()
                 addProperty(
-                    PropertySpec.builder(field.name, STRING)
-                        .initializer(field.mappedName())
+                    PropertySpec.builder(property.name(), STRING)
+                        .initializer("""${mappedName}""")
                         .build()
                 )
                 addFunction(
-                    FunSpec.builder(field.name)
-                        .addCode(CodeBlock.of("return ${propertyName}.${field.name}()"))
+                    FunSpec.builder(property.name())
+                        .addCode(CodeBlock.of("return ${propertyName}.${property.name()}()"))
                         .build()
                 )
             }
@@ -135,18 +138,20 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
         }
     }
 
-    private fun Builder.addFieldCriteriaMethod(field: PropertySpec) {
-        val concreteType = field.type.concreteType()
-        val annotations = context.entities()[concreteType.canonicalName]?.annotations
-        val none = annotations?.none { it.type.packageName.startsWith("dev.morphia.annotations") } ?: true
+    private fun Builder.addFieldCriteriaMethod(property: KSPropertyDeclaration) {
+        val concreteType = property.type.className()
+        val annotations = context.entities()[concreteType]?.annotations
+        val none = annotations?.none {
+            it.annotationType.packageName().startsWith("dev.morphia.annotations")
+        } ?: true
         val fieldCriteriaName = if (none) {
-            field.name.titleCase() + "FieldCriteria"
+            property.name().titleCase() + "FieldCriteria"
         } else {
-            concreteType.simpleName + "Criteria"
+            property.type.simpleName() + "Criteria"
         }
-        val path = """extendPath(path, "${field.name}")"""
+        val path = """extendPath(path, "${property.name()}")"""
         addFunction(
-            FunSpec.builder(field.name)
+            FunSpec.builder(property.name())
                 .addCode(CodeBlock.of("return ${fieldCriteriaName}(${path})"))
                 .build()
         )
@@ -166,20 +171,20 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     }
 */
 
-    private fun addField(criteriaClass: Builder, field: PropertySpec) {
-        if (field.hasAnnotation(Reference::class.java)) {
-            addReferenceCriteria(criteriaClass, field)
+    private fun addField(criteriaClass: Builder, property: KSPropertyDeclaration) {
+        if (property.hasAnnotation(Reference::class.java)) {
+            addReferenceCriteria(criteriaClass, property)
         } else {
-            criteriaClass.addFieldCriteriaMethod(field)
+            criteriaClass.addFieldCriteriaMethod(property)
 
-            if (!field.isMappedType()) {
-                addFieldCriteriaClass(field, criteriaClass)
+            if (!property.isMappedType()) {
+                addFieldCriteriaClass(property, criteriaClass)
             }
         }
     }
 
-    private fun addFieldCriteriaClass(field: PropertySpec, criteriaClass: Builder) {
-        TypeSpec.classBuilder("${field.name.titleCase()}FieldCriteria")
+    private fun addFieldCriteriaClass(property: KSPropertyDeclaration, criteriaClass: Builder) {
+        TypeSpec.classBuilder("${property.name().titleCase()}FieldCriteria")
             .apply {
                 primaryConstructor(
                     FunSpec.constructorBuilder()
@@ -196,52 +201,46 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                             .build()
                     )
 
-                attachFilters(field)
-                attachUpdates(field)
+                attachFilters(property)
+                attachUpdates(property)
                 criteriaClass.addType(build())
             }
     }
 
-    private fun addReferenceCriteria(criteriaClass: Builder, field: PropertySpec) {
-        val fieldCriteriaName = field.name.titleCase() + "FieldCriteria"
+    private fun addReferenceCriteria(criteriaClass: Builder, property: KSPropertyDeclaration) {
+        val fieldCriteriaName = property.name().titleCase() + "FieldCriteria"
         criteriaClass.addFunction(
-            FunSpec.builder(field.name)
-                .addCode(CodeBlock.of("return ${fieldCriteriaName}(extendPath(path, \"${field.name}\"))"))
+            FunSpec.builder(property.name())
+                .addCode(CodeBlock.of("return ${fieldCriteriaName}(extendPath(path, \"${property.name()}\"))"))
                 .build()
         )
-        addFieldCriteriaClass(field, criteriaClass)
+        addFieldCriteriaClass(property, criteriaClass)
     }
 
-    private fun PropertySpec.mappedType(): KotlinClass? {
-        return context.entities()[type.concreteType().canonicalName]
+    private fun KSPropertyDeclaration.mappedType(): KSClassDeclaration? {
+        return context.entities()[type.className()]
     }
 
-    private fun PropertySpec.isMappedType(): Boolean {
-        val mappedType = mappedType()
-        return mappedType != null && mappedType.annotations.any {
-            it.type.packageName in listOf(Entity::class.java.simpleName, Embedded::class.java.simpleName)
-        }
-    }
-}
-
-private fun TypeName.concreteType(): ClassName {
-    return when (this) {
-        is ClassName -> this
-        is ParameterizedTypeName -> typeArguments.last().concreteType()
-        else -> TODO(toString())
+    private fun KSPropertyDeclaration.isMappedType(): Boolean {
+        return mappedType()?.annotations?.any {
+            it.annotationType.packageName() in listOf(Entity::class.java.simpleName, Embedded::class.java.simpleName)
+        } ?: false
     }
 }
 
-fun PropertySpec.isContainer(): Boolean {
-    return type.toString().substringBefore("<") in CritterType.CONTAINER_TYPES
-}
-fun PropertySpec.isNumeric() = isNumeric(type.concreteType().canonicalName)
-fun PropertySpec.isText() = CritterType.TEXT_TYPES.contains(type.concreteType().canonicalName)
+internal fun KSDeclaration.name() = simpleName.asString()
+
 fun <T : Annotation> PropertySpec.getAnnotation(annotation: Class<T>): AnnotationSpec? {
     return annotations.firstOrNull { it.typeName == annotation.asTypeName() }
 }
+fun <T : Annotation> KSPropertyDeclaration.getAnnotation(annotation: Class<T>): KSAnnotation? {
+    return annotations.firstOrNull { it.annotationType.className() == annotation.name }
+}
 
 fun <T : Annotation> PropertySpec.hasAnnotation(annotation: Class<T>): Boolean {
+    return getAnnotation(annotation) != null
+}
+fun <T : Annotation> KSPropertyDeclaration.hasAnnotation(annotation: Class<T>): Boolean {
     return getAnnotation(annotation) != null
 }
 
@@ -249,24 +248,57 @@ fun AnnotationSpec.getValue(name: String = "value"): String? {
     return members.map { it.toPair() }.firstOrNull { it.first == name }?.second
 }
 
-@Suppress("DEPRECATION")
-fun PropertySpec.mappedName(): String {
-    val annotation = getAnnotation(Id::class.java)
-    return if (annotation != null) {
-        "_id"
-    } else {
-        getAnnotation(Embedded::class.java)?.getValue() ?: getAnnotation(Property::class.java)?.getValue() ?: name
-    }
+private fun Builder.attachFilters(property: KSPropertyDeclaration) {
+    FilterSieve.handlers(property, this)
 }
 
-private fun Builder.attachFilters(field: PropertySpec) {
-    FilterSieve.handlers(field, this)
-}
-
-private fun Builder.attachUpdates(field: PropertySpec) {
-    UpdateSieve.handlers(field, this)
+private fun Builder.attachUpdates(property: KSPropertyDeclaration) {
+    UpdateSieve.handlers(property, this)
 }
 
 fun String.className(): ClassName {
     return ClassName.bestGuess(this)
 }
+fun KSPropertyDeclaration.mappedName(): String {
+    return if (hasAnnotation(Id::class.java.name)) {
+        "\"_id\""
+    } else {
+        val embedAsString = getAnnotation(Embedded::class.java)?.valueAsString()
+        val propertyAsString = getAnnotation(Property::class.java)?.valueAsString()
+        val name = simpleName()
+        embedAsString
+            ?: propertyAsString
+            ?: "\"$name\""
+    }
+}
+
+private fun KSAnnotation.valueAsString(): String? {
+    val value = arguments.firstOrNull { argument ->
+        val name = argument.name?.asString()
+        name == null || name == "value"
+    }?.value?.toString()
+    return value?.let { "\"$it\"" }
+}
+
+fun KSPropertyDeclaration.isContainer(): Boolean = type.className() in CritterType.CONTAINER_TYPES
+
+fun KSPropertyDeclaration.isGeoCompatible(): Boolean {
+    return name() in CritterType.GEO_TYPES || try {
+        Geometry::class.java.isAssignableFrom(Class.forName(type.className()))
+    } catch (_: Exception) {
+        false
+    }
+}
+
+fun KSPropertyDeclaration.isNumeric(): Boolean {
+return    CritterType.NUMERIC_TYPES.contains(name())
+        || try {
+        val clazz = Class.forName(type.className())
+        Temporal::class.java.isAssignableFrom(clazz)
+            || Date::class.java.isAssignableFrom(clazz)
+    } catch (_: Exception) {
+        false
+    }
+}
+
+fun KSPropertyDeclaration.isText(): Boolean = CritterType.TEXT_TYPES.contains(name())

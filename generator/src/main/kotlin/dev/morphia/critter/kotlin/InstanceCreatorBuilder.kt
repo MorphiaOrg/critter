@@ -1,5 +1,9 @@
 package dev.morphia.critter.kotlin
 
+import com.google.devtools.ksp.isAbstract
+import com.google.devtools.ksp.isOpen
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
@@ -10,12 +14,13 @@ import com.squareup.kotlinpoet.KModifier.OVERRIDE
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import dev.morphia.critter.CritterParameter
+import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.kotlin.extensions.bestConstructor
+import dev.morphia.critter.kotlin.extensions.className
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.PropertyModel
-import java.io.File
 
 @OptIn(DelicateKotlinPoetApi::class)
 class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
@@ -30,7 +35,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             "kotlin.Double" to "0.0")
     }
 
-    private lateinit var source: KotlinClass
+    private lateinit var source: KSClassDeclaration
     private lateinit var creator: TypeSpec.Builder
     private lateinit var creatorName: ClassName
     private lateinit var entityName: ClassName
@@ -38,8 +43,8 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
     override fun build() {
         context.entities().values.forEach { source ->
             this.source = source
-            entityName = ClassName.bestGuess(source.qualifiedName)
-            creatorName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")
+            entityName = ClassName.bestGuess(source.className())
+            creatorName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name()}InstanceCreator")
             creator = TypeSpec.classBuilder(creatorName)
                 .addAnnotation(
                     AnnotationSpec.builder(Suppress::class.java)
@@ -47,10 +52,8 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
                         .build()
                 )
                 .addModifiers(OPEN)
-            val sourceTimestamp = source.lastModified()
-            val decoderFile = File(context.outputDirectory, creatorName.canonicalName.replace('.', '/') + ".java")
 
-            if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
+            if (!source.isAbstract()) {
                 creator.addSuperinterface(MorphiaInstanceCreator::class.java)
                 getInstance()
                 set()
@@ -75,13 +78,13 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             .addModifiers(OVERRIDE)
             .returns(entityName)
             .beginControlFlow("if (!::instance.isInitialized)")
-            method.addStatement("instance = %T(${params.joinToString { param -> param.name}})", entityName)
+            method.addStatement("instance = %T(${params.joinToString { param -> param.name!!.asString()}})", entityName)
 
         declareProperties(params, entityProperties)
         if (entityProperties.isNotEmpty()) {
             method.beginControlFlow(".also")
             entityProperties.forEach { property ->
-                if(!source.properties.first { prop -> prop.name == property.name }.isFinal) {
+                if(source.getAllProperties().first { prop -> prop.name() == property.name }.isOpen()) {
                     if(property.modifiers.contains(LATEINIT)) {
                         method.beginControlFlow("if (::${property.name}.isInitialized)")
                     }
@@ -104,25 +107,23 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
      * @return the properties not included in the ctor call
      */
     private fun declareProperties(
-        params: List<CritterParameter>,
+        params: List<KSValueParameter>,
         entityProperties: MutableList<PropertySpec>
     ) {
-        source.properties.forEach {
-            val initializer = defaultValues[it.type.name]
-            var type = it.type.typeName()
+        source.getAllProperties().forEach {
+            val initializer = defaultValues[it.type.className()]
+            val type = it.type
 
-            val ctorParam = params.firstOrNull { param -> param.name == it.name }
-            if (it.type.nullable) {
-                //?.type?.nullable == true
-                type = type.copy(nullable = (ctorParam == null || ctorParam.type.nullable))
-            }
-            val property = PropertySpec.builder(it.name, type, PRIVATE)
+            val ctorParam = params.firstOrNull { param -> param.name?.asString() == it.name() }
+            val nullable = it.type.resolve().isMarkedNullable
+
+            val property = PropertySpec.builder(it.name(), type.toTypeName(), PRIVATE)
                 .mutable(true)
 
             if (initializer != null) {
                 property.initializer(initializer)
             } else {
-                if (type.isNullable) {
+                if (nullable) {
                     property.initializer("null")
                 } else {
                     property.addModifiers(LATEINIT)
@@ -142,14 +143,14 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             .addParameter("model", PropertyModel::class.java)
 
         method.beginControlFlow("when(model.name)")
-        source.properties.forEachIndexed { index, property ->
-            method.beginControlFlow("\"${property.name}\" ->")
-            method.addStatement("this.${property.name} = value as %T", property.type.typeName())
+        source.getAllProperties().forEach { property ->
+            method.beginControlFlow("\"${property.name()}\" ->")
+            method.addStatement("this.${property.name()} = value as %T", property.type.toTypeName())
             method.beginControlFlow("if(::instance.isInitialized)")
-            if (!property.isFinal) {
-                method.addStatement("instance.${property.name} = value")
+            if (property.isOpen()) {
+                method.addStatement("instance.${property.name()} = value")
             } else {
-                method.addStatement("""throw %T("${property.name} is immutable.")""", IllegalStateException::class.java)
+                method.addStatement("""throw %T("${property.name()} is immutable.")""", IllegalStateException::class.java)
             }
             method.endControlFlow()
             method.endControlFlow()

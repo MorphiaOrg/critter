@@ -20,7 +20,7 @@ open class Person : AbstractPerson {
     @Suppress("unused")
     constructor()
 
-    constructor(first: String, last: String) {
+    constructor(first: String?, last: String?) {
         this.first = first
         this.last = last
     }

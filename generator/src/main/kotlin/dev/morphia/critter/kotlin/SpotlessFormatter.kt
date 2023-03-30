@@ -5,6 +5,8 @@ import java.io.File
 class SpotlessFormatter(formatterFactory: FormatterFactory) {
     val formatter = formatterFactory.newFormatter()
     fun format(file: File) {
-        file.writeText(formatter.computeLineEndings(formatter.compute(file.readText(), file), file))
+        val compute = formatter.compute(file.readText(), file)
+        val text = formatter.computeLineEndings(compute, file)
+        file.writeText(text)
     }
 }

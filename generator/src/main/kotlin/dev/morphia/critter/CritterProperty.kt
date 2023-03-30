@@ -9,8 +9,7 @@ import dev.morphia.annotations.Property
 class CritterProperty(
     val name: String, var type: CritterType,
     val annotations: List<CritterAnnotation>,
-    var isFinal: Boolean = false,
-    var stringLiteralInitializer: String? = null
+    var isFinal: Boolean = false
 ) {
     var accessor: CritterMethod? = null
     var mutator: CritterMethod? = null
@@ -27,13 +26,12 @@ class CritterProperty(
         return if (hasAnnotation(Id::class.java)) {
             "\"_id\""
         } else {
-            getAnnotation(Embedded::class.java)?.value()
-                ?: getAnnotation(Property::class.java)?.value()
+            getAnnotation(Embedded::class.java)?.valueAsString()
+                ?: getAnnotation(Property::class.java)?.valueAsString()
                 ?: "\"$name\""
         }
     }
     override fun toString(): String {
-        return "CritterProperty(name='$name', type=$type, annotations=$annotations, isFinal=$isFinal, " +
-            "stringLiteralInitializer=$stringLiteralInitializer, accessor=$accessor, mutator=$mutator)"
+        return "CritterProperty(name='$name', type=$type, annotations=$annotations, isFinal=$isFinal, accessor=$accessor, mutator=$mutator)"
     }
 }

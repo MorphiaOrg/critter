@@ -2,6 +2,9 @@
 
 package dev.morphia.critter.kotlin
 
+import com.google.devtools.ksp.isAbstract
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
@@ -21,8 +24,10 @@ import dev.morphia.annotations.LoadOnly
 import dev.morphia.annotations.NotSaved
 import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PrePersist
-import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.functions
+import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.writer.DocumentWriter
@@ -30,11 +35,10 @@ import org.bson.BsonWriter
 import org.bson.Document
 import org.bson.codecs.Codec
 import org.bson.codecs.EncoderContext
-import java.io.File
 
 @OptIn(DelicateKotlinPoetApi::class)
 class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
-    private lateinit var source: KotlinClass
+    private lateinit var source: KSClassDeclaration
     private lateinit var encoder: TypeSpec.Builder
     private lateinit var encoderName: ClassName
     private lateinit var entityName: ClassName
@@ -42,14 +46,12 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         context.entities().values.forEach { source ->
             this.source = source
 
-            entityName = ClassName.bestGuess(source.qualifiedName)
-            encoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name}Encoder")
+            entityName = ClassName.bestGuess(source.className())
+            encoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name()}Encoder")
             encoder = TypeSpec.classBuilder(encoderName)
                 .addModifiers(PUBLIC, FINAL)
-            val sourceTimestamp = source.lastModified()
-            val encoderFile = File(context.outputDirectory, encoderName.canonicalName.replace('.', '/') + ".java")
 
-            if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, encoderFile.lastModified())) {
+            if (!source.isAbstract()) {
                 buildEncoder()
             }
         }
@@ -80,7 +82,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
             .addParameter("writer", BsonWriter::class.java)
             .addParameter(ParameterSpec.builder("instance", entityName).build())
             .addParameter("encoderContext", EncoderContext::class.java)
-        builder.beginControlFlow("if (areEquivalentTypes(instance::class.java, %T::class.java))", source.qualifiedName.className())
+        builder.beginControlFlow("if (areEquivalentTypes(instance::class.java, %T::class.java))", source.toTypeName())
         val eventMethods = source.functions(PrePersist::class.java) + source.functions(PostPersist::class.java)
         if (eventMethods.isNotEmpty()) {
             builder.addStatement("lifecycle(writer, instance, encoderContext)")
@@ -128,8 +130,8 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         builder.addStatement("var document = %T()", Document::class.java)
         builder.addCode("// call PrePersist methods\n")
         source.functions(PrePersist::class.java).forEach {
-            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
-            builder.addStatement("instance.${it.name}${params}\n")
+            val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")")
+            builder.addStatement("instance.${it.name()}${params}\n")
         }
         builder.beginControlFlow("mapper.interceptors.forEach", EntityInterceptor::class.java)
         builder.addStatement("it.prePersist(instance, document, codec.datastore)")
@@ -139,8 +141,8 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         builder.addStatement("document = documentWriter.document")
         builder.addCode("// call PostPersist methods\n")
         source.functions(PostPersist::class.java).forEach {
-            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
-            builder.addStatement("instance.${it.name}${params}\n")
+            val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")")
+            builder.addStatement("instance.${it.name()}${params}\n")
         }
 
         builder.beginControlFlow("mapper.interceptors.forEach", EntityInterceptor::class.java)
@@ -161,12 +163,12 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
                 writer.writeString(model.discriminatorKey, model.discriminator)
             }
         """.trimIndent()
-        source.properties.forEach { field ->
-            if (!(field.hasAnnotation(Id::class.java)
-                    || field.hasAnnotation(LoadOnly::class.java)
-                    || field.hasAnnotation(NotSaved::class.java))
+        source.getAllProperties().forEach { property ->
+            if (!(property.hasAnnotation(Id::class.java)
+                    || property.hasAnnotation(LoadOnly::class.java)
+                    || property.hasAnnotation(NotSaved::class.java))
             ) {
-                lines += "encodeValue(writer, encoderContext, model.getProperty(\"${field.name}\")!!, instance.${field.name})"
+                lines += "encodeValue(writer, encoderContext, model.getProperty(\"${property.name()}\")!!, instance.${property.name()})"
             }
         }
         return lines.joinToString("\n")
@@ -179,22 +181,22 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
                 .addParameter("writer", BsonWriter::class.java)
                 .addParameter(ParameterSpec.builder("instance", entityName).build())
                 .addParameter("encoderContext", EncoderContext::class.java)
-            val idType = ClassName.bestGuess(it.type.name)
+            val idType = ClassName.bestGuess(it.type.className())
             method.addCode(
                 """
-                val id: %T? = instance.${it.name}
+                val id: %T? = instance.${it.name()}
                 if (id == null && encoderContext.isEncodingCollectibleDocument) {
-                    instance.${it.name} = idGenerator?.generate() as %T
+                    instance.${it.name()} = idGenerator?.generate() as %T
                 }
                 val idModel = morphiaCodec.entityModel.idProperty!!
-                encodeValue(writer, encoderContext, idModel, instance.${it.name})
+                encodeValue(writer, encoderContext, idModel, instance.${it.name()})
                 """.trimIndent(), idType, idType)
             encoder.addFunction(method.build())
         }
     }
 
-    private fun idProperty(): CritterProperty? {
-        return source.properties
+    private fun idProperty(): KSPropertyDeclaration? {
+        return source.getAllProperties()
             .filter { it.hasAnnotation(Id::class.java) }
             .firstOrNull()
     }
@@ -203,7 +205,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         encoder.addFunction(
             FunSpec.builder("getEncoderClass")
                 .addModifiers(OVERRIDE)
-                .addStatement("return ${source.name}::class.java")
+                .addStatement("return ${source.name()}::class.java")
                 .returns(Class::class.java.asClassName().parameterizedBy(entityName))
                 .build()
         )
