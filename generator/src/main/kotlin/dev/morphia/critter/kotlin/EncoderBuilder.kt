@@ -2,6 +2,7 @@
 
 package dev.morphia.critter.kotlin
 
+import className
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -27,6 +28,8 @@ import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.className
 import dev.morphia.critter.kotlin.extensions.functions
+import dev.morphia.critter.kotlin.extensions.hasAnnotation
+import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec

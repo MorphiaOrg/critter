@@ -25,6 +25,12 @@ import dev.morphia.Datastore
 import dev.morphia.DeleteOptions
 import dev.morphia.Morphia
 import dev.morphia.UpdateOptions
+import dev.morphia.critter.test.criteria.InvoiceCriteria
+import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.addresses
+import dev.morphia.critter.test.criteria.InvoiceCriteria.Companion.orderDate
+import dev.morphia.critter.test.criteria.PersonCriteria.Companion.age
+import dev.morphia.critter.test.criteria.PersonCriteria.Companion.first
+import dev.morphia.critter.test.criteria.PersonCriteria.Companion.last
 import dev.morphia.mapping.MapperOptions
 import dev.morphia.query.FindOptions
 import dev.morphia.query.MorphiaCursor
@@ -49,12 +55,8 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 @Test
-@Suppress("UNUSED_PARAMETER")
+@Suppress("UNUSED_PARAMETER", "removal", "DEPRECATION")
 class KotlinCriteriaTest {
-    fun dummy() {
-
-    }
-/*
     companion object {
         var mongoDBContainer: MongoDBContainer? = null
         lateinit var  database: MongoDatabase
@@ -63,7 +65,7 @@ class KotlinCriteriaTest {
 
         @BeforeTest
         fun setup() {
-            mongoDBContainer = MongoDBContainer("mongo:6.0.4")
+            mongoDBContainer = MongoDBContainer("mongo:6")
             mongoDBContainer?.let {
                 it.start()
 
@@ -124,10 +126,11 @@ class KotlinCriteriaTest {
         datastore.save(person)
         invoice = Invoice(now(), person, Address("NYC", "NY", "10018"))
         datastore.save(invoice)
+        val addresses1 = addresses()
         val criteria1: MorphiaCursor<Invoice> = datastore.find(
             Invoice::class.java
         ).filter(orderDate().lte(now().plusDays(5))).iterator(
-                FindOptions().sort(ascending(addresses().city().path))
+                FindOptions().sort(ascending(addresses1.city().path))
             )
         val list = criteria1.toList()
         assertEquals(
@@ -296,9 +299,8 @@ class KotlinCriteriaTest {
         assertEquals(
             datastore.find(Person::class.java).first()?.age, 31L
         )
-        assertNotNull(datastore.find(Person::class.java)?.first()?.first)
+        assertNotNull(datastore.find(Person::class.java).first()?.first)
         val delete = datastore.find(Person::class.java).delete()
         assertEquals(delete.deletedCount, 1)
     }
-*/
 }

@@ -12,10 +12,6 @@
     <artifactId>critter-generator</artifactId>
     <version>4.4.0-SNAPSHOT</version>
 
-    <properties>
-        <symbol-processing-api.version>1.7.22-1.0.8</symbol-processing-api.version>
-    </properties>
-
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
@@ -105,13 +101,13 @@
         <dependency>
             <groupId>com.google.devtools.ksp</groupId>
             <artifactId>symbol-processing-api</artifactId>
-            <version>${symbol-processing-api.version}</version>
+            <version>${ksp.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.devtools.ksp</groupId>
             <artifactId>symbol-processing-cmdline</artifactId>
-            <version>${symbol-processing-api.version}</version>
+            <version>${ksp.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

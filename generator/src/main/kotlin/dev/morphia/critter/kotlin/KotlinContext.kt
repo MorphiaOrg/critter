@@ -1,5 +1,6 @@
 package dev.morphia.critter.kotlin
 
+import className
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.FileLocation

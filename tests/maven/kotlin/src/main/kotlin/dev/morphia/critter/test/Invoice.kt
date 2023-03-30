@@ -9,10 +9,9 @@ import dev.morphia.annotations.PreLoad
 import dev.morphia.annotations.PrePersist
 import dev.morphia.annotations.Reference
 import dev.morphia.annotations.Transient
-import org.bson.types.ObjectId
 import java.time.LocalDateTime
-import java.util.Objects
 import java.util.StringJoiner
+import org.bson.types.ObjectId
 
 @Entity
 class Invoice() {
@@ -20,15 +19,13 @@ class Invoice() {
     var id: ObjectId = ObjectId()
 
     var orderDate: LocalDateTime? = null
-        set(value: LocalDateTime?) {
+        set(value) {
             field = value?.withNano(0)
         }
 
     @Reference
     var person: Person? = null
-    var listListList: List<List<List<Address>>> = mutableListOf()
     var addresses: MutableList<Address> = mutableListOf()
-    var mapList: MutableMap<String, List<Address>> = LinkedHashMap()
     var total: Double = 0.0
     var items: MutableList<Item> = mutableListOf()
 
@@ -59,8 +56,6 @@ class Invoice() {
         this.orderDate = orderDate
         this.person = person
         this.addresses.add(addresses)
-        mapList["1"] = this.addresses
-        listListList = mutableListOf(mutableListOf<List<Address>>(this.addresses))
         this.items.addAll(items)
     }
 
@@ -94,9 +89,7 @@ class Invoice() {
             .add("id=$id")
             .add("orderDate=$orderDate")
             .add("person=$person")
-            .add("listListList=$listListList")
             .add("addresses=$addresses")
-            .add("mapList=$mapList")
             .add("total=$total")
             .add("items=$items")
             .toString()
@@ -109,9 +102,7 @@ class Invoice() {
         if (id != other.id) return false
         if (orderDate != other.orderDate) return false
         if (person != other.person) return false
-        if (listListList != other.listListList) return false
         if (addresses != other.addresses) return false
-        if (mapList != other.mapList) return false
         if (total != other.total) return false
         if (items != other.items) return false
 
@@ -121,9 +112,7 @@ class Invoice() {
         var result = id.hashCode()
         result = 31 * result + (orderDate?.hashCode() ?: 0)
         result = 31 * result + (person?.hashCode() ?: 0)
-        result = 31 * result + listListList.hashCode()
         result = 31 * result + addresses.hashCode()
-        result = 31 * result + mapList.hashCode()
         result = 31 * result + total.hashCode()
         result = 31 * result + items.hashCode()
         return result

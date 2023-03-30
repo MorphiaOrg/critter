@@ -8,9 +8,9 @@ import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.critter.Critter.addMethods
-import dev.morphia.critter.kotlin.isContainer
-import dev.morphia.critter.kotlin.isNumeric
-import dev.morphia.critter.kotlin.isText
+import dev.morphia.critter.kotlin.extensions.isContainer
+import dev.morphia.critter.kotlin.extensions.isNumeric
+import dev.morphia.critter.kotlin.extensions.isText
 import dev.morphia.query.updates.AddToSetOperator
 import dev.morphia.query.updates.UpdateOperator
 import dev.morphia.query.updates.UpdateOperators

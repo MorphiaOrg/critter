@@ -95,8 +95,16 @@
                                 <value>kotlin("jvm") version "${kotlin.version}"</value>
                             </replacement>
                             <replacement>
+                                <token>(id\("com.google.devtools.ksp"\).*)</token>
+                                <value>id("com.google.devtools.ksp") version "${ksp.version}"</value>
+                            </replacement>
+                            <replacement>
                                 <token>(morphia.version=.*)</token>
                                 <value>morphia.version=${morphia.version}</value>
+                            </replacement>
+                            <replacement>
+                                <token>(critter.version=.*)</token>
+                                <value>critter.version=${project.version}</value>
                             </replacement>
                             <replacement>
                                 <token>(testng.version=.*)</token>

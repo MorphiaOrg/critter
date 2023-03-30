@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    id("com.google.devtools.ksp") version "1.7.22-1.0.8"
     kotlin("jvm") version "1.7.22"
-    id("dev.morphia.critter") version "4.4.0-SNAPSHOT"
 }
 
 repositories {
@@ -14,14 +14,15 @@ repositories {
 }
 
 sourceSets.main {
-    java.srcDirs("src/main/kotlin")
+    java.srcDirs("../../maven/kotlin/src/main/kotlin")
 }
 
 sourceSets.test {
-    java.srcDirs("src/test/kotlin")
+    java.srcDirs("../../maven/kotlin/src/test/kotlin")
 }
 
 dependencies {
+    ksp("dev.morphia.critter:dev.morphia.critter.gradle.plugin:4.4.0-SNAPSHOT")
     implementation("dev.morphia.morphia:morphia-core:${findProperty("morphia.version")}")
     testImplementation("org.testng:testng:${findProperty("testng.version")}")
     testImplementation("org.testcontainers:mongodb:${findProperty("testcontainers.version")}")
@@ -30,12 +31,6 @@ dependencies {
 tasks {
    test {
         useTestNG()
-    }
-
-    critter {
-        force = true
-        format = true
-        outputType = "kotlin"
     }
 }
 

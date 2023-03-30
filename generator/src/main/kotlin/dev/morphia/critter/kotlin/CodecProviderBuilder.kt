@@ -15,6 +15,7 @@ import com.squareup.kotlinpoet.asClassName
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.MorphiaInstanceCreator

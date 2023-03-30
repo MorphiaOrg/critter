@@ -1,5 +1,6 @@
 package dev.morphia.critter.kotlin.extensions
 
+import className
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.hasAnnotation
 import com.google.devtools.ksp.symbol.ClassKind.INTERFACE
@@ -11,8 +12,6 @@ import dev.morphia.annotations.PostLoad
 import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PreLoad
 import dev.morphia.annotations.PrePersist
-import dev.morphia.critter.kotlin.className
-import dev.morphia.critter.kotlin.name
 
 fun KSClassDeclaration.toTypeName(): TypeName {
     return ClassName(packageName.asString(), simpleName.asString())

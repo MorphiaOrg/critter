@@ -18,6 +18,7 @@ import dev.morphia.annotations.PreLoad
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.className
 import dev.morphia.critter.kotlin.extensions.functions
+import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.critter.titleCase
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator

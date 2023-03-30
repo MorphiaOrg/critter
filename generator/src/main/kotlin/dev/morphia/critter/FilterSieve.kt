@@ -9,9 +9,9 @@ import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import dev.morphia.critter.kotlin.isContainer
-import dev.morphia.critter.kotlin.isNumeric
-import dev.morphia.critter.kotlin.isText
+import dev.morphia.critter.kotlin.extensions.isContainer
+import dev.morphia.critter.kotlin.extensions.isNumeric
+import dev.morphia.critter.kotlin.extensions.isText
 import dev.morphia.query.filters.Filter
 import dev.morphia.query.filters.Filters
 import dev.morphia.query.filters.RegexFilter

@@ -1,5 +1,6 @@
 package dev.morphia.critter.kotlin
 
+import className
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -27,6 +28,8 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.critter.methodCase
 import dev.morphia.critter.titleCase
@@ -39,6 +42,8 @@ import dev.morphia.mapping.codec.pojo.TypeData
 import org.bson.codecs.pojo.PropertyAccessor
 import java.util.concurrent.atomic.AtomicInteger
 import nullable
+import packageName
+import simpleName
 
 @OptIn(DelicateKotlinPoetApi::class)
 class ModelImporter(val context: KotlinContext) : SourceBuilder {

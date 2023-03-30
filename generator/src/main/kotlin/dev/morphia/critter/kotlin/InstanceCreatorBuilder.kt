@@ -1,5 +1,6 @@
 package dev.morphia.critter.kotlin
 
+import className
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -18,6 +19,7 @@ import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.bestConstructor
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.PropertyModel
