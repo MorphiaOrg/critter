@@ -1,8 +1,7 @@
-@file:Suppress("DEPRECATION")
+@file:Suppress("DEPRECATION", "removal")
 
 package dev.morphia.critter.kotlin
 
-import className
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -26,6 +25,7 @@ import dev.morphia.annotations.NotSaved
 import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.className
 import dev.morphia.critter.kotlin.extensions.functions
 import dev.morphia.critter.kotlin.extensions.hasAnnotation
@@ -47,14 +47,14 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
     private lateinit var entityName: ClassName
     override fun build() {
         context.entities().values.forEach { source ->
-            this.source = source
-
-            entityName = ClassName.bestGuess(source.className())
-            encoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name()}Encoder")
-            encoder = TypeSpec.classBuilder(encoderName)
-                .addModifiers(PUBLIC, FINAL)
-
             if (!source.isAbstract()) {
+                this.source = source
+
+                entityName = ClassName.bestGuess(source.className())
+                encoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name()}Encoder")
+                encoder = TypeSpec.classBuilder(encoderName)
+                    .addModifiers(PUBLIC, FINAL)
+
                 buildEncoder()
             }
         }
@@ -132,13 +132,15 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         builder.addStatement("val mapper = codec.mapper")
         builder.addStatement("var document = %T()", Document::class.java)
         builder.addCode("// call PrePersist methods\n")
-        source.functions(PrePersist::class.java).forEach {
+        val prepersist = source.functions(PrePersist::class.java)
+        prepersist.forEach {
             val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")")
             builder.addStatement("instance.${it.name()}${params}\n")
         }
-        builder.beginControlFlow("mapper.interceptors.forEach", EntityInterceptor::class.java)
+        builder.beginControlFlow("mapper.interceptors.forEach")
         builder.addStatement("it.prePersist(instance, document, codec.datastore)")
         builder.endControlFlow()
+
         builder.addStatement("val documentWriter = %T(mapper, document)", DocumentWriter::class.java)
         builder.addStatement("encodeProperties(documentWriter, instance, encoderContext)")
         builder.addStatement("document = documentWriter.document")
@@ -166,7 +168,8 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
                 writer.writeString(model.discriminatorKey, model.discriminator)
             }
         """.trimIndent()
-        source.getAllProperties().forEach { property ->
+        source.activeProperties()
+            .forEach { property ->
             if (!(property.hasAnnotation(Id::class.java)
                     || property.hasAnnotation(LoadOnly::class.java)
                     || property.hasAnnotation(NotSaved::class.java))
@@ -199,7 +202,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
     }
 
     private fun idProperty(): KSPropertyDeclaration? {
-        return source.getAllProperties()
+        return source.activeProperties()
             .filter { it.hasAnnotation(Id::class.java) }
             .firstOrNull()
     }

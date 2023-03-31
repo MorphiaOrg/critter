@@ -14,11 +14,11 @@ repositories {
 }
 
 sourceSets.main {
-    java.srcDirs("../../maven/kotlin/src/main/kotlin")
+    java.srcDirs("src/main/kotlin")
 }
 
 sourceSets.test {
-    java.srcDirs("../../maven/kotlin/src/test/kotlin")
+    java.srcDirs("src/test/kotlin")
 }
 
 dependencies {

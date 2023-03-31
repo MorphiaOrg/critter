@@ -1,8 +1,6 @@
 package dev.morphia.critter.kotlin
 
-import className
 import com.google.devtools.ksp.isAbstract
-import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -27,9 +25,16 @@ import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.Datastore
+import dev.morphia.annotations.Transient
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.hasAnnotation
+import dev.morphia.critter.kotlin.extensions.isNotTransient
 import dev.morphia.critter.kotlin.extensions.name
+import dev.morphia.critter.kotlin.extensions.nullable
+import dev.morphia.critter.kotlin.extensions.packageName
+import dev.morphia.critter.kotlin.extensions.simpleName
 import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.critter.methodCase
 import dev.morphia.critter.titleCase
@@ -41,9 +46,6 @@ import dev.morphia.mapping.codec.pojo.EntityModelBuilder
 import dev.morphia.mapping.codec.pojo.TypeData
 import org.bson.codecs.pojo.PropertyAccessor
 import java.util.concurrent.atomic.AtomicInteger
-import nullable
-import packageName
-import simpleName
 
 @OptIn(DelicateKotlinPoetApi::class)
 class ModelImporter(val context: KotlinContext) : SourceBuilder {
@@ -93,7 +95,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             .filter { !it.isAbstract() }
             .forEach { source ->
                 this.source = source
-                this.properties = source.getAllProperties().toList()
+                this.properties = source.activeProperties().toList()
                 this.utilName = "${source.name()}Util"
                 this.util = TypeSpec.objectBuilder(utilName)
                     .addModifiers(INTERNAL)
@@ -156,6 +158,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 */
     private fun properties(builder: FunSpec.Builder) {
         properties
+            .filter { it.isNotTransient() }
             .forEach { property ->
                 builder.addCode(
                     """modelBuilder.addProperty()
@@ -177,6 +180,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             }
     }
 
+
     private fun accessor(property: KSPropertyDeclaration): String {
         val name = "${property.name().methodCase()}Accessor"
         val propertyType = property.type.toTypeName()
@@ -189,7 +193,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                         override fun <S : Any> set(instance: S, newValue: %T) {
                         
                 """.trimIndent(), PropertyAccessor::class.java, propertyType, propertyType)
-        if(property.isOpen()) {
+        if(property.isMutable) {
             method.addStatement("(instance as ${source.name()}).${property.name()} = newValue")
         } else {
             method.addStatement("throw %T(\"${property.name()} is immutable.\")", IllegalStateException::class.java)

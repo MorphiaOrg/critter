@@ -1,34 +1,24 @@
 package dev.morphia.critter.kotlin
 
-import className
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
-import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ksp.writeTo
 import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Entity
 import dev.morphia.critter.CritterConfig
 import dev.morphia.critter.CritterContext
-import dev.morphia.critter.CritterType
-import java.io.File
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.internal.compiler.parser.Parser.name
+import dev.morphia.critter.kotlin.extensions.className
 import org.slf4j.LoggerFactory
-import com.squareup.kotlinpoet.ksp.writeTo
 
 @Suppress("UNCHECKED_CAST")
 class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironment, val dependencies: Dependencies)
     : CritterContext<KSClassDeclaration, TypeSpec>(config) {
 
-    companion object {
-        private val LOG = LoggerFactory.getLogger(KotlinContext::class.java)
-    }
     val codeGenerator = environment.codeGenerator
 
     val formatter = SpotlessFormatter(Kotlin())
@@ -64,6 +54,14 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
         buildFile(buildFileSpec(typeSpec, staticImports))
     }
 
+    override fun generateServiceLoader(model: Class<*>, impl: String) {
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "META-INF/services/${model.name}", "").use {
+            val writer = it.writer()
+            writer.write(impl + "\n")
+            writer.flush()
+        }
+    }
+
     fun buildFile(fileSpec: FileSpec) {
 /*
         if (format) {
@@ -86,9 +84,3 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
     }
 }
 
-fun CritterType.typeName(): TypeName {
-    val typeName: ClassName = name.className()
-
-    return if (typeParameters.isEmpty()) typeName else
-        typeName.parameterizedBy(typeParameters.map { it.typeName() })
-}

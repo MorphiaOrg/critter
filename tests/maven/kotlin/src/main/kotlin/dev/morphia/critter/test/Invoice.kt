@@ -16,7 +16,7 @@ import org.bson.types.ObjectId
 @Entity
 class Invoice() {
     @Id
-    var id: ObjectId = ObjectId()
+    var id = ObjectId()
 
     var orderDate: LocalDateTime? = null
         set(value) {

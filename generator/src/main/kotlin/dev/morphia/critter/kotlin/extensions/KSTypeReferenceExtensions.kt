@@ -1,8 +1,7 @@
+package dev.morphia.critter.kotlin.extensions
+
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Nullability.NULLABLE
-import dev.morphia.critter.kotlin.extensions.className
-import dev.morphia.critter.kotlin.extensions.packageName
-import dev.morphia.critter.kotlin.extensions.simpleName
 
 fun KSTypeReference.nullable() = resolve().nullability == NULLABLE
 

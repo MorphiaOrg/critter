@@ -12,15 +12,17 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
     companion object {
         val DOCUMENT = CritterType(Document::class.java.name, nullable = false)
         val MAPPER = CritterType(Mapper::class.java.name, nullable = false)
-        internal val CONTAINER_TYPES = listOf("List", "Set")
-            .map { listOf(it, "java.util.$it", "Mutable$it") }
-            .flatten()
+        internal val LIST_TYPES = listOf("List", "MutableList").explodeTypes(listOf("java.util", "kotlin.collections"))
+        internal val SET_TYPES = listOf("Set", "MutableSet").explodeTypes(listOf("java.util", "kotlin.collections"))
+        internal val MAP_TYPES = listOf("Map", "MutableMap").explodeTypes(listOf("java.util", "kotlin.collections"))
+        internal val CONTAINER_TYPES = LIST_TYPES + SET_TYPES
+
         internal val GEO_TYPES = listOf("double[]", "Double[]").explodeTypes()
         internal val NUMERIC_TYPES = listOf("Float", "Double", "Long", "Int", "Integer", "Byte", "Short", "Number").explodeTypes()
         internal val TEXT_TYPES = listOf("String").explodeTypes()
-        private fun List<String>.explodeTypes(): List<String> {
+        private fun List<String>.explodeTypes(packages: List<String> = listOf("java.lang", "kotlin")): List<String> {
             return flatMap {
-                listOf(it, "java.lang.$it", "kotlin.$it")
+                listOf(it) + packages.map { pkg -> "$pkg.$it"}
             }
         }
     }
@@ -36,7 +38,12 @@ data class CritterType(val name: String, val typeParameters: List<CritterType> =
     }
 
     val isContainer: Boolean by lazy {
-        name in CONTAINER_TYPES
+        name in CONTAINER_TYPES || try {
+            val klass = Class.forName(name)
+            List::class.java.isAssignableFrom(klass) || Set::class.java.isAssignableFrom(klass)
+        } catch (_: Exception) {
+            false
+        }
     }
 
     val isGeoCompatible: Boolean by lazy {

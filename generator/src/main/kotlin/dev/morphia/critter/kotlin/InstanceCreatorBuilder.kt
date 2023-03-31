@@ -1,9 +1,8 @@
 package dev.morphia.critter.kotlin
 
-import className
 import com.google.devtools.ksp.isAbstract
-import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -17,8 +16,13 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.bestConstructor
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.isContainer
+import dev.morphia.critter.kotlin.extensions.isList
+import dev.morphia.critter.kotlin.extensions.isMap
+import dev.morphia.critter.kotlin.extensions.isSet
 import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
@@ -86,7 +90,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         if (entityProperties.isNotEmpty()) {
             method.beginControlFlow(".also")
             entityProperties.forEach { property ->
-                if(source.getAllProperties().first { prop -> prop.name() == property.name }.isOpen()) {
+                if(source.activeProperties().first { prop -> prop.name() == property.name }.isMutable) {
                     if(property.modifiers.contains(LATEINIT)) {
                         method.beginControlFlow("if (::${property.name}.isInitialized)")
                     }
@@ -112,8 +116,8 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         params: List<KSValueParameter>,
         entityProperties: MutableList<PropertySpec>
     ) {
-        source.getAllProperties().forEach {
-            val initializer = defaultValues[it.type.className()]
+        source.activeProperties().forEach {
+            val initializer = defaultValues[it.type.className()] ?: calculateInitializer(it)
             val type = it.type
 
             val ctorParam = params.firstOrNull { param -> param.name?.asString() == it.name() }
@@ -122,7 +126,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             val property = PropertySpec.builder(it.name(), type.toTypeName(), PRIVATE)
                 .mutable(true)
 
-            if (initializer != null) {
+             if (initializer != null) {
                 property.initializer(initializer)
             } else {
                 if (nullable) {
@@ -138,6 +142,15 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         }
     }
 
+    private fun calculateInitializer(property: KSPropertyDeclaration): String? {
+        return when {
+            property.isList() -> "mutableListOf()"
+            property.isSet() -> "mutableSetOf()"
+            property.isMap() -> "LinkedHashMap()"
+            else -> null
+        }
+    }
+
     private fun set() {
         val method = FunSpec.builder("set")
             .addModifiers(OVERRIDE)
@@ -145,11 +158,11 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             .addParameter("model", PropertyModel::class.java)
 
         method.beginControlFlow("when(model.name)")
-        source.getAllProperties().forEach { property ->
+        source.activeProperties().forEach { property ->
             method.beginControlFlow("\"${property.name()}\" ->")
             method.addStatement("this.${property.name()} = value as %T", property.type.toTypeName())
             method.beginControlFlow("if(::instance.isInitialized)")
-            if (property.isOpen()) {
+            if (property.isMutable) {
                 method.addStatement("instance.${property.name()} = value")
             } else {
                 method.addStatement("""throw %T("${property.name()} is immutable.")""", IllegalStateException::class.java)

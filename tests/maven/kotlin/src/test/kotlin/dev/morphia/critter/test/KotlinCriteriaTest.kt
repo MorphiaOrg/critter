@@ -87,6 +87,10 @@ class KotlinCriteriaTest {
         }
     }
 
+    fun dummy() {
+        fail("dummy")
+    }
+
     @Test(dataProvider = "datastores")
     fun andQueries(state: String, datastore: Datastore) {
         datastore.save(Person("Mike", "Bloomberg"))
@@ -126,11 +130,10 @@ class KotlinCriteriaTest {
         datastore.save(person)
         invoice = Invoice(now(), person, Address("NYC", "NY", "10018"))
         datastore.save(invoice)
-        val addresses1 = addresses()
         val criteria1: MorphiaCursor<Invoice> = datastore.find(
             Invoice::class.java
         ).filter(orderDate().lte(now().plusDays(5))).iterator(
-                FindOptions().sort(ascending(addresses1.city().path))
+                FindOptions().sort(ascending(addresses().city().path))
             )
         val list = criteria1.toList()
         assertEquals(

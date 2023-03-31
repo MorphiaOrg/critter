@@ -2,7 +2,6 @@
 
 package dev.morphia.critter.kotlin
 
-import className
 import com.google.devtools.ksp.hasAnnotation
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -31,17 +30,19 @@ import dev.morphia.critter.CritterType
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.UpdateSieve
+import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.className
 import dev.morphia.critter.kotlin.extensions.hasAnnotation
 import dev.morphia.critter.kotlin.extensions.name
+import dev.morphia.critter.kotlin.extensions.packageName
 import dev.morphia.critter.kotlin.extensions.simpleName
 import dev.morphia.critter.titleCase
 import dev.morphia.query.filters.Filters
 import dev.morphia.query.updates.UpdateOperators
 import org.slf4j.LoggerFactory
-import packageName
 
-class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
+class
+KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
     companion object {
         private val STRING = String::class.asClassName()
         private val NULLABLE_STRING = STRING.copy(nullable = true)
@@ -78,7 +79,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                         .initializer("path")
                         .build()
                 )
-                val properties = source.getAllProperties().iterator()
+                val properties = source.activeProperties().iterator()
                 if (properties.hasNext()) {
                     buildCompanionObject("${source.name()}Criteria", source, criteriaClass)
                 }
@@ -113,7 +114,7 @@ class KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
                     .build()
             )
 
-            source.getAllProperties().forEach { property ->
+            source.activeProperties().forEach { property ->
                 val mappedName = property.mappedName()
                 addProperty(
                     PropertySpec.builder(property.name(), STRING)
