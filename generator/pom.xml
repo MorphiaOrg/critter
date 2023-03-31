@@ -102,13 +102,11 @@
             <groupId>com.google.devtools.ksp</groupId>
             <artifactId>symbol-processing-api</artifactId>
             <version>${ksp.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.devtools.ksp</groupId>
             <artifactId>symbol-processing-cmdline</artifactId>
             <version>${ksp.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.squareup</groupId>
