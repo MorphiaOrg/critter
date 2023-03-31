@@ -29,7 +29,7 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
 
             creator.addAnnotation(
                 AnnotationSpec.builder(SuppressWarnings::class.java)
-                    .addMember("value", CodeBlock.of("""{"rawtypes"}"""))
+                    .addMember("value", CodeBlock.of("""{"rawtypes", "unchecked"}"""))
                     .build()
             )
 
