@@ -87,10 +87,6 @@ class KotlinCriteriaTest {
         }
     }
 
-    fun dummy() {
-        fail("dummy")
-    }
-
     @Test(dataProvider = "datastores")
     fun andQueries(state: String, datastore: Datastore) {
         datastore.save(Person("Mike", "Bloomberg"))

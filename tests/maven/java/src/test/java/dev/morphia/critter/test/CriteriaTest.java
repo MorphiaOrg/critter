@@ -41,6 +41,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+@SuppressWarnings("removal")
 @Test
 public class CriteriaTest {
     private MongoDBContainer mongoDBContainer;
