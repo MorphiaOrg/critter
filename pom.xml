@@ -28,7 +28,6 @@
         <gradle.version>7.6.1</gradle.version>
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
-        <kibble.version>0.23.0-SNAPSHOT</kibble.version>
         <kotlin.version>1.7.22</kotlin.version>
         <kotlinpoet.version>1.12.0</kotlinpoet.version>
         <ksp-maven.version>1.4</ksp-maven.version>
@@ -103,23 +102,6 @@
                 <artifactId>kotlin-compiler-embeddable</artifactId>
                 <version>${kotlin.version}</version>
             </dependency>
-<!--
-            <dependency>
-                <groupId>com.antwerkz.kibble</groupId>
-                <artifactId>kibble</artifactId>
-                <version>${kibble.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-stdlib-jdk8</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-script-runtime</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
--->
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>mongodb</artifactId>
