@@ -1,6 +1,7 @@
 package dev.morphia.critter.kotlin
 
 import com.google.devtools.ksp.isAbstract
+import com.google.devtools.ksp.isDefault
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -25,15 +26,13 @@ import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.Datastore
-import dev.morphia.annotations.Transient
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.className
-import dev.morphia.critter.kotlin.extensions.hasAnnotation
 import dev.morphia.critter.kotlin.extensions.isNotTransient
+import dev.morphia.critter.kotlin.extensions.morphiaAnnotations
 import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.critter.kotlin.extensions.nullable
-import dev.morphia.critter.kotlin.extensions.packageName
 import dev.morphia.critter.kotlin.extensions.simpleName
 import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.critter.methodCase
@@ -167,7 +166,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                 """
                 )
                 typeData(builder, property)
-                property.annotations.forEach {
+                property.morphiaAnnotations().forEach {
                     if (it.arguments.isNotEmpty()) {
                         val name = buildAnnotation(it)
                         builder.addCode(".annotation($name())\n")
@@ -257,8 +256,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
     }
 
     private fun annotations(builder: FunSpec.Builder) {
-        source.annotations
-            .filter { it.annotationType.packageName().startsWith("dev.morphia") }
+        source.morphiaAnnotations()
             .forEach {
                 if (it.arguments.isNotEmpty()) {
                     builder.addCode(".annotation(${buildAnnotation(it)}())\n")
@@ -280,19 +278,10 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
         builder.addStatement("val builder = %T.${builderName.simpleName.methodCase()}()", builderName)
         annotation.arguments
+            .filterNot { it.isDefault() }
             .forEach { argument ->
                 val name = argument.name?.asString() ?: "value"
-                var value = argument.value
-                value = when (value) {
-                    is String -> "\"${value}\""
-                    is KSAnnotation -> buildAnnotation(value) + "()"
-                    is Array<*> -> value.joinToString(", ") {
-                        buildAnnotation(it as KSAnnotation) + "()"
-                    }
-
-                    is KSType -> "${value.declaration.className()}::class.java"
-                    else -> value
-                }
+                var value = convertArgumentValue(name, argument.value)
                 builder.addStatement(".$name($value)")
             }
 
@@ -300,6 +289,25 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
         util.addFunction(builder.build())
         return "$utilName.$methodName"
+    }
+
+    private fun convertArgumentValue(name: String, value: Any?): String {
+        return when (value) {
+            is String -> "\"${value}\""
+            is KSAnnotation -> buildAnnotation(value) + "()"
+            is List<*> -> value.joinToString(", ") {
+                "" + convertArgumentValue(name, it)
+            }
+
+            is Number -> value.toString()
+            is KSType -> return value.declaration.className() + if (value.toString() == value.declaration.className()) {
+                    ""
+                } else {
+                    "::class.java"
+                }
+
+            else -> value.toString()
+        }
     }
 
     private fun annotationBuilderName(it: KSAnnotation): ClassName {

@@ -1,11 +1,23 @@
 package dev.morphia.critter.test
 
+import com.mongodb.client.model.CollationAlternate.SHIFTED
+import dev.morphia.annotations.Collation
 import dev.morphia.annotations.Entity
+import dev.morphia.annotations.Field
 import dev.morphia.annotations.Id
+import dev.morphia.annotations.Index
+import dev.morphia.annotations.IndexOptions
+import dev.morphia.annotations.Indexes
 import dev.morphia.annotations.Property
+import java.time.LocalDateTime
+import kotlin.jvm.internal.ClassReference
 import org.bson.types.ObjectId
 
 @Entity
+@Indexes(
+    Index(fields = arrayOf(Field("emailAddress")), options = IndexOptions(unique = true, collation = Collation(alternate = SHIFTED))),
+    Index(fields = arrayOf(Field("ircName"), Field("hostName")))
+)
 open class Person : AbstractPerson {
     @Id
     var id: ObjectId? = null

@@ -30,7 +30,7 @@ fun KSClassDeclaration.bestConstructor(): KSFunctionDeclaration? {
     val ctors = getConstructors()
     if(hasLifecycleEvents()) {
         val method = ctors.firstOrNull { it.parameters.isEmpty() }
-        return method ?: throw IllegalStateException("A type with lifecycle events must have a no-arg constructor")
+        return method ?: throw IllegalStateException("A type with lifecycle events must have a no-arg constructor: ${className()}")
     }
     val propertyMap = this.activeProperties()
         .map { it.name() to it.type }

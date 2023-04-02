@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("com.google.devtools.ksp") version "1.7.22-1.0.8"
-    kotlin("jvm") version "1.7.22"
+    id("com.google.devtools.ksp") version "1.8.10-1.0.9"
+    kotlin("jvm") version "1.8.10"
 }
 
 repositories {
