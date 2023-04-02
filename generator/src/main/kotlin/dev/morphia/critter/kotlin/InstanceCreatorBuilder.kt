@@ -117,7 +117,6 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         entityProperties: MutableList<PropertySpec>
     ) {
         source.activeProperties().forEach {
-            val initializer = defaultValues[it.type.className()] ?: calculateInitializer(it)
             val type = it.type
 
             val ctorParam = params.firstOrNull { param -> param.name?.asString() == it.name() }
@@ -126,28 +125,18 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             val property = PropertySpec.builder(it.name(), type.toTypeName(), PRIVATE)
                 .mutable(true)
 
-             if (initializer != null) {
+            val initializer = defaultValues[it.type.className()] //?: calculateInitializer(it)
+            if (nullable) {
+                property.initializer("null")
+            } else if (initializer != null) {
                 property.initializer(initializer)
             } else {
-                if (nullable) {
-                    property.initializer("null")
-                } else {
-                    property.addModifiers(LATEINIT)
-                }
+                property.addModifiers(LATEINIT)
             }
             property.build().also { propertySpec ->
                 if (ctorParam == null) entityProperties += propertySpec
                 creator.addProperty(propertySpec)
             }
-        }
-    }
-
-    private fun calculateInitializer(property: KSPropertyDeclaration): String? {
-        return when {
-            property.isList() -> "mutableListOf()"
-            property.isSet() -> "mutableSetOf()"
-            property.isMap() -> "LinkedHashMap()"
-            else -> null
         }
     }
 

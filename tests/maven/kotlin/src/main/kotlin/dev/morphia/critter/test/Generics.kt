@@ -1,8 +1,9 @@
 package dev.morphia.critter.test
 
 import dev.morphia.annotations.Entity
+import java.util.TreeMap
 
-//@Entity
+@Entity
 class Generics() {
     constructor(address: Address) : this() {
         mapList["1"] = listOf(address)
@@ -10,5 +11,5 @@ class Generics() {
     }
 
     var listListList: List<List<List<Address>>> = mutableListOf()
-    var mapList: MutableMap<String, List<Address>> = LinkedHashMap()
+    var mapList: TreeMap<String, List<Address>> = TreeMap()
 }
