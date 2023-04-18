@@ -257,7 +257,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         val argument = property.type
 
         method.addCode("return ")
-        emitTypeData(method, argument.toTypeName())
+        emitTypeData(method, argument.resolve().fullyQualified())
 
         util.addFunction(method.build())
         return "$utilName.$name()"

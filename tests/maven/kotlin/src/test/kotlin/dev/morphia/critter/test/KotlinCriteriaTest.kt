@@ -47,12 +47,14 @@ import org.testng.Assert.assertEquals
 import org.testng.Assert.assertFalse
 import org.testng.Assert.assertNotNull
 import org.testng.Assert.assertTrue
-import org.testng.Assert.fail
 import org.testng.annotations.AfterTest
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeTest
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+
+private const val STANDARD_CODECS = "Standard codecs"
+private const val CRITTER_CODECS = "Critter codecs"
 
 @Suppress("UNUSED_PARAMETER", "removal", "DEPRECATION")
 class KotlinCriteriaTest {
@@ -87,9 +89,20 @@ class KotlinCriteriaTest {
 
     @Test(dataProvider = "datastores")
     fun parents(state: String, datastore: Datastore) {
+        if( state == STANDARD_CODECS) {
+            datastore.mapper.map(
+                RootParent::class.java,
+                ChildLevel1a::class.java,
+                ChildLevel1b::class.java,
+                ChildLevel1c::class.java,
+                ChildLevel2a::class.java,
+                ChildLevel2b::class.java,
+                ChildLevel3a::class.java
+            )
+        }
         val rootParent = datastore.mapper.getEntityModel(RootParent::class.java)
 
-        assertEquals(rootParent.subtypes.size, 2)
+        assertEquals(rootParent.subtypes.size, 6)
     }
 
     @Test(dataProvider = "datastores")
@@ -116,8 +129,8 @@ class KotlinCriteriaTest {
     @DataProvider(name = "datastores")
     fun datastores(): Array<Array<Any>> {
         return arrayOf(
-            arrayOf("Standard codecs", getDatastore(false)),
-            arrayOf("Critter codecs", getDatastore(true))
+            arrayOf(STANDARD_CODECS, getDatastore(false)),
+            arrayOf(CRITTER_CODECS, getDatastore(true))
         )
     }
 

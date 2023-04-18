@@ -2,10 +2,7 @@ package dev.morphia.critter.kotlin.extensions
 
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Modifier.JAVA_TRANSIENT
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.annotations.Transient
 import dev.morphia.critter.CritterType
 import dev.morphia.critter.kotlin.getAnnotation
@@ -63,12 +60,6 @@ fun <T : Annotation> KSPropertyDeclaration.hasAnnotation(annotation: Class<T>): 
 }
 
 fun KSPropertyDeclaration.fullyQualified(): TypeName {
-    val resolved = type.resolve()
-    var propertyType = (resolved.toTypeName()
-        .copy(nullable = type.nullable()) as ClassName).let { type ->
-        if (resolved.arguments.isNotEmpty()) {
-            type.parameterizedBy(resolved.arguments.map { it.toTypeName() })
-        } else type
-    }
-    return propertyType
+    return type.resolve().fullyQualified()
 }
+
