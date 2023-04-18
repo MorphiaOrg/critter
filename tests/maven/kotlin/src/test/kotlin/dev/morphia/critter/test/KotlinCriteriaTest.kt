@@ -54,19 +54,17 @@ import org.testng.annotations.BeforeTest
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
-@Test
 @Suppress("UNUSED_PARAMETER", "removal", "DEPRECATION")
 class KotlinCriteriaTest {
     companion object {
         var mongoDBContainer: MongoDBContainer? = null
-        lateinit var  database: MongoDatabase
+        lateinit var database: MongoDatabase
         lateinit var mongoClient: MongoClient
         lateinit var datastore: Datastore
 
         @BeforeTest
         fun setup() {
-            mongoDBContainer = MongoDBContainer("mongo:6")
-            mongoDBContainer?.let {
+            mongoDBContainer = MongoDBContainer("mongo:6").also {
                 it.start()
 
                 mongoClient = MongoClients.create(
@@ -85,6 +83,13 @@ class KotlinCriteriaTest {
         fun shutdown() {
             mongoDBContainer?.close()
         }
+    }
+
+    @Test(dataProvider = "datastores")
+    fun parents(state: String, datastore: Datastore) {
+        val rootParent = datastore.mapper.getEntityModel(RootParent::class.java)
+
+        assertEquals(rootParent.subtypes.size, 2)
     }
 
     @Test(dataProvider = "datastores")
@@ -111,7 +116,8 @@ class KotlinCriteriaTest {
     @DataProvider(name = "datastores")
     fun datastores(): Array<Array<Any>> {
         return arrayOf(
-            arrayOf("Standard codecs", getDatastore(false)), arrayOf("Critter codecs", getDatastore(true))
+            arrayOf("Standard codecs", getDatastore(false)),
+            arrayOf("Critter codecs", getDatastore(true))
         )
     }
 
@@ -235,6 +241,7 @@ class KotlinCriteriaTest {
         assertEquals(query.iterator().toList(), criteria.iterator().toList())
     }
 
+    @Test
     fun paths() {
         assertEquals(addresses().city().path, "addresses.city")
         assertEquals(orderDate().path, "orderDate")

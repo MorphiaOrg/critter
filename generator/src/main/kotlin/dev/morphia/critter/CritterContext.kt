@@ -12,7 +12,7 @@ abstract class CritterContext<C, T>(
 ) {
     constructor(config: CritterConfig) : this(config.criteriaPkg, config.force, config.format, config.outputDirectory, config.resourceOutput)
 
-    protected val classes: MutableMap<String, C> = mutableMapOf()
+    val classes: MutableMap<String, C> = mutableMapOf()
 
     protected fun add(name: String, type: C) {
         classes[name] = type

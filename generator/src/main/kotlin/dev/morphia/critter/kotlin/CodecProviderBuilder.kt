@@ -66,11 +66,13 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
             .forEach { javaClass ->
                 method.beginControlFlow("%T::class.java ->", javaClass.toTypeName())
                 method.addStatement(
-                    "val codec = MorphiaCodec<%T>(datastore, mapper.getEntityModel(type), propertyCodecProviders, mapper" +
-                        ".discriminatorLookup, registry)", javaClass.toTypeName())
-                method.addStatement("""codec.setEncoder(${javaClass.name()}Encoder(codec))
-                    |.setDecoder(${javaClass.name()}Decoder(codec))""".trimMargin())
-                method.addStatement("codec")
+                    """
+                        MorphiaCodec<%T>(datastore, mapper.getEntityModel(type), propertyCodecProviders, mapper.discriminatorLookup, 
+                        registry).also {
+                            it.setEncoder(${javaClass.name()}Encoder(it))
+                            it.setDecoder(${javaClass.name()}Decoder(it))
+                        }""".trimIndent(),
+                    javaClass.toTypeName())
                 method.endControlFlow()
             }
         method.addStatement("else -> null")

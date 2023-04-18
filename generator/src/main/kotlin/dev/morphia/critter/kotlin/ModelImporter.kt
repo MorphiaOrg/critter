@@ -1,12 +1,10 @@
 package dev.morphia.critter.kotlin
 
-import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isDefault
 import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
@@ -29,10 +27,10 @@ import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.fullyQualified
 import dev.morphia.critter.kotlin.extensions.isNotTransient
 import dev.morphia.critter.kotlin.extensions.morphiaAnnotations
 import dev.morphia.critter.kotlin.extensions.name
-import dev.morphia.critter.kotlin.extensions.nullable
 import dev.morphia.critter.kotlin.extensions.simpleName
 import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.critter.methodCase
@@ -43,15 +41,15 @@ import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.EntityModelBuilder
 import dev.morphia.mapping.codec.pojo.TypeData
-import org.bson.codecs.pojo.PropertyAccessor
 import java.util.concurrent.atomic.AtomicInteger
+import org.bson.codecs.pojo.PropertyAccessor
+
+private const val ANY = "kotlin.Any"
 
 @OptIn(DelicateKotlinPoetApi::class)
 class ModelImporter(val context: KotlinContext) : SourceBuilder {
     private lateinit var utilName: String
     private lateinit var util: Builder
-    private lateinit var source: KSDeclaration
-    private lateinit var properties: List<KSPropertyDeclaration>
     private lateinit var importer: Builder
     private lateinit var importerName: ClassName
     private val builders = AtomicInteger(1)
@@ -64,23 +62,16 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                     .addMember("\"UNCHECKED_CAST\"")
                     .build()
             )
-        val method = builder("getModels")
-            .addModifiers(OVERRIDE)
-            .addParameter("mapper", Mapper::class.java)
 
-        method.addCode("return listOf(")
-        method.addCode(
-            context.entities().values
-                .filter { !it.isAbstract() }
-                .joinToString(",\n\t\t") { source ->
-                    "build${source.name().titleCase()}Model(mapper)"
-                }
-        )
-        method.addCode(")")
-        importer.addFunction(method.build())
-
+        parents()
         typeData()
+        getCodecProvider()
 
+        context.buildFile(importer.build())
+        context.generateServiceLoader(EntityModelImporter::class.java, importerName.toString())
+    }
+
+    private fun getCodecProvider() {
         importer.addFunction(
             builder("getCodecProvider")
                 .addModifiers(OVERRIDE)
@@ -89,33 +80,81 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                 .returns(MorphiaCodecProvider::class.java)
                 .build()
         )
+    }
 
-        context.entities().values
-            .filter { !it.isAbstract() }
-            .forEach { source ->
-                this.source = source
-                this.properties = source.activeProperties().toList()
-                this.utilName = "${source.name()}Util"
-                this.util = TypeSpec.objectBuilder(utilName)
-                    .addModifiers(INTERNAL)
-                val builder = builder("build${source.name().titleCase()}Model")
-                    .addModifiers(PRIVATE)
-                    .addParameter("mapper", Mapper::class.java)
-                    .returns(EntityModel::class.java)
+    private fun buildModel(source: KSClassDeclaration) {
+        this.utilName = "${source.name()}Util"
+        this.util = TypeSpec.objectBuilder(utilName)
+            .addModifiers(INTERNAL)
+        val builder = builder("build${source.name().titleCase()}Model")
+            .addModifiers(PRIVATE)
+            .addParameter("mapper", Mapper::class.java)
+            .returns(EntityModel::class.java)
 
-                builder
-                    .addCode("val modelBuilder = %T(mapper, %T::class.java)\n", EntityModelBuilder::class.java, source.toTypeName())
+        builder
+            .addCode("val modelBuilder = %T(mapper, %T::class.java)\n", EntityModelBuilder::class.java, source.toTypeName())
 
-                annotations(builder)
-                properties(builder)
-                builder.addStatement("return modelBuilder.build()")
+        annotations(source, builder)
+        properties(source, builder)
+        builder.addStatement("return modelBuilder.build()")
 
-                importer.addFunction(builder.build())
-                importer.addType(util.build())
+        importer.addFunction(builder.build())
+        importer.addType(util.build())
+    }
+
+    private fun bucketEntities(entities: Collection<KSClassDeclaration>): MutableMap<String, MutableSet<KSClassDeclaration>> {
+        val map = HashMap<String, MutableSet<KSClassDeclaration>>()
+        for (entity in entities) {
+            entity.superTypes
+                .filter { it.className() != ANY }
+                .forEach {
+                    map.getOrPut(it.className()) { mutableSetOf() }.add(entity)
+                }
+        }
+        return map
+    }
+
+    private fun KSClassDeclaration.modelName() = "${name().methodCase()}Model"
+
+    private fun parents() {
+
+        val list = List::class.asClassName()
+            .parameterizedBy(EntityModel::class.asClassName())
+        val method = builder("getModels")
+            .addModifiers(OVERRIDE)
+            .addParameter("mapper", Mapper::class.java)
+            .returns(list)
+
+        val buckets = bucketEntities(context.entities().values)
+        val values = context.entities().values.toMutableList()
+        buckets.remove(ANY)
+
+        val build = mutableListOf<() -> Unit>()
+        val models = mutableMapOf<String, String>()
+        values.forEach { entity ->
+            val model = entity.modelName()
+            method.addCode("val $model = build${entity.name().titleCase()}Model(mapper)\n")
+            build += { buildModel(entity) }
+            models[entity.className()] = model
+        }
+
+        buckets.forEach { entry ->
+            val model = models[entry.key]
+            if(model != null) {
+                entry.value.forEach { subtype ->
+//                    method.addCode("$model.addSubtype(${subtype.modelName()})\n")
+                    method.addCode("${subtype.modelName()}.superClass = $model\n")
+                }
             }
-        val type = importer.build()
-        context.buildFile(type)
-        context.generateServiceLoader(EntityModelImporter::class.java, importerName.toString())
+
+        }
+
+
+        method.addCode("return listOf(${models.values.joinToString(", ")})")
+
+        importer.addFunction(method.build())
+
+        build.forEach { it() }
     }
 
     private fun typeData() {
@@ -142,27 +181,14 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         importer.addType(objectBuilder.build())
     }
 
-/*
-    private fun discoverProperties(): List<PropertySource<JavaClassSource>> {
-        fun props(type: JavaClassSource): List<PropertySource<JavaClassSource>> {
-            val parent = context.resolve(name = type.superType)
-            val list = parent?.let {
-                props(it.sourceClass)
-            } ?: emptyList()
-
-            return list + type.properties
-        }
-        return props(source)
-    }
-*/
-    private fun properties(builder: FunSpec.Builder) {
-        properties
+    private fun properties(source: KSClassDeclaration, builder: FunSpec.Builder) {
+        source.activeProperties().toList()
             .filter { it.isNotTransient() }
             .forEach { property ->
                 builder.addCode(
                     """modelBuilder.addProperty()
                     .name("${property.name()}")
-                    .accessor(${accessor(property)} as PropertyAccessor<in Any>)
+                    .accessor(${accessor(source, property)} as PropertyAccessor<in Any>)
                 """
                 )
                 typeData(builder, property)
@@ -180,10 +206,9 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
     }
 
 
-    private fun accessor(property: KSPropertyDeclaration): String {
+    private fun accessor(source: KSClassDeclaration, property: KSPropertyDeclaration): String {
         val name = "${property.name().methodCase()}Accessor"
-        val propertyType = property.type.toTypeName()
-            .copy(nullable = property.type.nullable())
+        val propertyType = property.fullyQualified()
         val method = builder(name)
             .returns(PropertyAccessor::class.java.asClassName()
                 .parameterizedBy(STAR))
@@ -212,7 +237,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
     private fun methodName(property: KSPropertyDeclaration) = (property.name()).methodCase()
     private fun typeData(builder: FunSpec.Builder, property: KSPropertyDeclaration) {
-        if (!property.type.isParameterized()) {
+        if (property.type.resolve().arguments.isEmpty()) {
             var type = property.type.toTypeName()
             if ( type.isNullable ) {
                  type = type.copy(nullable = false)
@@ -255,7 +280,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         method.addCode(")")
     }
 
-    private fun annotations(builder: FunSpec.Builder) {
+    private fun annotations(source: KSClassDeclaration, builder: FunSpec.Builder) {
         source.morphiaAnnotations()
             .forEach {
                 if (it.arguments.isNotEmpty()) {
@@ -281,7 +306,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             .filterNot { it.isDefault() }
             .forEach { argument ->
                 val name = argument.name?.asString() ?: "value"
-                var value = convertArgumentValue(name, argument.value)
+                val value = convertArgumentValue(name, argument.value)
                 builder.addStatement(".$name($value)")
             }
 
@@ -316,5 +341,3 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         return (name + "Builder").className()
     }
 }
-
-fun KSTypeReference.isParameterized() = element?.typeArguments?.isNotEmpty() ?: false

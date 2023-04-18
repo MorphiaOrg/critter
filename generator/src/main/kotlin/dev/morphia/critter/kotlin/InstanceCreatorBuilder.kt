@@ -4,6 +4,7 @@ import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.impl.kotlin.KSDeclarationImpl
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
@@ -19,10 +20,7 @@ import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.bestConstructor
 import dev.morphia.critter.kotlin.extensions.className
-import dev.morphia.critter.kotlin.extensions.isContainer
-import dev.morphia.critter.kotlin.extensions.isList
-import dev.morphia.critter.kotlin.extensions.isMap
-import dev.morphia.critter.kotlin.extensions.isSet
+import dev.morphia.critter.kotlin.extensions.fullyQualified
 import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.mapping.codec.Conversions
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
@@ -122,10 +120,10 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             val ctorParam = params.firstOrNull { param -> param.name?.asString() == it.name() }
             val nullable = it.type.resolve().isMarkedNullable
 
-            val property = PropertySpec.builder(it.name(), type.toTypeName(), PRIVATE)
+            val property = PropertySpec.builder(it.name(), it.fullyQualified(), PRIVATE)
                 .mutable(true)
 
-            val initializer = defaultValues[it.type.className()] //?: calculateInitializer(it)
+            val initializer = defaultValues[it.type.className()] ?: calculateInitializer(it)
             if (nullable) {
                 property.initializer("null")
             } else if (initializer != null) {
@@ -140,6 +138,16 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         }
     }
 
+    private fun calculateInitializer(it: KSPropertyDeclaration): String? {
+        return if (it is KSDeclarationImpl) {
+            (it as KSDeclarationImpl).ktDeclaration.text
+                .split('\n')
+                .filter { it.contains("var ") || it.contains("val ") }
+                .firstOrNull { it.contains("=") }
+                ?.substringAfter("=")
+        } else null
+    }
+
     private fun set() {
         val method = FunSpec.builder("set")
             .addModifiers(OVERRIDE)
@@ -149,7 +157,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         method.beginControlFlow("when(model.name)")
         source.activeProperties().forEach { property ->
             method.beginControlFlow("\"${property.name()}\" ->")
-            method.addStatement("this.${property.name()} = value as %T", property.type.toTypeName())
+            method.addStatement("this.${property.name()} = value as %T", property.fullyQualified())
             method.beginControlFlow("if(::instance.isInitialized)")
             if (property.isMutable) {
                 method.addStatement("instance.${property.name()} = value")
