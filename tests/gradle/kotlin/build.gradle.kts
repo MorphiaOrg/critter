@@ -22,7 +22,7 @@ sourceSets.test {
 }
 
 dependencies {
-    ksp("dev.morphia.critter:dev.morphia.critter.gradle.plugin:4.4.0-SNAPSHOT")
+    ksp("dev.morphia.critter:dev.morphia.critter.gradle.plugin:${findProperty("critter.version")}")
     implementation("dev.morphia.morphia:morphia-core:${findProperty("morphia.version")}")
     testImplementation("org.testng:testng:${findProperty("testng.version")}")
     testImplementation("org.testcontainers:mongodb:${findProperty("testcontainers.version")}")

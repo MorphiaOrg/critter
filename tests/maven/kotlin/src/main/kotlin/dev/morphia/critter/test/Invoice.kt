@@ -3,6 +3,8 @@ package dev.morphia.critter.test
 
 import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
+import dev.morphia.annotations.IndexOptions
+import dev.morphia.annotations.Indexed
 import dev.morphia.annotations.PostLoad
 import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PreLoad
@@ -14,7 +16,7 @@ import java.util.StringJoiner
 import org.bson.types.ObjectId
 
 @Entity
-class Invoice() {
+class Invoice(): Any() {
     @Id
     var id = ObjectId()
 
@@ -25,7 +27,8 @@ class Invoice() {
 
     @Reference
     var person: Person? = null
-    var addresses: MutableList<Address> = mutableListOf()
+    @Indexed(options = IndexOptions(name = "changed"))
+    var addresses = mutableListOf<Address>()
     var total: Double = 0.0
     var items: MutableList<Item> = mutableListOf()
 

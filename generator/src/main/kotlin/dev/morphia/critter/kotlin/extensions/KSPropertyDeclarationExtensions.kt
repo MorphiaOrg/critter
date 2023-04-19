@@ -2,6 +2,7 @@ package dev.morphia.critter.kotlin.extensions
 
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Modifier.JAVA_TRANSIENT
+import com.squareup.kotlinpoet.TypeName
 import dev.morphia.annotations.Transient
 import dev.morphia.critter.CritterType
 import dev.morphia.critter.kotlin.getAnnotation
@@ -57,3 +58,8 @@ fun KSPropertyDeclaration.isNumeric(): Boolean {
 fun <T : Annotation> KSPropertyDeclaration.hasAnnotation(annotation: Class<T>): Boolean {
     return getAnnotation(annotation) != null
 }
+
+fun KSPropertyDeclaration.fullyQualified(): TypeName {
+    return type.resolve().fullyQualified()
+}
+

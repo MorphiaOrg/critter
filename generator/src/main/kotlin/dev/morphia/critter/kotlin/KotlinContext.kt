@@ -1,54 +1,59 @@
 package dev.morphia.critter.kotlin
 
+import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Entity
 import dev.morphia.critter.CritterConfig
 import dev.morphia.critter.CritterContext
 import dev.morphia.critter.kotlin.extensions.className
-import org.slf4j.LoggerFactory
 
 @Suppress("UNCHECKED_CAST")
 class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironment, val dependencies: Dependencies)
     : CritterContext<KSClassDeclaration, TypeSpec>(config) {
 
+    companion object {
+        val ENTITY_MAPPINGS = listOf(Entity::class.java.name, Embedded::class.java.name)
+    }
+
     val codeGenerator = environment.codeGenerator
 
     val formatter = SpotlessFormatter(Kotlin())
+    private lateinit var entities: Map<String, KSClassDeclaration>
 
-    fun scan(classes: List<KSClassDeclaration>) {
-        this.classes += classes.map {klass ->
-            klass.qualifiedName!!.asString() to klass
-        }
-/*
-        classes.forEach { klass ->
-            with(KotlinClass(this, klass, File((klass.location as FileLocation).filePath))) {
-                add("${pkgName}.${name}", this)
-            }
-        }
-*/
+    fun scan(list: List<KSClassDeclaration>) {
 
-        KotlinCriteriaBuilder(this).build()
-        KotlinCodecsBuilder(this).build()
-    }
+        classes += list.map { it.qualifiedName!!.asString() to it }.toMap()
 
-    override fun entities(): Map<String, KSClassDeclaration> = classes.filter {
-        it.value.annotations.any { ann ->
-            val className = ann.annotationType.className()
-            className == Entity::class.java.name || className == Embedded::class.java.name
+        //        annotated.map { it.parent }.filterIsInstance<KSFile>().forEach { println(it) }
+        entities = classes.values
+            .filter { !it.isAbstract() && hasMappingAnnotation(it) }
+            .associateBy { it.qualifiedName!!.asString() }
+
+        if (entities.isNotEmpty()) {
+            KotlinCriteriaBuilder(this).build()
+            KotlinCodecsBuilder(this).build()
         }
     }
 
-    private fun TypeSpec.hasAnnotation(java: Class<*>): Boolean {
-        return annotationSpecs.contains(AnnotationSpec.builder(java.asClassName()).build())
+    fun hasMappingAnnotation(klass: KSClassDeclaration?): Boolean {
+        return klass != null &&
+            (klass.annotations.any { it.annotationType.className() in ENTITY_MAPPINGS } ||
+                hasMappingAnnotation(klass.superClass()))
     }
+
+    private fun KSClassDeclaration.superClass(): KSClassDeclaration? {
+        return superTypes
+            .map { classes[it.resolve().declaration.className()] }
+            .filterNotNull()
+            .firstOrNull()
+    }
+    override fun entities(): Map<String, KSClassDeclaration> = entities
 
     override fun buildFile(typeSpec: TypeSpec, vararg staticImports: Pair<Class<*>, String>) {
         buildFile(buildFileSpec(typeSpec, staticImports))

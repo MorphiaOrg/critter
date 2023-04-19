@@ -1,15 +1,15 @@
 package dev.morphia.critter
 
+import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.plugins.JavaPluginConvention
-import java.io.File
+import org.gradle.api.plugins.JavaPluginExtension
 
 class CritterPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.plugins.apply(JavaPlugin::class.java)
-        val mainSourceSet = project.convention.getPlugin(JavaPluginConvention::class.java)
+        val mainSourceSet = project.extensions.findByType(JavaPluginExtension::class.java)!!
             .sourceSets.getByName("main")
         val directories = mainSourceSet.allJava.sourceDirectories.files
         val outputDirectory = File("${project.buildDir}/generated/critter/")
