@@ -54,7 +54,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
         method.beginControlFlow("if (found != null)")
         method.addStatement("return found")
 
-        context.entities().values.filter { !it.isAbstract() }.forEachIndexed { _, javaClass ->
+        context.entities().values.filter { !it.isAbstract }.forEachIndexed { _, javaClass ->
             method.nextControlFlow("else if (type.equals(\$T.class))", javaClass.qualifiedName.className())
             method.addStatement("\$T model = getMapper().getEntityModel(type)", EntityModel::class.java)
             method.addStatement(
@@ -95,7 +95,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
         method.addStatement(
             "MorphiaCodec<T> codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders()," + " getMapper().getDiscriminatorLookup(), registry)"
         )
-        context.entities().values.filter { !it.isAbstract() }.forEachIndexed { index, javaClass ->
+        context.entities().values.filter { !it.isAbstract }.forEachIndexed { index, javaClass ->
             val ifStmt = "if (type.equals(${"$"}T.class))"
             if (index == 0) {
                 method.beginControlFlow(ifStmt, javaClass.qualifiedName.className())

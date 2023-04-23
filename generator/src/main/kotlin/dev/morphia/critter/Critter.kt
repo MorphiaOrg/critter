@@ -9,17 +9,15 @@ import org.jboss.forge.roaster.model.source.MethodSource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import dev.morphia.critter.java.CodecsBuilder as JavaCodecsBuilder
-import dev.morphia.critter.java.CriteriaBuilder as JavaCriteriaBuilder
+import dev.morphia.critter.java.JavaCriteriaBuilder as JavaCriteriaBuilder
 
 object Critter {
     private val LOG: Logger = LoggerFactory.getLogger(Critter::class.java)
-    private lateinit var javaContext: JavaContext
-    private lateinit var outputType: OutputType
+    lateinit var javaContext: JavaContext
 
     fun scan(baseDir: File, sourceDirectories: Set<String>, criteriaPackage: String?, force: Boolean, format: Boolean,
-             outputType: OutputType, sourceOutput: File, resourceOutput: File) {
+             sourceOutput: File, resourceOutput: File) {
         javaContext = JavaContext(criteriaPackage, force, format, sourceOutput, resourceOutput)
-        this.outputType = outputType
         sourceDirectories
             .map {
                 val file = File(it)
@@ -55,14 +53,6 @@ object Critter {
         val list = parse.methods
         return list.map {
             addMethod(it)
-        }
-    }
-
-    fun outputType(name: String): OutputType {
-        return try {
-            OutputType.valueOf(name.uppercase(Locale.getDefault()))
-        } catch (_: Exception) {
-            throw IllegalArgumentException("Output type of '$name' is not supported.")
         }
     }
 }

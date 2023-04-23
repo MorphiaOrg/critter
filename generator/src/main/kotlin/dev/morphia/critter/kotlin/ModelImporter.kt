@@ -63,7 +63,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                     .build()
             )
 
-        parents()
+        getModels()
         typeData()
         getCodecProvider()
 
@@ -116,7 +116,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
     private fun KSClassDeclaration.modelName() = "${name().methodCase()}Model"
 
-    private fun parents() {
+    private fun getModels() {
 
         val list = List::class.asClassName()
             .parameterizedBy(EntityModel::class.asClassName())
@@ -142,7 +142,6 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             val model = models[entry.key]
             if(model != null) {
                 entry.value.forEach { subtype ->
-//                    method.addCode("$model.addSubtype(${subtype.modelName()})\n")
                     method.addCode("${subtype.modelName()}.superClass = $model\n")
                 }
             }

@@ -4,7 +4,6 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import dev.morphia.Datastore;
@@ -39,11 +38,13 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 @SuppressWarnings("removal")
 @Test
-public class CriteriaTest {
+public class JavaCriteriaTest {
+    private final String STANDARD_CODECS = "Standard codecs";
+    private final String CRITTER_CODECS = "Critter codecs";
+
     private MongoDBContainer mongoDBContainer;
     private MongoClient mongoClient;
     private Datastore datastore;
@@ -66,6 +67,23 @@ public class CriteriaTest {
         if (mongoDBContainer != null ) {
             mongoDBContainer.close();
         }
+    }
+
+    @Test(dataProvider = "datastores")
+    public void parents(String state, Datastore datastore) {
+        if (state == STANDARD_CODECS) {
+            datastore.getMapper().map(
+                RootParent.class,
+                ChildLevel1a.class,
+                ChildLevel1b.class,
+                ChildLevel1c.class,
+                ChildLevel2a.class,
+                ChildLevel2b.class,
+                ChildLevel3a.class);
+        }
+        var rootParent = datastore.getMapper().getEntityModel(RootParent.class);
+
+        assertEquals(rootParent.getSubtypes().size(), 6);
     }
 
     @Test(dataProvider = "datastores")
@@ -289,4 +307,6 @@ public class CriteriaTest {
                          .autoImportModels(useGenerated)
                          .build());
     }
+
+
 }

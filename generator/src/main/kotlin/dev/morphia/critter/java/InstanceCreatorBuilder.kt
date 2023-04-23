@@ -8,21 +8,23 @@ import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeSpec
 import dev.morphia.critter.SourceBuilder
+import dev.morphia.critter.java.extensions.allProperties
+import dev.morphia.critter.java.extensions.bestConstructor
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.PropertyModel
-import java.io.File
 import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PUBLIC
+import org.jboss.forge.roaster.model.source.JavaClassSource
 
 class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
-    private lateinit var source: JavaClass
+    private lateinit var source: JavaClassSource
     private lateinit var creator: TypeSpec.Builder
     private lateinit var creatorName: ClassName
     private lateinit var entityName: ClassName
     override fun build() {
         context.entities().values.forEach { source ->
             this.source = source
-            entityName = ClassName.get(source.pkgName, source.name)
+            entityName = ClassName.get(source.`package`, source.name)
             creatorName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")
             creator = TypeSpec.classBuilder(creatorName)
                 .addModifiers(PUBLIC)
@@ -33,11 +35,7 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
                     .build()
             )
 
-
-            val sourceTimestamp = source.lastModified()
-            val decoderFile = File(context.outputDirectory, creatorName.canonicalName().replace('.', '/') + ".java")
-
-            if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
+            if (!source.isAbstract()) {
                 creator.addSuperinterface(ClassName.get(MorphiaInstanceCreator::class.java))
                 fields()
                 getInstance()
@@ -49,8 +47,8 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
     }
 
     private fun fields() {
-        source.properties.forEach {
-            creator.addField(FieldSpec.builder(it.type.name.className(), it.name, PRIVATE).build())
+        source.allProperties().forEach {
+            creator.addField(FieldSpec.builder(it.type.qualifiedName.className(), it.name, PRIVATE).build())
         }
     }
 
@@ -58,7 +56,7 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
         creator.addField(FieldSpec.builder(entityName, "instance", PRIVATE).build())
         val ctor = source.bestConstructor()
         val params = ctor?.parameters?.map { it.name } ?: emptyList()
-        val properties = source.properties
+        val properties = source.allProperties()
             .toMutableList()
         properties.removeIf { it.name in params }
         val method = methodBuilder("getInstance")
@@ -85,7 +83,7 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
             .addParameter(PropertyModel::class.java, "model")
 
         method.beginControlFlow("switch (model.getName())")
-        source.properties.forEachIndexed { index, property ->
+        source.allProperties().forEachIndexed { index, property ->
             method.addCode("case \"${property.name}\":")
             method.addStatement("${property.name} = (\$T)value", property.type.name.className())
             method.beginControlFlow("if(instance != null)")

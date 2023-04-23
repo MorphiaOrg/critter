@@ -7,7 +7,6 @@ import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.mongodb.client.model.geojson.Geometry
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -26,7 +25,6 @@ import dev.morphia.annotations.Entity
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.annotations.Reference
-import dev.morphia.critter.CritterType
 import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.UpdateSieve
@@ -154,7 +152,7 @@ KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
         val fieldCriteriaName = if (none) {
             property.name().titleCase() + "FieldCriteria"
         } else {
-            type.declaration.simpleName() + "Criteria"
+            type.declaration.simpleName() + "FieldCriteria"
         }
         val path = """extendPath(path, "${property.name()}")"""
         addFunction(
@@ -257,6 +255,7 @@ private fun Builder.attachUpdates(property: KSPropertyDeclaration) {
 fun String.className(): ClassName {
     return ClassName.bestGuess(this)
 }
+
 fun KSPropertyDeclaration.mappedName(): String {
     return if (hasAnnotation(Id::class.java.name)) {
         "\"_id\""
@@ -276,11 +275,4 @@ private fun KSAnnotation.valueAsString(): String? {
 }
 
 
-fun KSPropertyDeclaration.isGeoCompatible(): Boolean {
-    return name() in CritterType.GEO_TYPES || try {
-        Geometry::class.java.isAssignableFrom(Class.forName(type.className()))
-    } catch (_: Exception) {
-        false
-    }
-}
 

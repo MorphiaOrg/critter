@@ -2,6 +2,8 @@ package dev.morphia.critter.test;
 
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
+import dev.morphia.annotations.IndexOptions;
+import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.PostLoad;
 import dev.morphia.annotations.PostPersist;
 import dev.morphia.annotations.PreLoad;
@@ -11,9 +13,7 @@ import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -26,11 +26,11 @@ public class Invoice {
     private LocalDateTime orderDate;
     @Reference
     private Person person;
-    private List<List<List<Address>>> listListList = new ArrayList<>();
+    @Indexed(options = @IndexOptions(name = "changed"))
     private List<Address> addresses = new ArrayList<>();
-    private Map<String, List<Address>> mapList = new LinkedHashMap<>();
     private Double total = 0.0;
     private List<Item> items = new ArrayList<>();
+
     private transient boolean postLoad;
     private transient boolean preLoad;
     private transient boolean prePersist;
@@ -39,13 +39,11 @@ public class Invoice {
     private Invoice() {
     }
 
-    public Invoice(LocalDateTime orderDate, Person person, Address addresses, Item... items) {
+   public Invoice(LocalDateTime orderDate, Person person, Address addresses, Item... items) {
         this.orderDate = orderDate.withNano(0);
         this.person = person;
         if (addresses != null) {
             this.addresses.add(addresses);
-            mapList.put("1", this.addresses);
-            listListList = List.of(List.of(this.addresses));
         }
         this.items.addAll(asList(items));
     }
@@ -93,22 +91,6 @@ public class Invoice {
         this.items = items;
     }
 
-    public List<List<List<Address>>> getListListList() {
-        return listListList;
-    }
-
-    public void setListListList(List<List<List<Address>>> listListList) {
-        this.listListList = listListList;
-    }
-
-    public Map<String, List<Address>> getMapList() {
-        return mapList;
-    }
-
-    public void setMapList(Map<String, List<Address>> mapList) {
-        this.mapList = mapList;
-    }
-
     public LocalDateTime getOrderDate() {
         return orderDate;
     }
@@ -135,7 +117,7 @@ public class Invoice {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, orderDate, person, listListList, addresses, mapList, total, items);
+        return Objects.hash(id, orderDate, person, addresses, total, items);
     }
 
     @Override
@@ -148,8 +130,8 @@ public class Invoice {
         }
         Invoice invoice = (Invoice) o;
         return Objects.equals(id, invoice.id) && Objects.equals(orderDate, invoice.orderDate) &&
-               Objects.equals(person, invoice.person) && Objects.equals(listListList, invoice.listListList) &&
-               Objects.equals(addresses, invoice.addresses) && Objects.equals(mapList, invoice.mapList) &&
+               Objects.equals(person, invoice.person) &&
+               Objects.equals(addresses, invoice.addresses) &&
                Objects.equals(total, invoice.total) && Objects.equals(items, invoice.items);
     }
 
@@ -159,9 +141,7 @@ public class Invoice {
             .add("id=" + id)
             .add("orderDate=" + orderDate)
             .add("person=" + person)
-            .add("listListList=" + listListList)
             .add("addresses=" + addresses)
-            .add("mapList=" + mapList)
             .add("total=" + total)
             .add("items=" + items)
             .toString();

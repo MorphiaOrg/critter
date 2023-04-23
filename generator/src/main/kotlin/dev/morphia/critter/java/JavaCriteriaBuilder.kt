@@ -3,31 +3,32 @@ package dev.morphia.critter.java
 import com.squareup.javapoet.ClassName
 import dev.morphia.annotations.Reference
 import dev.morphia.critter.Critter.addMethods
-import dev.morphia.critter.CritterProperty
-import dev.morphia.critter.FilterSieve
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.UpdateSieve
+import dev.morphia.critter.java.extensions.allProperties
+import dev.morphia.critter.java.extensions.attachFilters
+import dev.morphia.critter.java.extensions.attachUpdates
+import dev.morphia.critter.java.extensions.concreteType
+import dev.morphia.critter.java.extensions.isMappedType
+import dev.morphia.critter.java.extensions.mappedName
 import dev.morphia.critter.titleCase
+import java.io.File
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
-import java.io.File
-import java.io.PrintWriter
+import org.jboss.forge.roaster.model.source.PropertySource
 
-class CriteriaBuilder(val context: JavaContext): SourceBuilder {
+class JavaCriteriaBuilder(val context: JavaContext): SourceBuilder {
     private var nested = mutableListOf<JavaClassSource>()
 
     override fun build() {
         context.entities().values.forEach { source ->
             nested.clear()
             val criteriaClass = Roaster.create(JavaClassSource::class.java)
-                    .setPackage(context.criteriaPkg ?: (source.pkgName + ".criteria"))
+                    .setPackage(context.criteriaPkg ?: (source.`package` + ".criteria"))
                     .setName(source.name + "Criteria")
                     .setFinal(true)
 
             val outputFile = File(context.outputDirectory, criteriaClass.qualifiedName.replace('.', '/') + ".java")
-            val sourceTimestamp = source.lastModified()
-            val timestamp = outputFile.lastModified()
-            if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, timestamp)) {
+            if (!source.isAbstract()) {
                 criteriaClass.addField("private static final ${criteriaClass.name}Impl instance = new ${criteriaClass.name}Impl()")
                 val impl = Roaster.create(JavaClassSource::class.java)
                         .setName(source.name + "CriteriaImpl")
@@ -64,8 +65,8 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
         }
     }
 
-    private fun processFields(source: JavaClass, criteriaClass: JavaClassSource, impl: JavaClassSource) {
-        source.properties.forEach { field ->
+    private fun processFields(source: JavaClassSource, criteriaClass: JavaClassSource, impl: JavaClassSource) {
+        source.allProperties().forEach { field ->
             criteriaClass.addField("public static final String ${field.name} = ${field.mappedName()}; ")
             addField(criteriaClass, impl, field)
         }
@@ -76,18 +77,18 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
 
     }
 
-    private fun addField(criteriaClass: JavaClassSource, impl: JavaClassSource, property: CritterProperty) {
+    private fun addField(criteriaClass: JavaClassSource, impl: JavaClassSource, property: PropertySource<JavaClassSource>) {
         if (property.hasAnnotation(Reference::class.java)) {
             addReferenceCriteria(criteriaClass, impl, property)
         } else {
             impl.addFieldCriteriaMethod(criteriaClass, property)
-            if (!property.isMappedType()) {
+            if (!property.isMappedType(context)) {
                 addFieldCriteriaClass(property)
             }
         }
     }
 
-    private fun addFieldCriteriaClass(property: CritterProperty) {
+    private fun addFieldCriteriaClass(property: PropertySource<JavaClassSource>) {
         addNestedType(Roaster.create(JavaClassSource::class.java))
                 .apply {
                     name = "${property.name.titleCase()}FieldCriteria"
@@ -107,7 +108,7 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
                 }
     }
 
-    private fun addReferenceCriteria(criteriaClass: JavaClassSource, impl: JavaClassSource, property: CritterProperty) {
+    private fun addReferenceCriteria(criteriaClass: JavaClassSource, impl: JavaClassSource, property: PropertySource<JavaClassSource>) {
         val fieldCriteriaName = property.name.titleCase() + "FieldCriteria"
         criteriaClass.addImport(fieldCriteriaName)
         criteriaClass.addMethod("""
@@ -131,22 +132,14 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
         outputFile.writeText(criteriaClass.toString())
     }
 
-    private fun CritterProperty.mappedType(): JavaClass? {
-        return context.entities()[type.concreteType()]
-    }
-
-    private fun CritterProperty.isMappedType(): Boolean {
-        return mappedType() != null
-    }
-
-    private fun JavaClassSource.addFieldCriteriaMethod(criteriaClass: JavaClassSource, property: CritterProperty) {
-        val concreteType = property.type.concreteType()
-        val annotations = context.entities()[concreteType]?.annotations
+    private fun JavaClassSource.addFieldCriteriaMethod(criteriaClass: JavaClassSource, property: PropertySource<JavaClassSource>) {
+        val concreteType = property.concreteType()
+        val annotations = context.entities()[concreteType.qualifiedName]?.annotations
         val fieldCriteriaName = if (annotations == null) {
             property.name.titleCase() + "FieldCriteria"
         } else {
-            val outer = concreteType.substringAfterLast('.') + "Criteria"
-            val impl = concreteType.substringAfterLast('.') + "CriteriaImpl"
+            val outer = concreteType.name + "Criteria"
+            val impl = concreteType.name + "CriteriaImpl"
 
             criteriaClass.addImport("${criteriaClass.`package`}.${outer}.${impl}")
             impl
@@ -166,13 +159,6 @@ class CriteriaBuilder(val context: JavaContext): SourceBuilder {
 
 }
 
-private fun JavaClassSource.attachFilters(property: CritterProperty) {
-    FilterSieve.handlers(property, this)
-}
-
-private fun JavaClassSource.attachUpdates(property: CritterProperty) {
-    UpdateSieve.handlers(property, this)
-}
 fun String.className(): ClassName {
-    return ClassName.get(substringBeforeLast('.'), substringAfterLast('.'))
+    return ClassName.get(if (contains(".")) substringBeforeLast('.') else "", substringAfterLast('.'))
 }
