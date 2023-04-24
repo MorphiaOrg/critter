@@ -105,7 +105,8 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
     private fun bucketEntities(entities: Collection<KSClassDeclaration>): MutableMap<String, MutableSet<KSClassDeclaration>> {
         val map = HashMap<String, MutableSet<KSClassDeclaration>>()
         for (entity in entities) {
-            entity.superTypes
+            val superTypes = entity.superTypes.toList()
+            superTypes
                 .filter { it.className() != ANY }
                 .forEach {
                     map.getOrPut(it.className()) { mutableSetOf() }.add(entity)

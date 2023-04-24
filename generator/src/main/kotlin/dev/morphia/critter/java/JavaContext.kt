@@ -8,21 +8,19 @@ import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Entity
 import dev.morphia.critter.Critter
 import dev.morphia.critter.CritterContext
-import dev.morphia.critter.java.extensions.hasAnnotations
 import java.io.File
 import java.io.FileNotFoundException
-import org.checkerframework.checker.units.qual.C
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.JavaInterfaceSource
 import org.jboss.forge.roaster.model.source.JavaSource
 
 class JavaContext(
-    criteriaPkg: String? = null, force: Boolean = false, format: Boolean = true,
+    criteriaPkg: String? = null, format: Boolean = true,
     sourceOutputDirectory: File = File("target/generated-sources/critter"),
     resourceOutputDirectory: File = File("target/generated-resources/critter"),
 ) :
-    CritterContext<JavaClassSource, TypeSpec>(criteriaPkg, force, format, sourceOutputDirectory, resourceOutputDirectory) {
+    CritterContext<CritterType, TypeSpec>(criteriaPkg, format, sourceOutputDirectory, resourceOutputDirectory) {
     companion object {
         internal val LIST_TYPES = listOf("List", "MutableList").explodeTypes(listOf("java.util"))
         internal val SET_TYPES = listOf("Set", "MutableSet").explodeTypes(listOf("java.util"))
@@ -40,14 +38,11 @@ class JavaContext(
         }
     }
 
-    val interfaces: MutableMap<String, JavaInterfaceSource> = mutableMapOf()
-
-
     init {
         Critter.javaContext = this
     }
 
-    private var entities: Map<String, JavaClassSource>? = null
+    private var entities: Map<String, CritterType>? = null
 
     override fun scan(directory: File) {
         if (!directory.exists()) {
@@ -57,27 +52,20 @@ class JavaContext(
             .walkTopDown()
             .filter { it.name.endsWith(".java") }
             .map { it to Roaster.parse(it) }
-            .filter { it.second is JavaSource<*> }
-            .forEach { add(it.second as JavaSource<*>) }
+            .filter { it.second is JavaClassSource ||
+                it.second is JavaInterfaceSource }
+            .forEach {
+                val type = CritterType.of(this, it.second as JavaSource<*>)
+                add(type.qualifiedName, type)
+            }
     }
 
-    private fun add(type: JavaSource<*>) {
-        if (type is JavaClassSource) {
-            add(type.qualifiedName, type)
-        } else if (type is JavaInterfaceSource) {
-            interfaces.put(type.qualifiedName, type)
-        }
-
-    }
-
-    override fun entities(): Map<String, JavaClassSource> {
+    override fun entities(): Map<String, CritterType> {
         var map = entities
         if (map == null) {
             map = classes
                 .filter {
-                    println("**************** it.value.qualifiedName = ${it.value.qualifiedName}")
-                    val hasAnnotations = it.value.hasAnnotations(Entity::class.java, Embedded::class.java)
-                    hasAnnotations
+                    it.value.hasAnnotations(Entity::class.java, Embedded::class.java)
                 }
                 .toSortedMap()
             entities = map

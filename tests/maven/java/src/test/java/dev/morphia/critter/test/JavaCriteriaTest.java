@@ -13,6 +13,7 @@ import dev.morphia.UpdateOptions;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
 import dev.morphia.mapping.MapperOptions;
+import dev.morphia.mapping.codec.pojo.EntityModel;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
@@ -26,6 +27,7 @@ import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.mongodb.WriteConcern.MAJORITY;
@@ -33,6 +35,7 @@ import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.or;
+import static java.lang.String.format;
 import static org.bson.UuidRepresentation.STANDARD;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -79,11 +82,18 @@ public class JavaCriteriaTest {
                 ChildLevel1c.class,
                 ChildLevel2a.class,
                 ChildLevel2b.class,
-                ChildLevel3a.class);
+                ChildLevel3a.class,
+                TestEntity.class);
         }
-        var rootParent = datastore.getMapper().getEntityModel(RootParent.class);
 
-        assertEquals(rootParent.getSubtypes().size(), 6);
+        checkSubtypes(datastore, RootParent.class, 6);
+        checkSubtypes(datastore, TestEntity.class, 7);
+    }
+
+    private static void checkSubtypes(Datastore datastore, Class<?> type, int expected) {
+        Set<EntityModel> subtypes = datastore.getMapper().getEntityModel(type).getSubtypes();
+        assertEquals(subtypes.size(), expected, format("Expected %d subtypes: %s", expected,
+            subtypes.stream().map(EntityModel::getName).collect(Collectors.toList())));
     }
 
     @Test(dataProvider = "datastores")

@@ -12,8 +12,6 @@ import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeSpec.Builder
 import dev.morphia.Datastore
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.extensions.allProperties
-import dev.morphia.critter.java.extensions.modelName
 import dev.morphia.critter.methodCase
 import dev.morphia.critter.titleCase
 import dev.morphia.mapping.EntityModelImporter
@@ -30,7 +28,6 @@ import javax.lang.model.element.Modifier.STATIC
 import org.bson.codecs.pojo.PropertyAccessor
 import org.jboss.forge.roaster.model.Annotation
 import org.jboss.forge.roaster.model.Type
-import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.JavaSource
 import org.jboss.forge.roaster.model.source.PropertySource
 
@@ -39,7 +36,7 @@ private const val OBJECT = "java.lang.Object"
 class ModelImporter(val context: JavaContext) : SourceBuilder {
     private lateinit var utilName: String
     private lateinit var util: Builder
-    private lateinit var source: JavaClassSource
+    private lateinit var source: CritterType
     private lateinit var properties: List<PropertySource<*>>
     private lateinit var importer: Builder
     private lateinit var importerName: ClassName
@@ -82,7 +79,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         )
     }
 
-    private fun buildModel(source: JavaClassSource) {
+    private fun buildModel(source: CritterType) {
         this.source = source
         this.properties = source.allProperties()
         this.utilName = "${source.name}Util"
@@ -114,25 +111,24 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
                     .build()
             )
             .returns(ParameterizedTypeName.get(List::class.java, EntityModel::class.java))
-        val buckets = bucketEntities(context.entities().values)
-        buckets.remove(OBJECT)
+        val values: MutableList<CritterType> = context.entities().values.toMutableList()
+        val buckets = bucketEntities(values)
 
-        val build = mutableListOf<() -> Unit>()
         val models = mutableMapOf<String, String>()
-        context.entities().values.forEach { entity ->
-            val model = entity.modelName()
-            method.addCode("var $model = build${entity.name.titleCase()}Model(mapper);\n")
-            build += { buildModel(entity) }
-            models[entity.qualifiedName] = model
+        val build = mutableListOf<() -> Unit>()
+
+        values.forEach { entity ->
+            models[entity.qualifiedName] = setUpModel(entity, method, build)
         }
 
         buckets.forEach { entry ->
             val model = models[entry.key]
-            if (model != null) {
+            if(model != null) {
                 entry.value.forEach { subtype ->
-                    method.addCode("${subtype.modelName()}.setSuperClass($model);\n")
+                    method.addCode("${subtype.modelName}.setSuperClass($model);\n")
                 }
             }
+
         }
 
         method.addCode("return List.of(${models.values.joinToString(", ")});")
@@ -142,15 +138,25 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         build.forEach { it() }
     }
 
-    private fun bucketEntities(entities: Collection<JavaClassSource>): MutableMap<String, MutableSet<JavaClassSource>> {
-        val map = HashMap<String, MutableSet<JavaClassSource>>()
+    private fun setUpModel(
+        entity: CritterType,
+        method: MethodSpec.Builder,
+        build: MutableList<() -> Unit>,
+    ): String {
+        val model = entity.modelName
+        method.addCode("var $model = build${entity.name.titleCase()}Model(mapper);\n")
+        build += { buildModel(entity) }
+        return model
+    }
+
+    private fun bucketEntities(entities: MutableList<CritterType>): Map<String, MutableSet<CritterType>> {
+        val map = HashMap<String, MutableSet<CritterType>>()
         for (entity in entities) {
-            val superClass = entity.superType
-            if (superClass != OBJECT) {
-                map.getOrPut(superClass) { mutableSetOf() }.add(entity)
+            entity.superType()?.let {
+                map.getOrPut(it.qualifiedName) { mutableSetOf() }.add(entity)
             }
-            entity.interfaces.forEach {
-                map.getOrPut(it) { mutableSetOf() }.add(entity)
+            entity.interfaces().forEach {
+                map.getOrPut(it.qualifiedName) { mutableSetOf() }.add(entity)
             }
         }
         return map
@@ -296,8 +302,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     }
 
     private fun annotations(builder: MethodSpec.Builder) {
-        source.annotations
-            .filter { it.qualifiedName.startsWith("dev.morphia") }
+        source.annotations()
             .forEach {
                 if (it.values.isNotEmpty()) {
                     builder.addCode("\n.annotation(${buildAnnotation(it)}())")
@@ -312,7 +317,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         builder.addCode(";")
     }
 
-    private fun buildAnnotation(annotation: Annotation<out JavaSource<*>>): String {
+    private fun buildAnnotation(annotation: Annotation<*>): String {
         val builderName = annotationBuilderName(annotation)
         val methodName = "annotation${annotation.name}${builders.getAndIncrement()}"
         val builder = methodBuilder(methodName)
@@ -342,7 +347,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         return "$utilName.$methodName"
     }
 
-    private fun annotationBuilderName(it: Annotation<out JavaSource<*>>): ClassName {
+    private fun annotationBuilderName(it: Annotation<*>): ClassName {
         var name = it.qualifiedName
         name = name.substringBeforeLast('.') + ".internal." + name.substringAfterLast('.')
         return (name + "Builder").className()

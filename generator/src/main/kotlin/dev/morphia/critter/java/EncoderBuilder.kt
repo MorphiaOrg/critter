@@ -18,26 +18,24 @@ import dev.morphia.annotations.NotSaved
 import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.extensions.allProperties
-import dev.morphia.critter.java.extensions.methods
 import dev.morphia.critter.nameCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import dev.morphia.mapping.codec.writer.DocumentWriter
+import javax.lang.model.element.Modifier.FINAL
+import javax.lang.model.element.Modifier.PRIVATE
+import javax.lang.model.element.Modifier.PUBLIC
 import org.bson.BsonWriter
 import org.bson.Document
 import org.bson.codecs.EncoderContext
 import org.bson.codecs.IdGenerator
-import javax.lang.model.element.Modifier.FINAL
-import javax.lang.model.element.Modifier.PRIVATE
-import javax.lang.model.element.Modifier.PUBLIC
 import org.jboss.forge.roaster.model.source.JavaClassSource
 import org.jboss.forge.roaster.model.source.PropertySource
 
 @Suppress("removal")
 class EncoderBuilder(val context: JavaContext) : SourceBuilder {
-    private lateinit var source: JavaClassSource
+    private lateinit var source: CritterType
     private lateinit var encoder: TypeSpec.Builder
     private lateinit var encoderName: ClassName
     private lateinit var entityName: ClassName

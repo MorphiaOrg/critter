@@ -7,6 +7,7 @@ import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
 import dev.morphia.critter.Critter
+import dev.morphia.critter.java.CritterType
 import dev.morphia.critter.java.JavaContext
 import dev.morphia.critter.kotlin.extensions.hasAnnotation
 import java.time.temporal.Temporal
@@ -24,7 +25,7 @@ fun PropertySource<*>.mappedName(): String {
     }
 }
 
-fun PropertySource<*>.mappedType(context: JavaContext): JavaClassSource? {
+fun PropertySource<*>.mappedType(context: JavaContext): CritterType? {
     return context.entities()[concreteType().getQualifiedName()]
 }
 

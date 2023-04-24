@@ -15,7 +15,6 @@ import java.io.File
 open class CritterTask : SourceTask() {
     @Input
     lateinit var files: Set<String>
-
     @OutputDirectory
     lateinit var sourceOutputDirectory: File
     @OutputDirectory
@@ -23,10 +22,6 @@ open class CritterTask : SourceTask() {
     @Input
     @Optional
     var criteriaPackage: String? = null
-    @Input
-    var outputType: String = "kotlin"
-    @Input
-    var force = false
     @Input
     var format = false
 
@@ -39,9 +34,7 @@ open class CritterTask : SourceTask() {
         if(!sourceOutputDirectory.isAbsolute) {
             sourceOutputDirectory = File(project.buildDir, sourceOutputDirectory.toString())
         }
-        scan(project.projectDir, files, criteriaPackage, force, format, Critter.outputType(outputType), sourceOutputDirectory,
-            resourceOutputDirectory
-        )
+        scan(project.projectDir, files, criteriaPackage, format, sourceOutputDirectory, resourceOutputDirectory)
         generateCriteria()
         generateCodecs()
     }

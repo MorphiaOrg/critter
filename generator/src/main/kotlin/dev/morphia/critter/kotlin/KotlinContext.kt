@@ -12,6 +12,7 @@ import dev.morphia.annotations.Entity
 import dev.morphia.critter.CritterConfig
 import dev.morphia.critter.CritterContext
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.interfaces
 
 @Suppress("UNCHECKED_CAST")
 class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironment, val dependencies: Dependencies)
@@ -45,7 +46,7 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
 
         //        annotated.map { it.parent }.filterIsInstance<KSFile>().forEach { println(it) }
         entities = classes.values
-            .filter { !it.isAbstract() && hasMappingAnnotation(it) }
+            .filter { hasMappingAnnotation(it) }
             .associateBy { it.qualifiedName!!.asString() }
 
         if (entities.isNotEmpty()) {
@@ -56,8 +57,9 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
 
     fun hasMappingAnnotation(klass: KSClassDeclaration?): Boolean {
         return klass != null &&
-            (klass.annotations.any { it.annotationType.className() in ENTITY_MAPPINGS } ||
-                hasMappingAnnotation(klass.superClass()))
+            (klass.annotations.any { it.annotationType.className() in ENTITY_MAPPINGS }
+                || klass.interfaces().any { hasMappingAnnotation(it) }
+                || hasMappingAnnotation(klass.superClass()))
     }
 
     private fun KSClassDeclaration.superClass(): KSClassDeclaration? {

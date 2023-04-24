@@ -152,7 +152,7 @@ KotlinCriteriaBuilder(val context: KotlinContext) : SourceBuilder {
         val fieldCriteriaName = if (none) {
             property.name().titleCase() + "FieldCriteria"
         } else {
-            type.declaration.simpleName() + "FieldCriteria"
+            type.declaration.simpleName() + "Criteria"
         }
         val path = """extendPath(path, "${property.name()}")"""
         addFunction(

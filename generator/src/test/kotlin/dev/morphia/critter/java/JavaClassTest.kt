@@ -2,7 +2,6 @@ package dev.morphia.critter.java
 
 import dev.morphia.annotations.Id
 import dev.morphia.annotations.Property
-import dev.morphia.critter.java.extensions.allProperties
 import dev.morphia.critter.kotlin.assertFilePath
 import org.jboss.forge.roaster.Roaster
 import org.jboss.forge.roaster.model.JavaType
@@ -19,7 +18,8 @@ class JavaClassTest {
     @Test
     fun build() {
         val directory = File("${GENERATED_ROOT}/critter-sources")
-        val context = JavaContext(force= true, sourceOutputDirectory = directory,
+        val context = JavaContext(
+            sourceOutputDirectory = directory,
             resourceOutputDirectory = File("${GENERATED_ROOT}/critter-resources")
         )
         context.scan(File("../tests/maven/java/src/main/java/"))
@@ -38,7 +38,7 @@ class JavaClassTest {
 
     @Test
     fun codecs() {
-        val context = JavaContext(criteriaPkg = "abc.def", force = true,
+        val context = JavaContext(criteriaPkg = "abc.def",
             sourceOutputDirectory = File("${GENERATED_ROOT}/codecs-sources"),
             resourceOutputDirectory = File("${GENERATED_ROOT}/codecs-resources")
         )
@@ -53,7 +53,6 @@ class JavaClassTest {
     @Test
     fun modelImporter() {
         val context = JavaContext(criteriaPkg = "abc.def",
-            force = true,
             sourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-source"),
             resourceOutputDirectory = File("${GENERATED_ROOT}/model-importer-resource"),
 
@@ -73,7 +72,7 @@ class JavaClassTest {
     fun parents() {
         val directory = File("${GENERATED_ROOT}/parentTest/")
         val resourceOutput = File("${GENERATED_ROOT}/parentTestRes/")
-        val context = JavaContext(force = true, sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
+        val context = JavaContext(sourceOutputDirectory = directory, resourceOutputDirectory = resourceOutput)
 
         context.scan(File("../tests/maven/java/src/main/java"))
         val personClass = context.resolve("dev.morphia.critter.test", "Person")!!
@@ -94,7 +93,7 @@ class JavaClassTest {
         Assert.assertNotNull(invoiceCriteria.getMethod("addresses"))
     }
 
-    private fun validatePersonCriteria(personClass: JavaClassSource?, personCriteria: JavaClassSource) {
+    private fun validatePersonCriteria(personClass: CritterType?, personCriteria: JavaClassSource) {
         val origFields = personClass?.allProperties()
         val criteriaFields = personCriteria.fields.filter { it.isStatic && it.name != "instance" }
         assertEquals(

@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName
 import dev.morphia.annotations.Reference
 import dev.morphia.critter.Critter.addMethods
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.extensions.allProperties
 import dev.morphia.critter.java.extensions.attachFilters
 import dev.morphia.critter.java.extensions.attachUpdates
 import dev.morphia.critter.java.extensions.concreteType
@@ -65,7 +64,7 @@ class JavaCriteriaBuilder(val context: JavaContext): SourceBuilder {
         }
     }
 
-    private fun processFields(source: JavaClassSource, criteriaClass: JavaClassSource, impl: JavaClassSource) {
+    private fun processFields(source: CritterType, criteriaClass: JavaClassSource, impl: JavaClassSource) {
         source.allProperties().forEach { field ->
             criteriaClass.addField("public static final String ${field.name} = ${field.mappedName()}; ")
             addField(criteriaClass, impl, field)
@@ -134,7 +133,7 @@ class JavaCriteriaBuilder(val context: JavaContext): SourceBuilder {
 
     private fun JavaClassSource.addFieldCriteriaMethod(criteriaClass: JavaClassSource, property: PropertySource<JavaClassSource>) {
         val concreteType = property.concreteType()
-        val annotations = context.entities()[concreteType.qualifiedName]?.annotations
+        val annotations = context.entities()[concreteType.qualifiedName]?.annotations()
         val fieldCriteriaName = if (annotations == null) {
             property.name.titleCase() + "FieldCriteria"
         } else {

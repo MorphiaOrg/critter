@@ -11,7 +11,6 @@ import com.squareup.javapoet.TypeSpec
 import dev.morphia.annotations.PostLoad
 import dev.morphia.annotations.PreLoad
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.extensions.methods
 import dev.morphia.critter.titleCase
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.EntityDecoder
@@ -25,10 +24,9 @@ import javax.lang.model.element.Modifier.PUBLIC
 import org.bson.BsonReader
 import org.bson.Document
 import org.bson.codecs.DecoderContext
-import org.jboss.forge.roaster.model.source.JavaClassSource
 
 class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
-    private lateinit var source: JavaClassSource
+    private lateinit var source: CritterType
     private lateinit var decoder: TypeSpec.Builder
     private lateinit var decoderName: ClassName
     private lateinit var entityName: ClassName

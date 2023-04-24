@@ -8,21 +8,20 @@ import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeSpec
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.java.extensions.allProperties
-import dev.morphia.critter.java.extensions.bestConstructor
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PUBLIC
-import org.jboss.forge.roaster.model.source.JavaClassSource
 
 class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
-    private lateinit var source: JavaClassSource
+    private lateinit var source: CritterType
     private lateinit var creator: TypeSpec.Builder
     private lateinit var creatorName: ClassName
     private lateinit var entityName: ClassName
     override fun build() {
-        context.entities().values.forEach { source ->
+        context.entities().values
+            .filter { !it.isAbstract() }
+            .forEach { source ->
             this.source = source
             entityName = ClassName.get(source.`package`, source.name)
             creatorName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")
@@ -83,7 +82,7 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
             .addParameter(PropertyModel::class.java, "model")
 
         method.beginControlFlow("switch (model.getName())")
-        source.allProperties().forEachIndexed { index, property ->
+        source.allProperties().forEach { property ->
             method.addCode("case \"${property.name}\":")
             method.addStatement("${property.name} = (\$T)value", property.type.name.className())
             method.beginControlFlow("if(instance != null)")

@@ -32,6 +32,7 @@ import dev.morphia.critter.test.criteria.PersonCriteria.Companion.age
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.first
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.last
 import dev.morphia.mapping.MapperOptions
+import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.query.FindOptions
 import dev.morphia.query.MorphiaCursor
 import dev.morphia.query.Sort
@@ -40,6 +41,7 @@ import dev.morphia.query.filters.Filters
 import dev.morphia.query.filters.Filters.and
 import java.time.LocalDateTime.now
 import java.time.LocalDateTime.of
+import java.util.function.Function
 import java.util.stream.Collectors
 import org.bson.UuidRepresentation.STANDARD
 import org.testcontainers.containers.MongoDBContainer
@@ -91,18 +93,26 @@ class KotlinCriteriaTest {
     fun parents(state: String, datastore: Datastore) {
         if( state == STANDARD_CODECS) {
             datastore.mapper.map(
+                ChildLevel3a::class.java,
                 RootParent::class.java,
-                ChildLevel1a::class.java,
-                ChildLevel1b::class.java,
-                ChildLevel1c::class.java,
-                ChildLevel2a::class.java,
                 ChildLevel2b::class.java,
-                ChildLevel3a::class.java
+                ChildLevel1c::class.java,
+                ChildLevel1b::class.java,
+                ChildLevel1a::class.java,
+                ChildLevel2a::class.java,
+                TestEntity::class.java
             )
         }
-        val rootParent = datastore.mapper.getEntityModel(RootParent::class.java)
 
-        assertEquals(rootParent.subtypes.size, 6)
+        checkSubtypes(datastore, RootParent::class.java, 6)
+        checkSubtypes(datastore, TestEntity::class.java, 7)
+    }
+
+    private fun checkSubtypes(datastore: Datastore, clazz: Class<*>, expected: Int) {
+        val subtypes = datastore.mapper.getEntityModel(clazz).subtypes
+        assertEquals(
+            subtypes.size, expected,
+            "Expected ${expected} subtypes: ${subtypes.map { it.name }}")
     }
 
     @Test(dataProvider = "datastores")

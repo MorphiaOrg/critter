@@ -3,6 +3,6 @@ package dev.morphia.critter.test
 import dev.morphia.annotations.Entity
 
 @Entity
-class User : AbstractPerson() {
+class User : Person() {
     var email: String? = null
 }

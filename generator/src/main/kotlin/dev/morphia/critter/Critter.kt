@@ -15,9 +15,9 @@ object Critter {
     private val LOG: Logger = LoggerFactory.getLogger(Critter::class.java)
     lateinit var javaContext: JavaContext
 
-    fun scan(baseDir: File, sourceDirectories: Set<String>, criteriaPackage: String?, force: Boolean, format: Boolean,
+    fun scan(baseDir: File, sourceDirectories: Set<String>, criteriaPackage: String?, format: Boolean,
              sourceOutput: File, resourceOutput: File) {
-        javaContext = JavaContext(criteriaPackage, force, format, sourceOutput, resourceOutput)
+        javaContext = JavaContext(criteriaPackage, format, sourceOutput, resourceOutput)
         sourceDirectories
             .map {
                 val file = File(it)

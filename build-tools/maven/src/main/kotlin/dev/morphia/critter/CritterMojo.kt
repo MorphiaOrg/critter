@@ -59,7 +59,7 @@ class CritterMojo : AbstractMojo() {
         project.addResource(Resource().also {
             it.directory = resourceOutput.path
         })
-        scan(project.basedir, sourceDirectories, criteriaPackage, force, format, sourceOutput, resourceOutput)
+        scan(project.basedir, sourceDirectories, criteriaPackage, format, sourceOutput, resourceOutput)
         generateCriteria()
         if (generateCodecs) {
             generateCodecs()
