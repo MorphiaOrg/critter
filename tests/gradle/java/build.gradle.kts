@@ -23,8 +23,6 @@ tasks {
     }
 
     critter {
-        force = true
-        outputType = "java"
     }
 }
 
