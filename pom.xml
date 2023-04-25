@@ -23,7 +23,7 @@
     </scm>
 
     <properties>
-        <testcontainers.version>1.17.6</testcontainers.version>
+        <testcontainers.version>1.18.0</testcontainers.version>
         <dokka.version>1.7.20</dokka.version>
         <gradle.version>7.6.1</gradle.version>
         <jacoco.version>0.8.1</jacoco.version>
@@ -31,12 +31,11 @@
         <kotlin.version>1.8.10</kotlin.version>
         <kotlinpoet.version>1.13.0</kotlinpoet.version>
         <ksp-maven.version>1.4</ksp-maven.version>
-        <ktlint.version>0.47.1</ktlint.version>
         <maven.version>3.9.1</maven.version>
         <morphia.version>2.3.1</morphia.version>
         <roaster.version>2.28.0.Final</roaster.version>
         <slf4j.version>2.0.7</slf4j.version>
-        <spotless.version>2.31.0</spotless.version>
+        <spotless.version>2.36.0</spotless.version>
         <ksp.version>1.8.10-1.0.9</ksp.version>
         <testng.version>7.7.0</testng.version>
 
@@ -118,21 +117,6 @@
                 <artifactId>logback-classic</artifactId>
                 <version>1.4.6</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.pinterest.ktlint</groupId>
-                <artifactId>ktlint-core</artifactId>
-                <version>${ktlint.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.pinterest.ktlint</groupId>
-                <artifactId>ktlint-ruleset-standard</artifactId>
-                <version>${ktlint.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.pinterest</groupId>
-                <artifactId>ktlint</artifactId>
-                <version>${ktlint.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>

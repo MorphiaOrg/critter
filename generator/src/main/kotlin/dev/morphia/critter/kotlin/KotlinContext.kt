@@ -1,6 +1,5 @@
 package dev.morphia.critter.kotlin
 
-import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -37,14 +36,14 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
 
     val codeGenerator = environment.codeGenerator
 
-    val formatter = SpotlessFormatter(Kotlin())
+    val formatter = SpotlessFormatter()
+
     private lateinit var entities: Map<String, KSClassDeclaration>
 
     fun scan(list: List<KSClassDeclaration>) {
 
         classes += list.map { it.qualifiedName!!.asString() to it }.toMap()
 
-        //        annotated.map { it.parent }.filterIsInstance<KSFile>().forEach { println(it) }
         entities = classes.values
             .filter { hasMappingAnnotation(it) }
             .associateBy { it.qualifiedName!!.asString() }
@@ -53,6 +52,18 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
             KotlinCriteriaBuilder(this).build()
             KotlinCodecsBuilder(this).build()
         }
+
+        if (format && false) {
+            val generatedFile = codeGenerator.generatedFile
+            generatedFile
+                .filter { it.extension == "kt" }
+                .forEach { outputFile ->
+//                    outputFile.toPath().relativize()
+                    println("**************** formatting $outputFile")
+                    formatter.format(outputFile)
+                }
+        }
+
     }
 
     fun hasMappingAnnotation(klass: KSClassDeclaration?): Boolean {
@@ -83,11 +94,6 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
     }
 
     fun buildFile(fileSpec: FileSpec) {
-/*
-        if (format) {
-            formatter.format(outputFile)
-        }
-*/
         fileSpec.writeTo(codeGenerator, Dependencies(true))
     }
 

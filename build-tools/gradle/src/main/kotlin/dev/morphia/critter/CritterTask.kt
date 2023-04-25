@@ -23,6 +23,10 @@ open class CritterTask : SourceTask() {
     @Optional
     var criteriaPackage: String? = null
     @Input
+    var outputType: String = "kotlin"
+    @Input
+    var force = false
+    @Input
     var format = false
 
     init {

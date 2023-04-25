@@ -32,7 +32,6 @@ import dev.morphia.critter.test.criteria.PersonCriteria.Companion.age
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.first
 import dev.morphia.critter.test.criteria.PersonCriteria.Companion.last
 import dev.morphia.mapping.MapperOptions
-import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.query.FindOptions
 import dev.morphia.query.MorphiaCursor
 import dev.morphia.query.Sort
@@ -41,7 +40,6 @@ import dev.morphia.query.filters.Filters
 import dev.morphia.query.filters.Filters.and
 import java.time.LocalDateTime.now
 import java.time.LocalDateTime.of
-import java.util.function.Function
 import java.util.stream.Collectors
 import org.bson.UuidRepresentation.STANDARD
 import org.testcontainers.containers.MongoDBContainer
