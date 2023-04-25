@@ -18,13 +18,15 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
     private lateinit var creator: TypeSpec.Builder
     private lateinit var creatorName: ClassName
     private lateinit var entityName: ClassName
+    private lateinit var packageName: String
     override fun build() {
         context.entities().values
             .filter { !it.isAbstract() }
             .forEach { source ->
             this.source = source
             entityName = ClassName.get(source.`package`, source.name)
-            creatorName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}InstanceCreator")
+            packageName = source.packageName()
+            creatorName = ClassName.get(packageName, "${source.name}InstanceCreator")
             creator = TypeSpec.classBuilder(creatorName)
                 .addModifiers(PUBLIC)
 
@@ -40,7 +42,7 @@ class InstanceCreatorBuilder(val context: JavaContext) : SourceBuilder {
                 getInstance()
                 set()
 
-                context.buildFile(creator.build())
+                context.buildFile(packageName, creator.build())
             }
         }
     }

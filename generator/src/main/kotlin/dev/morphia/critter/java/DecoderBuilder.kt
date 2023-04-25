@@ -34,7 +34,8 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
         context.entities().values.forEach { source ->
             this.source = source
             entityName = ClassName.get(source.`package`, source.name)
-            decoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Decoder")
+            val packageName = source.packageName()
+            decoderName = ClassName.get(packageName, "${source.name}Decoder")
             decoder = TypeSpec.classBuilder(decoderName)
                 .addModifiers(PUBLIC, FINAL)
 
@@ -51,7 +52,7 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
                 getInstanceCreator()
                 lifecycle()
 
-                context.buildFile(decoder.build())
+                context.buildFile(packageName, decoder.build())
             }
         }
     }

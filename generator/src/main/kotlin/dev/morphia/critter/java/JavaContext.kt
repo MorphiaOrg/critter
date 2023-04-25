@@ -7,7 +7,10 @@ import com.squareup.javapoet.TypeSpec
 import dev.morphia.annotations.Embedded
 import dev.morphia.annotations.Entity
 import dev.morphia.critter.Critter
+import dev.morphia.critter.Critter.DEFAULT_PACKAGE
 import dev.morphia.critter.CritterContext
+import dev.morphia.critter.java.JavaContext.Companion
+import dev.morphia.critter.snakeCase
 import java.io.File
 import java.io.FileNotFoundException
 import org.jboss.forge.roaster.Roaster
@@ -74,8 +77,7 @@ class JavaContext(
         return map
     }
 
-    override fun buildFile(typeSpec: TypeSpec, vararg staticImports: Pair<Class<*>, String>) {
-        val packageName = "dev.morphia.critter.codecs"
+    fun buildFile(packageName: String, typeSpec: TypeSpec, vararg staticImports: Pair<Class<*>, String>) {
         val builder = JavaFile
             .builder(packageName, typeSpec)
         staticImports.forEach {
@@ -100,3 +102,5 @@ class JavaContext(
         sourceFile.writeText(parsed.toString())
     }
 }
+
+fun CritterType.packageName() = "${DEFAULT_PACKAGE}.${name.snakeCase()}"

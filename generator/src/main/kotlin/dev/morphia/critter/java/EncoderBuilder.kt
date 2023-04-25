@@ -18,7 +18,7 @@ import dev.morphia.annotations.NotSaved
 import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.nameCase
+import dev.morphia.critter.titleCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
@@ -39,11 +39,13 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
     private lateinit var encoder: TypeSpec.Builder
     private lateinit var encoderName: ClassName
     private lateinit var entityName: ClassName
+    private lateinit var packageName: String
     override fun build() {
         context.entities().values.forEach { source ->
             this.source = source
             entityName = ClassName.get(source.`package`, source.name)
-            encoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Encoder")
+            packageName = source.packageName()
+            encoderName = ClassName.get(packageName, "${source.name}Encoder")
             encoder = TypeSpec.classBuilder(encoderName)
                 .addModifiers(PUBLIC, FINAL)
 
@@ -67,7 +69,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         encodeMethod()
         encodeId()
 
-        context.buildFile(encoder.build(), ExpressionHelper::class.java to "document")
+        context.buildFile(packageName, encoder.build(), ExpressionHelper::class.java to "document")
     }
 
     private fun encodeMethod() {
@@ -210,13 +212,13 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
 
     private fun getter(property: PropertySource<JavaClassSource>): String {
         val name = property.name
-        val ending = name.nameCase() + "()"
+        val ending = name.titleCase() + "()"
 
         return if (property.type.name.equals("boolean", true)) "is${ending}" else "get${ending}"
     }
 
     private fun setter(property: PropertySource<JavaClassSource>): String {
-        return "set${property.name.nameCase()}"
+        return "set${property.name.titleCase()}"
     }
 
     private fun encoderClassMethod() {

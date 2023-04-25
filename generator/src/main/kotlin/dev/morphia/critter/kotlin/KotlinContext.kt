@@ -3,6 +3,7 @@ package dev.morphia.critter.kotlin
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.impl.synthetic.KSErrorTypeClassDeclaration.packageName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.writeTo
@@ -81,8 +82,8 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
     }
     override fun entities(): Map<String, KSClassDeclaration> = entities
 
-    override fun buildFile(typeSpec: TypeSpec, vararg staticImports: Pair<Class<*>, String>) {
-        buildFile(buildFileSpec(typeSpec, staticImports))
+    fun buildFile(packageName: String, typeSpec: TypeSpec, vararg staticImports: Pair<Class<*>, String>) {
+        buildFile(buildFileSpec(packageName, typeSpec, staticImports))
     }
 
     override fun generateServiceLoader(model: Class<*>, impl: String) {
@@ -97,10 +98,9 @@ class KotlinContext(config: CritterConfig, environment: SymbolProcessorEnvironme
         fileSpec.writeTo(codeGenerator, Dependencies(true))
     }
 
-    private fun buildFileSpec(typeSpec: TypeSpec, staticImports: Array<out Pair<Class<*>, String>>): FileSpec {
-        val packageName = "dev.morphia.critter.codecs"
+    private fun buildFileSpec(packageName: String, typeSpec: TypeSpec, staticImports: Array<out Pair<Class<*>, String>>): FileSpec {
         val builder = FileSpec
-            .builder(packageName, "${typeSpec.name}")
+            .builder(packageName, typeSpec.name!!)
             .addType(typeSpec)
 
         staticImports.forEach {

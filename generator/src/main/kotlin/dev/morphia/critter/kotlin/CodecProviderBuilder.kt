@@ -13,8 +13,9 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import dev.morphia.Datastore
+import dev.morphia.critter.Critter.DEFAULT_PACKAGE
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.codecPackageName
 import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.critter.kotlin.extensions.toTypeName
 import dev.morphia.mapping.codec.MorphiaCodecProvider
@@ -41,7 +42,7 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
         get()
         refreshCodecs()
 
-        context.buildFile(provider.build())
+        context.buildFile(DEFAULT_PACKAGE, provider.build())
     }
 
     private fun get() {
@@ -69,10 +70,11 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
                     """
                         MorphiaCodec<%T>(datastore, mapper.getEntityModel(type), propertyCodecProviders, mapper.discriminatorLookup, 
                         registry).also {
-                            it.setEncoder(${javaClass.name()}Encoder(it))
-                            it.setDecoder(${javaClass.name()}Decoder(it))
+                            it.setEncoder(%T(it))
+                            it.setDecoder(%T(it))
                         }""".trimIndent(),
-                    javaClass.toTypeName())
+                    javaClass.toTypeName(), ClassName(javaClass.codecPackageName(), "${javaClass.name()}Encoder"),
+                    ClassName(javaClass.codecPackageName(), "${javaClass.name()}Decoder"))
                 method.endControlFlow()
             }
         method.addStatement("else -> null")
@@ -109,25 +111,27 @@ class CodecProviderBuilder(val context: KotlinContext) : SourceBuilder {
         context.entities().values
             .filter { !it.isAbstract() }
             .forEach { type ->
-                function.beginControlFlow("%T::class.java ->", type.toTypeName())
+                val typeName = type.toTypeName()
+                function.beginControlFlow("%T::class.java ->", typeName)
                 function.addStatement(
                     "val codec: MorphiaCodec<%T> = MorphiaCodec(datastore, model, propertyCodecProviders," +
-                        " mapper.discriminatorLookup, registry)", type.toTypeName()
+                        " mapper.discriminatorLookup, registry)", typeName
                 )
                 function.addCode(
                     """
                     codec.setDecoder(object: %T<%T>(codec) {
                         protected override fun getInstanceCreator(): %T {
-                            return object: ${type.name()}InstanceCreator() {
-                                override fun getInstance(): ${type.name()} {
-                                    return entity as ${type.name()}
+                            return object: %T() {
+                                override fun getInstance(): %T {
+                                    return entity as %T
                                 }
                             }
                         }
                     })
                     
                     return codec as Codec<T>
-                """.trimIndent(), EntityDecoder::class.java, type.toTypeName(), MorphiaInstanceCreator::class.java
+                """.trimIndent(), EntityDecoder::class.java, typeName, MorphiaInstanceCreator::class.java,
+                    ClassName(type.codecPackageName(), "${type.name()}InstanceCreator"), typeName, typeName
                 )
                 function.endControlFlow()
             }

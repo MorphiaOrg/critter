@@ -46,7 +46,7 @@ class JavaClassTest {
         context.scan(File("../tests/maven/java/src/main/java/"))
         CodecsBuilder(context).build()
         for (name in listOf("Encoder", "Decoder", "InstanceCreator")) {
-            assertFilePath(context.outputDirectory, File(context.outputDirectory, "dev/morphia/critter/codecs/Address${name}.java"))
+            assertFilePath(context.outputDirectory, File(context.outputDirectory, "dev/morphia/critter/codecs/address/Address${name}.java"))
         }
     }
 

@@ -28,7 +28,6 @@ abstract class CritterContext<C, T>(
 //        return classes[name]?.file
     }
 
-    abstract fun buildFile(typeSpec: T, vararg staticImports: Pair<Class<*>, String>)
     open fun generateServiceLoader(model: Class<*>, impl: String) {
         val serviceFile = File(resourceOutput.canonicalFile, "META-INF/services/${model.name}")
         val parentFile = serviceFile.parentFile.canonicalFile

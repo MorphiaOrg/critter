@@ -20,6 +20,7 @@ import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.bestConstructor
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.codecPackageName
 import dev.morphia.critter.kotlin.extensions.fullyQualified
 import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.mapping.codec.Conversions
@@ -48,7 +49,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
         context.entities().values.forEach { source ->
             this.source = source
             entityName = ClassName.bestGuess(source.className())
-            creatorName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name()}InstanceCreator")
+            creatorName = ClassName(source.codecPackageName(), "${source.name()}InstanceCreator")
             creator = TypeSpec.classBuilder(creatorName)
                 .addAnnotation(
                     AnnotationSpec.builder(Suppress::class.java)
@@ -62,7 +63,7 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
                 getInstance()
                 set()
 
-                context.buildFile(creator.build(), Conversions::class.java to "convert")
+                context.buildFile(creatorName.packageName, creator.build(), Conversions::class.java to "convert")
             }
         }
     }

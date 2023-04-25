@@ -24,6 +24,7 @@ import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.Datastore
+import dev.morphia.critter.Critter.DEFAULT_PACKAGE
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.className
@@ -54,7 +55,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
     private lateinit var importerName: ClassName
     private val builders = AtomicInteger(1)
     override fun build() {
-        importerName = ClassName("dev.morphia.critter.codecs", "CritterModelImporter")
+        importerName = ClassName(DEFAULT_PACKAGE, "CritterModelImporter")
         importer = TypeSpec.classBuilder(importerName)
             .addSuperinterface(EntityModelImporter::class.java)
             .addAnnotation(
@@ -67,7 +68,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
         typeData()
         getCodecProvider()
 
-        context.buildFile(importer.build())
+        context.buildFile(importerName.packageName, importer.build())
         context.generateServiceLoader(EntityModelImporter::class.java, importerName.toString())
     }
 

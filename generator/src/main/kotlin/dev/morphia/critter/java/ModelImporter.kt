@@ -11,6 +11,7 @@ import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeSpec.Builder
 import dev.morphia.Datastore
+import dev.morphia.critter.Critter.DEFAULT_PACKAGE
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.methodCase
 import dev.morphia.critter.titleCase
@@ -31,8 +32,6 @@ import org.jboss.forge.roaster.model.Type
 import org.jboss.forge.roaster.model.source.JavaSource
 import org.jboss.forge.roaster.model.source.PropertySource
 
-private const val OBJECT = "java.lang.Object"
-
 class ModelImporter(val context: JavaContext) : SourceBuilder {
     private lateinit var utilName: String
     private lateinit var util: Builder
@@ -40,9 +39,11 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
     private lateinit var properties: List<PropertySource<*>>
     private lateinit var importer: Builder
     private lateinit var importerName: ClassName
+    private lateinit var packageName: String
     private val builders = AtomicInteger(1)
     override fun build() {
-        importerName = ClassName.get("dev.morphia.critter.codecs", "CritterModelImporter")
+        packageName = DEFAULT_PACKAGE
+        importerName = ClassName.get(packageName, "CritterModelImporter")
         importer = TypeSpec.classBuilder(importerName)
             .addModifiers(PUBLIC, Modifier.FINAL)
             .addSuperinterface(EntityModelImporter::class.java)
@@ -58,7 +59,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
 
         getCodecProvider()
 
-        context.buildFile(importer.build())
+        context.buildFile(packageName, importer.build())
         context.generateServiceLoader(EntityModelImporter::class.java, importerName.toString())
     }
 
