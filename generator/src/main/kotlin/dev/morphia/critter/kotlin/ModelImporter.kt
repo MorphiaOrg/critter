@@ -319,7 +319,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
     private fun convertArgumentValue(name: String, value: Any?): String {
         return when (value) {
-            is String -> "\"${value}\""
+            is String -> "\"${value}\"".replace("$", "\\$")
             is KSAnnotation -> buildAnnotation(value) + "()"
             is List<*> -> value.joinToString(", ") {
                 "" + convertArgumentValue(name, it)
@@ -332,7 +332,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                     "::class.java"
                 }
 
-            else -> value.toString()
+            else -> value.toString().replace("$", "${"$"}$")
         }
     }
 

@@ -318,6 +318,7 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
         builder.addCode(";")
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun buildAnnotation(annotation: Annotation<*>): String {
         val builderName = annotationBuilderName(annotation)
         val methodName = "annotation${annotation.name}${builders.getAndIncrement()}"
@@ -325,19 +326,28 @@ class ModelImporter(val context: JavaContext) : SourceBuilder {
             .addModifiers(PRIVATE, STATIC)
             .returns(annotation.qualifiedName.className())
 
+
         builder.addStatement("var builder = ${"$"}T.${builderName.simpleName().methodCase()}()", builderName)
+        val types = Class.forName(annotation.getQualifiedName())
+            .declaredMethods
+            .associate { it.name to it.returnType }
+
         annotation.values
             .forEach { pair ->
                 val name = pair.name
-                var value = annotation.getLiteralValue(name)
-                val arrayValue = annotation.getAnnotationArrayValue(name)
-                val annotationValue = annotation.getAnnotationValue(name)
-                if (annotationValue != null) {
-                    value = buildAnnotation(annotationValue) + "()"
-                } else if (arrayValue != null) {
-                    value = arrayValue.joinToString(", ") {
-                        buildAnnotation(it) + "()"
+                val type = types[name]!!
+                val value: Any = when {
+                    type.isEnum() -> {
+                        val enumValue = annotation.getEnumValue(type as Class<out Enum<*>>, name)
+                        CodeBlock.of("${"$"}T", (type.name + "." + enumValue).className())
                     }
+                    type.isArray -> annotation.getAnnotationArrayValue(name)
+                        .joinToString(", ") {
+                            buildAnnotation(it) + "()"
+                        }
+                    type.isAnnotation -> buildAnnotation(annotation.getAnnotationValue(name)) + "()"
+                    else -> annotation.getLiteralValue(name)
+                        .replace("$", "${"$"}$")
                 }
                 builder.addStatement("builder.$name($value)")
             }

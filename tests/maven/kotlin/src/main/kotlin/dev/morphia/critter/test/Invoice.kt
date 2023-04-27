@@ -2,21 +2,28 @@ package dev.morphia.critter.test
 
 
 import dev.morphia.annotations.Entity
+import dev.morphia.annotations.Field
 import dev.morphia.annotations.Id
+import dev.morphia.annotations.Index
 import dev.morphia.annotations.IndexOptions
 import dev.morphia.annotations.Indexed
+import dev.morphia.annotations.Indexes
 import dev.morphia.annotations.PostLoad
 import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PreLoad
 import dev.morphia.annotations.PrePersist
 import dev.morphia.annotations.Reference
 import dev.morphia.annotations.Transient
+import dev.morphia.annotations.Validation
+import dev.morphia.utils.IndexType.TEXT
 import java.time.LocalDateTime
 import java.util.StringJoiner
 import org.bson.types.ObjectId
 
 @Entity
-class Invoice(): Any() {
+@Validation("{ title: \$exists: true } }")
+@Indexes(value = [Index(fields = [Field(value = "title", type = TEXT)])])
+class Invoice() {
     @Id
     var id = ObjectId()
 
