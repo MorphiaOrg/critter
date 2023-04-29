@@ -8,6 +8,9 @@ import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import dev.morphia.critter.Critter.addMethods
+import dev.morphia.critter.java.extensions.isContainer
+import dev.morphia.critter.java.extensions.isNumeric
+import dev.morphia.critter.java.extensions.isText
 import dev.morphia.critter.kotlin.extensions.isContainer
 import dev.morphia.critter.kotlin.extensions.isNumeric
 import dev.morphia.critter.kotlin.extensions.isText
@@ -19,6 +22,7 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSupertypeOf
 import org.jboss.forge.roaster.model.source.JavaClassSource
+import org.jboss.forge.roaster.model.source.PropertySource
 
 object UpdateSieve {
     internal val functions = updates()
@@ -30,15 +34,15 @@ object UpdateSieve {
             .filter { it.name !in setOf("setOnInsert") }
             .filterNot { it.name == "set" && it.parameters.size == 1 }
 
-    fun handlers(property: CritterProperty, target: JavaClassSource) {
+    fun handlers(target: JavaClassSource, property: PropertySource<*>) {
         val updates = TreeSet(Updates.common())
-        if (property.type.isNumeric) {
+        if (property.isNumeric()) {
             updates.addAll(Updates.numerics())
         }
-        if (property.type.isText) {
+        if (property.isText()) {
             updates.addAll(Updates.strings())
         }
-        if (property.type.isContainer) {
+        if (property.isContainer()) {
             updates.addAll(Updates.containers())
         }
         updates.forEach {
@@ -68,7 +72,7 @@ object UpdateSieve {
 enum class Updates : OperationGenerator {
     and,
     addToSet {
-        override fun handle(target: JavaClassSource, property: CritterProperty) {
+        override fun handle(target: JavaClassSource, property: PropertySource<*>) {
             target.addImport(AddToSetOperator::class.java)
             target.addMethods("""
             public AddToSetOperator ${name}(Object value) {
@@ -96,7 +100,7 @@ enum class Updates : OperationGenerator {
     },
     currentDate,
     dec {
-        override fun handle(target: JavaClassSource, property: CritterProperty) {
+        override fun handle(target: JavaClassSource, property: PropertySource<*>) {
             target.addMethod("""
                 public UpdateOperator ${name}() {
                     return UpdateOperators.${name}(path);
@@ -118,7 +122,7 @@ enum class Updates : OperationGenerator {
         }
     },
     inc {
-        override fun handle(target: JavaClassSource, property: CritterProperty) {
+        override fun handle(target: JavaClassSource, property: PropertySource<*>) {
             target.addMethod("""
                 public UpdateOperator ${name}() {
                     return UpdateOperators.${name}(path);
@@ -146,7 +150,7 @@ enum class Updates : OperationGenerator {
     pop,
     pull,
     pullAll {
-        override fun handle(target: JavaClassSource, property: CritterProperty) {
+        override fun handle(target: JavaClassSource, property: PropertySource<*>) {
             target.addImport(java.util.List::class.java)
             target.addMethod("""
             public UpdateOperator ${name}(List<?> values) {
@@ -168,7 +172,7 @@ enum class Updates : OperationGenerator {
         fun common() = values().toSet() - numerics() - strings() - containers()
     }
 
-    open fun handle(target: JavaClassSource, property: CritterProperty) {
+    open fun handle(target: JavaClassSource, property: PropertySource<*>) {
         handle(target, property, name, UpdateSieve.functions, "UpdateOperators")
     }
 

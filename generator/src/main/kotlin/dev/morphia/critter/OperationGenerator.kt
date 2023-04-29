@@ -13,9 +13,10 @@ import dev.morphia.query.updates.UpdateOperators
 import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.javaType
 import org.jboss.forge.roaster.model.source.JavaClassSource
+import org.jboss.forge.roaster.model.source.PropertySource
 
 interface OperationGenerator {
-    fun handle(target: JavaClassSource, property: CritterProperty, name: String, functions: Map<String, KFunction<*>>, functionSource: String) {
+    fun handle(target: JavaClassSource, property: PropertySource<*>, name: String, functions: Map<String, KFunction<*>>, functionSource: String) {
         target.addImport(Filters::class.java)
         target.addImport(Filter::class.java)
         target.addImport(UpdateOperators::class.java.name)

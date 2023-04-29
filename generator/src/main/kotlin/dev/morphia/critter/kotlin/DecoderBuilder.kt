@@ -17,6 +17,7 @@ import dev.morphia.annotations.PostLoad
 import dev.morphia.annotations.PreLoad
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.codecPackageName
 import dev.morphia.critter.kotlin.extensions.functions
 import dev.morphia.critter.kotlin.extensions.name
 import dev.morphia.critter.titleCase
@@ -40,7 +41,7 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
         context.entities().values.forEach { source ->
             this.source = source
             entityName = ClassName.bestGuess(source.className())
-            decoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name()}Decoder")
+            decoderName = ClassName(source.codecPackageName(), "${source.name()}Decoder")
             decoder = TypeSpec.classBuilder(decoderName)
                 .addModifiers(PUBLIC, FINAL)
 
@@ -51,7 +52,7 @@ class DecoderBuilder(private val context: KotlinContext) : SourceBuilder {
                 decodeMethod()
                 getInstanceCreator()
                 lifecycle()
-                context.buildFile(decoder.build(), Conversions::class.java to "convert")
+                context.buildFile(decoderName.packageName, decoder.build(), Conversions::class.java to "convert")
             }
         }
     }

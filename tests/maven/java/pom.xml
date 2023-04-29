@@ -12,6 +12,10 @@
     <artifactId>critter-tests-maven-java</artifactId>
     <name>critter-tests-maven-java</name>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <build>
         <plugins>
             <plugin>

@@ -91,18 +91,26 @@ class KotlinCriteriaTest {
     fun parents(state: String, datastore: Datastore) {
         if( state == STANDARD_CODECS) {
             datastore.mapper.map(
+                ChildLevel3a::class.java,
                 RootParent::class.java,
-                ChildLevel1a::class.java,
-                ChildLevel1b::class.java,
-                ChildLevel1c::class.java,
-                ChildLevel2a::class.java,
                 ChildLevel2b::class.java,
-                ChildLevel3a::class.java
+                ChildLevel1c::class.java,
+                ChildLevel1b::class.java,
+                ChildLevel1a::class.java,
+                ChildLevel2a::class.java,
+                TestEntity::class.java
             )
         }
-        val rootParent = datastore.mapper.getEntityModel(RootParent::class.java)
 
-        assertEquals(rootParent.subtypes.size, 6)
+        checkSubtypes(datastore, RootParent::class.java, 6)
+        checkSubtypes(datastore, TestEntity::class.java, 7)
+    }
+
+    private fun checkSubtypes(datastore: Datastore, clazz: Class<*>, expected: Int) {
+        val subtypes = datastore.mapper.getEntityModel(clazz).subtypes
+        assertEquals(
+            subtypes.size, expected,
+            "Expected ${expected} subtypes: ${subtypes.map { it.name }}")
     }
 
     @Test(dataProvider = "datastores")

@@ -10,6 +10,7 @@ import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeSpec
 import com.squareup.javapoet.TypeVariableName
 import dev.morphia.Datastore
+import dev.morphia.critter.Critter.DEFAULT_PACKAGE
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.mapping.codec.MorphiaCodecProvider
 import dev.morphia.mapping.codec.MorphiaInstanceCreator
@@ -23,9 +24,10 @@ import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PUBLIC
 
 class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
-    private val provider = TypeSpec.classBuilder("CritterCodecProvider").addModifiers(PUBLIC, FINAL)
+    private lateinit var provider: TypeSpec.Builder
 
     override fun build() {
+        provider = TypeSpec.classBuilder("CritterCodecProvider").addModifiers(PUBLIC, FINAL)
         provider.superclass(ClassName.get(MorphiaCodecProvider::class.java))
 
         provider.addAnnotation(
@@ -36,7 +38,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
         buildGet()
         refreshCodecs()
 
-        context.buildFile(provider.build())
+        context.buildFile(DEFAULT_PACKAGE, provider.build())
     }
 
     private fun buildGet() {
@@ -61,8 +63,10 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                 "MorphiaCodec<\$T> codec = new MorphiaCodec<>(getDatastore(), model, getPropertyCodecProviders(), " + "getMapper().getDiscriminatorLookup(), registry)",
                 javaClass.qualifiedName.className()
             )
-            method.addStatement("codec.setEncoder(new ${javaClass.name}Encoder(codec))", EntityEncoder::class.java)
-            method.addStatement("codec.setDecoder(new ${javaClass.name}Decoder(codec))", EntityDecoder::class.java)
+            method.addStatement("codec.setEncoder(new ${"$"}T(codec))",
+                "${javaClass.packageName()}.${javaClass.name}Encoder".className())
+            method.addStatement("codec.setDecoder(new ${"$"}T(codec))",
+                "${javaClass.packageName()}.${javaClass.name}Decoder".className())
             method.addStatement("return (MorphiaCodec<T>)codec")
         }
         method.endControlFlow()
@@ -108,7 +112,7 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                         @NonNull
                         @Override
                         protected ${"$"}T getInstanceCreator() {
-                            return new ${javaClass.name}InstanceCreator() {
+                            return new ${"$"}T() {
                                 @Override
                                 public ${javaClass.name} getInstance() {
                                     return (${javaClass.name})entity;
@@ -116,7 +120,8 @@ class CodecProviderBuilder(val context: JavaContext) : SourceBuilder {
                             };
                         }
                     });
-                """.trimIndent(), EntityDecoder::class.java, MorphiaInstanceCreator::class.java
+                """.trimIndent(), EntityDecoder::class.java, MorphiaInstanceCreator::class.java,
+                    "${javaClass.packageName()}.${javaClass.name}InstanceCreator".className()
             )
         }
 

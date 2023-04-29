@@ -27,10 +27,13 @@ import dev.morphia.annotations.PrePersist
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.className
+import dev.morphia.critter.kotlin.extensions.codecPackageName
 import dev.morphia.critter.kotlin.extensions.functions
 import dev.morphia.critter.kotlin.extensions.hasAnnotation
 import dev.morphia.critter.kotlin.extensions.name
+import dev.morphia.critter.kotlin.extensions.packageName
 import dev.morphia.critter.kotlin.extensions.toTypeName
+import dev.morphia.critter.snakeCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.writer.DocumentWriter
@@ -50,8 +53,8 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
             if (!source.isAbstract()) {
                 this.source = source
 
-                entityName = ClassName.bestGuess(source.className())
-                encoderName = ClassName("dev.morphia.mapping.codec.pojo", "${source.name()}Encoder")
+                entityName = ClassName(source.packageName(), source.name())
+                encoderName = ClassName(source.codecPackageName(), "${source.name()}Encoder")
                 encoder = TypeSpec.classBuilder(encoderName)
                     .addModifiers(PUBLIC, FINAL)
 
@@ -75,7 +78,7 @@ class EncoderBuilder(val context: KotlinContext) : SourceBuilder {
         lifecycle()
         encodeId()
 
-        context.buildFile(encoder.build(), ExpressionHelper::class.java to "document")
+        context.buildFile(encoderName.packageName, encoder.build(), ExpressionHelper::class.java to "document")
     }
 
 

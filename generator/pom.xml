@@ -10,7 +10,6 @@
     </parent>
 
     <artifactId>critter-generator</artifactId>
-    <version>4.5.0-SNAPSHOT</version>
 
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>

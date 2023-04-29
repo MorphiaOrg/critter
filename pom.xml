@@ -36,7 +36,7 @@
         <morphia.version>2.3.1</morphia.version>
         <roaster.version>2.28.0.Final</roaster.version>
         <slf4j.version>2.0.7</slf4j.version>
-        <spotless.version>2.31.0</spotless.version>
+        <spotless.version>2.36.0</spotless.version>
         <ksp.version>1.8.10-1.0.9</ksp.version>
         <testng.version>7.7.0</testng.version>
 
@@ -261,6 +261,13 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+
     </build>
 
     <distributionManagement>

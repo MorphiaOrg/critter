@@ -17,29 +17,27 @@ import dev.morphia.mapping.codec.pojo.EntityDecoder
 import dev.morphia.mapping.codec.pojo.EntityModel
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.reader.DocumentReader
-import org.bson.BsonReader
-import org.bson.Document
-import org.bson.codecs.DecoderContext
-import java.io.File
 import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PRIVATE
 import javax.lang.model.element.Modifier.PROTECTED
 import javax.lang.model.element.Modifier.PUBLIC
+import org.bson.BsonReader
+import org.bson.Document
+import org.bson.codecs.DecoderContext
 
 class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
-    private lateinit var source: JavaClass
+    private lateinit var source: CritterType
     private lateinit var decoder: TypeSpec.Builder
     private lateinit var decoderName: ClassName
     private lateinit var entityName: ClassName
     override fun build() {
         context.entities().values.forEach { source ->
             this.source = source
-            entityName = ClassName.get(source.pkgName, source.name)
-            decoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Decoder")
+            entityName = ClassName.get(source.`package`, source.name)
+            val packageName = source.packageName()
+            decoderName = ClassName.get(packageName, "${source.name}Decoder")
             decoder = TypeSpec.classBuilder(decoderName)
                 .addModifiers(PUBLIC, FINAL)
-            val sourceTimestamp = source.lastModified()
-            val decoderFile = File(context.outputDirectory, decoderName.canonicalName().replace('.', '/') + ".java")
 
             decoder.addAnnotation(
                 AnnotationSpec.builder(SuppressWarnings::class.java)
@@ -47,14 +45,14 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
                     .build()
             )
 
-            if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, decoderFile.lastModified())) {
+            if (!source.isAbstract()) {
                 decoder.superclass(ParameterizedTypeName.get(ClassName.get(EntityDecoder::class.java), entityName))
                 buildConstructor()
                 decodeMethod()
                 getInstanceCreator()
                 lifecycle()
 
-                context.buildFile(decoder.build())
+                context.buildFile(packageName, decoder.build())
             }
         }
     }
@@ -74,7 +72,7 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
             .addStatement("var instanceCreator = new ${entityName.simpleName().titleCase()}InstanceCreator()")
             .addStatement("var instance = instanceCreator.getInstance()")
         source.methods(PreLoad::class.java).forEach {
-            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
+            val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")") { parameter -> parameter.name }
             method.addStatement("instance.${it.name}${params}\n")
         }
         method.beginControlFlow("for (var ei : mapper.getInterceptors())")
@@ -87,7 +85,7 @@ class DecoderBuilder(private val context: JavaContext) : SourceBuilder {
                 DocumentReader::class.java
             )
         source.methods(PostLoad::class.java).forEach {
-            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
+            val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")") { parameter -> parameter.name }
             method.addStatement("instance.${it.name}${params}\n")
         }
         method.beginControlFlow("for (var ei : mapper.getInterceptors())")

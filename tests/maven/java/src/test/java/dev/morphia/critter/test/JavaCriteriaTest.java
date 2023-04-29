@@ -4,7 +4,6 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import dev.morphia.Datastore;
@@ -14,6 +13,7 @@ import dev.morphia.UpdateOptions;
 import dev.morphia.critter.test.criteria.InvoiceCriteria;
 import dev.morphia.critter.test.criteria.PersonCriteria;
 import dev.morphia.mapping.MapperOptions;
+import dev.morphia.mapping.codec.pojo.EntityModel;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.mongodb.WriteConcern.MAJORITY;
@@ -34,16 +35,19 @@ import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.or;
+import static java.lang.String.format;
 import static org.bson.UuidRepresentation.STANDARD;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 @SuppressWarnings("removal")
 @Test
-public class CriteriaTest {
+public class JavaCriteriaTest {
+    private final String STANDARD_CODECS = "Standard codecs";
+    private final String CRITTER_CODECS = "Critter codecs";
+
     private MongoDBContainer mongoDBContainer;
     private MongoClient mongoClient;
     private Datastore datastore;
@@ -66,6 +70,30 @@ public class CriteriaTest {
         if (mongoDBContainer != null ) {
             mongoDBContainer.close();
         }
+    }
+
+    @Test(dataProvider = "datastores")
+    public void parents(String state, Datastore datastore) {
+        if (state == STANDARD_CODECS) {
+            datastore.getMapper().map(
+                RootParent.class,
+                ChildLevel1a.class,
+                ChildLevel1b.class,
+                ChildLevel1c.class,
+                ChildLevel2a.class,
+                ChildLevel2b.class,
+                ChildLevel3a.class,
+                TestEntity.class);
+        }
+
+        checkSubtypes(datastore, RootParent.class, 6);
+        checkSubtypes(datastore, TestEntity.class, 7);
+    }
+
+    private static void checkSubtypes(Datastore datastore, Class<?> type, int expected) {
+        Set<EntityModel> subtypes = datastore.getMapper().getEntityModel(type).getSubtypes();
+        assertEquals(subtypes.size(), expected, format("Expected %d subtypes: %s", expected,
+            subtypes.stream().map(EntityModel::getName).collect(Collectors.toList())));
     }
 
     @Test(dataProvider = "datastores")
@@ -289,4 +317,6 @@ public class CriteriaTest {
                          .autoImportModels(useGenerated)
                          .build());
     }
+
+
 }

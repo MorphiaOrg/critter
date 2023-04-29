@@ -17,32 +17,35 @@ import dev.morphia.annotations.LoadOnly
 import dev.morphia.annotations.NotSaved
 import dev.morphia.annotations.PostPersist
 import dev.morphia.annotations.PrePersist
-import dev.morphia.critter.CritterProperty
 import dev.morphia.critter.SourceBuilder
-import dev.morphia.critter.nameCase
+import dev.morphia.critter.titleCase
 import dev.morphia.mapping.codec.pojo.EntityEncoder
 import dev.morphia.mapping.codec.pojo.MorphiaCodec
 import dev.morphia.mapping.codec.pojo.PropertyModel
 import dev.morphia.mapping.codec.writer.DocumentWriter
+import javax.lang.model.element.Modifier.FINAL
+import javax.lang.model.element.Modifier.PRIVATE
+import javax.lang.model.element.Modifier.PUBLIC
 import org.bson.BsonWriter
 import org.bson.Document
 import org.bson.codecs.EncoderContext
 import org.bson.codecs.IdGenerator
-import java.io.File
-import javax.lang.model.element.Modifier.FINAL
-import javax.lang.model.element.Modifier.PRIVATE
-import javax.lang.model.element.Modifier.PUBLIC
+import org.jboss.forge.roaster.model.source.JavaClassSource
+import org.jboss.forge.roaster.model.source.PropertySource
 
+@Suppress("removal")
 class EncoderBuilder(val context: JavaContext) : SourceBuilder {
-    private lateinit var source: JavaClass
+    private lateinit var source: CritterType
     private lateinit var encoder: TypeSpec.Builder
     private lateinit var encoderName: ClassName
     private lateinit var entityName: ClassName
+    private lateinit var packageName: String
     override fun build() {
         context.entities().values.forEach { source ->
             this.source = source
-            entityName = ClassName.get(source.pkgName, source.name)
-            encoderName = ClassName.get("dev.morphia.mapping.codec.pojo", "${source.name}Encoder")
+            entityName = ClassName.get(source.`package`, source.name)
+            packageName = source.packageName()
+            encoderName = ClassName.get(packageName, "${source.name}Encoder")
             encoder = TypeSpec.classBuilder(encoderName)
                 .addModifiers(PUBLIC, FINAL)
 
@@ -52,10 +55,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
                     .build()
             )
 
-            val sourceTimestamp = source.lastModified()
-            val encoderFile = File(context.outputDirectory, encoderName.canonicalName().replace('.', '/') + ".java")
-
-            if (!source.isAbstract() && context.shouldGenerate(sourceTimestamp, encoderFile.lastModified())) {
+            if (!source.isAbstract()) {
                 buildEncoder()
             }
         }
@@ -69,7 +69,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         encodeMethod()
         encodeId()
 
-        context.buildFile(encoder.build(), ExpressionHelper::class.java to "document")
+        context.buildFile(packageName, encoder.build(), ExpressionHelper::class.java to "document")
     }
 
     private fun encodeMethod() {
@@ -136,7 +136,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         builder.addStatement("var document = new \$T()", Document::class.java)
         builder.addCode("// call PrePersist methods\n")
         source.methods(PrePersist::class.java).forEach {
-            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
+            val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")") { parameter -> parameter.name }
             builder.addStatement("instance.${it.name}${params}\n")
         }
         builder.beginControlFlow("for (\$T ei : mapper.getInterceptors())", EntityInterceptor::class.java)
@@ -147,7 +147,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         builder.addStatement("document = documentWriter.getDocument()")
         builder.addCode("// call PostPersist methods\n")
         source.methods(PostPersist::class.java).forEach {
-            val params = it.parameterNames().joinToString(", ", prefix = "(", postfix = ")")
+            val params = it.parameters.joinToString(", ", prefix = "(", postfix = ")") { parameter -> parameter.name }
             builder.addStatement("instance.${it.name}${params}\n")
         }
 
@@ -170,7 +170,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
                 writer.writeString(model.getDiscriminatorKey(), model.getDiscriminator());
             }
         """.trimIndent()
-        source.properties.forEach { field ->
+        source.allProperties().forEach { field ->
             if (!(field.hasAnnotation(Id::class.java)
                     || field.hasAnnotation(LoadOnly::class.java)
                     || field.hasAnnotation(NotSaved::class.java))
@@ -188,7 +188,7 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
                 .addParameter(BsonWriter::class.java, "writer")
                 .addParameter(ParameterSpec.builder(entityName, "instance").build())
                 .addParameter(EncoderContext::class.java, "encoderContext")
-            val idType = ClassName.get(it.type.name.substringBeforeLast('.'), it.type.name.substringAfterLast('.'))
+            val idType = it.type.qualifiedName.className()
             method.addCode(
                 """
                 Object id = instance.${getter(it)};
@@ -206,18 +206,19 @@ class EncoderBuilder(val context: JavaContext) : SourceBuilder {
         }
     }
 
-    private fun idProperty(): CritterProperty? {
-        return source.properties.firstOrNull { it.hasAnnotation(Id::class.java) }
+    private fun idProperty(): PropertySource<JavaClassSource>? {
+        return source.allProperties().firstOrNull { it.hasAnnotation(Id::class.java) }
     }
-    private fun getter(property: CritterProperty): String {
+
+    private fun getter(property: PropertySource<JavaClassSource>): String {
         val name = property.name
-        val ending = name.nameCase() + "()"
+        val ending = name.titleCase() + "()"
 
         return if (property.type.name.equals("boolean", true)) "is${ending}" else "get${ending}"
     }
 
-    private fun setter(property: CritterProperty): String {
-        return "set${property.name.nameCase()}"
+    private fun setter(property: PropertySource<JavaClassSource>): String {
+        return "set${property.name.titleCase()}"
     }
 
     private fun encoderClassMethod() {

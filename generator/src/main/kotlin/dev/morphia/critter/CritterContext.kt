@@ -5,12 +5,11 @@ import java.io.FileNotFoundException
 
 abstract class CritterContext<C, T>(
     val criteriaPkg: String?,
-    var force: Boolean,
     var format: Boolean,
     val outputDirectory: File,
     val resourceOutput: File,
 ) {
-    constructor(config: CritterConfig) : this(config.criteriaPkg, config.force, config.format, config.outputDirectory, config.resourceOutput)
+    constructor(config: CritterConfig) : this(config.criteriaPkg, config.format, config.outputDirectory, config.resourceOutput)
 
     val classes: MutableMap<String, C> = mutableMapOf()
 
@@ -19,10 +18,6 @@ abstract class CritterContext<C, T>(
     }
 
     abstract fun entities(): Map<String, C>
-
-    open fun shouldGenerate(sourceTimestamp: Long?, outputTimestamp: Long?): Boolean {
-        return force || sourceTimestamp == null || outputTimestamp == null || sourceTimestamp >= outputTimestamp
-    }
 
     open fun resolve(currentPkg: String? = null, name: String): C? {
         return classes[name] ?: currentPkg?.let { classes["$currentPkg.$name"] }
@@ -33,7 +28,6 @@ abstract class CritterContext<C, T>(
 //        return classes[name]?.file
     }
 
-    abstract fun buildFile(typeSpec: T, vararg staticImports: Pair<Class<*>, String>)
     open fun generateServiceLoader(model: Class<*>, impl: String) {
         val serviceFile = File(resourceOutput.canonicalFile, "META-INF/services/${model.name}")
         val parentFile = serviceFile.parentFile.canonicalFile

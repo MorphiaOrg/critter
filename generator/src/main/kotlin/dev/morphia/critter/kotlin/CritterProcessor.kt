@@ -27,7 +27,9 @@ class CritterProcessor(val environment: SymbolProcessorEnvironment) : SymbolProc
         KotlinContext(config, environment, ALL_FILES)
                 .scan(resolver.getNewFiles()
                     .flatMap {
-                        it.declarations.filterIsInstance<KSClassDeclaration>()
+                        val decls = it.declarations
+                            .filterIsInstance<KSClassDeclaration>()
+                        decls
                             .filter { klass -> klass.classKind == CLASS || klass.classKind == INTERFACE }
                     }
                     .toList())

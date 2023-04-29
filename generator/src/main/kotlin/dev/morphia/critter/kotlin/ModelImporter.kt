@@ -24,6 +24,7 @@ import com.squareup.kotlinpoet.TypeSpec.Builder
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import dev.morphia.Datastore
+import dev.morphia.critter.Critter.DEFAULT_PACKAGE
 import dev.morphia.critter.SourceBuilder
 import dev.morphia.critter.kotlin.extensions.activeProperties
 import dev.morphia.critter.kotlin.extensions.className
@@ -54,7 +55,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
     private lateinit var importerName: ClassName
     private val builders = AtomicInteger(1)
     override fun build() {
-        importerName = ClassName("dev.morphia.critter.codecs", "CritterModelImporter")
+        importerName = ClassName(DEFAULT_PACKAGE, "CritterModelImporter")
         importer = TypeSpec.classBuilder(importerName)
             .addSuperinterface(EntityModelImporter::class.java)
             .addAnnotation(
@@ -63,11 +64,11 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                     .build()
             )
 
-        parents()
+        getModels()
         typeData()
         getCodecProvider()
 
-        context.buildFile(importer.build())
+        context.buildFile(importerName.packageName, importer.build())
         context.generateServiceLoader(EntityModelImporter::class.java, importerName.toString())
     }
 
@@ -105,7 +106,8 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
     private fun bucketEntities(entities: Collection<KSClassDeclaration>): MutableMap<String, MutableSet<KSClassDeclaration>> {
         val map = HashMap<String, MutableSet<KSClassDeclaration>>()
         for (entity in entities) {
-            entity.superTypes
+            val superTypes = entity.superTypes.toList()
+            superTypes
                 .filter { it.className() != ANY }
                 .forEach {
                     map.getOrPut(it.className()) { mutableSetOf() }.add(entity)
@@ -116,7 +118,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
     private fun KSClassDeclaration.modelName() = "${name().methodCase()}Model"
 
-    private fun parents() {
+    private fun getModels() {
 
         val list = List::class.asClassName()
             .parameterizedBy(EntityModel::class.asClassName())
@@ -142,7 +144,6 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
             val model = models[entry.key]
             if(model != null) {
                 entry.value.forEach { subtype ->
-//                    method.addCode("$model.addSubtype(${subtype.modelName()})\n")
                     method.addCode("${subtype.modelName()}.superClass = $model\n")
                 }
             }
@@ -318,7 +319,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
 
     private fun convertArgumentValue(name: String, value: Any?): String {
         return when (value) {
-            is String -> "\"${value}\""
+            is String -> "\"${value}\"".replace("$", "\\$")
             is KSAnnotation -> buildAnnotation(value) + "()"
             is List<*> -> value.joinToString(", ") {
                 "" + convertArgumentValue(name, it)
@@ -331,7 +332,7 @@ class ModelImporter(val context: KotlinContext) : SourceBuilder {
                     "::class.java"
                 }
 
-            else -> value.toString()
+            else -> value.toString().replace("$", "${"$"}$")
         }
     }
 

@@ -2,7 +2,6 @@ package dev.morphia.critter
 
 import dev.morphia.critter.Critter.generateCodecs
 import dev.morphia.critter.Critter.generateCriteria
-import dev.morphia.critter.Critter.outputType
 import dev.morphia.critter.Critter.scan
 import org.apache.maven.model.Resource
 import org.apache.maven.plugin.AbstractMojo
@@ -45,7 +44,8 @@ class CritterMojo : AbstractMojo() {
     @Parameter(property = "critter.format", defaultValue = "true")
     private var format: Boolean = true
 
-    @Parameter(property = "critter.type", name = "outputType", required = true)
+    @Deprecated("The mojo is only used for Java output now")
+    @Parameter(property = "critter.type", name = "outputType", required = false)
     lateinit var outputType: String
 
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
@@ -59,7 +59,7 @@ class CritterMojo : AbstractMojo() {
         project.addResource(Resource().also {
             it.directory = resourceOutput.path
         })
-        scan(project.basedir, sourceDirectories, criteriaPackage, force, format, outputType(outputType), sourceOutput, resourceOutput)
+        scan(project.basedir, sourceDirectories, criteriaPackage, format, sourceOutput, resourceOutput)
         generateCriteria()
         if (generateCodecs) {
             generateCodecs()

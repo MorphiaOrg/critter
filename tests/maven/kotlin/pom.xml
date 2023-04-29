@@ -12,6 +12,10 @@
     <artifactId>critter-tests-maven-kotlin</artifactId>
     <name>critter-tests-maven-kotlin</name>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
