@@ -5,12 +5,16 @@
     <parent>
         <groupId>dev.morphia.critter</groupId>
         <artifactId>critter-tests-maven</artifactId>
-        <version>4.4.4-SNAPSHOT</version>
+        <version>4.4.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>critter-tests-maven-java</artifactId>
     <name>critter-tests-maven-java</name>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <build>
         <plugins>
