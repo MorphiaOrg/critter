@@ -5,7 +5,7 @@
     <parent>
         <groupId>dev.morphia.critter</groupId>
         <artifactId>critter</artifactId>
-        <version>4.4.4-SNAPSHOT</version>
+        <version>4.4.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -16,8 +16,19 @@
         <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
-    <modules>
-        <module>maven</module>
-        <module>gradle</module>
-    </modules>
+    <profiles>
+        <profile>
+            <id>tests</id>
+            <activation>
+                <property>
+                    <name>!release</name>
+                </property>
+            </activation>
+
+            <modules>
+                <module>maven</module>
+                <module>gradle</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>
