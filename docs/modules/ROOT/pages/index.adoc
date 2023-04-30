@@ -44,14 +44,15 @@ Critter supports a number of configuration options that can be passed to the mav
 | criteriaPackage | critter.package | If this option is omitted, the code will be generated using the
 package of your entities with `.criteria` appended.  If a value is given, every criteria generated will live in the
 named package.
-| force | critter.force | This defaults to false but if it's set to true, critter will always regenerate your criteria classes.
-| format | critter.format | Turns code formatting on or off.  Possible values: true, false. Defaults to true.
 | generateCodecs | critter.codecs | Turns codec generation on or off.  Possible values: true, false. Defaults to true.
 | outputType | critter.type | Setting this changes the language used in the generated criteria classes.
 Possible values: java, kotlin
 |=======
 
-To use it, you simply need to add a plugin to your build file.  To use critter with maven, you would update your pom as shown here:
+=== Java
+
+To use it with your java projects, you simply need to add a plugin to your build file.  To use critter with maven, you would update your pom
+as shown here:
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -82,17 +83,44 @@ If you use gradle, you would configure your file like so (using the kotlin dsl):
 plugins {
     id("dev.morphia.critter") version "{version}"
 }
-
-
-tasks {
-    critter {
-        force = true
-        outputType = "java"
-    }
-}
 ----
 This will generate your criteria classes in `build/generated-src/critter` and add the directory as a source directory of your gradle
 project.
+
+=== Kotlin
+
+To build your kotlin code, it's a slightly different approach.
+
+[source]
+----
+<plugin>
+    <groupId>org.jetbrains.kotlin</groupId>
+    <artifactId>kotlin-maven-plugin</artifactId>
+
+    ...
+
+    <configuration>
+        <javaParameters>true</javaParameters>
+        <jvmTarget>11</jvmTarget>
+        <compilerPlugins>
+            <compilerPlugin>ksp</compilerPlugin>footnote:[Enable the KSP processor]
+        </compilerPlugins>
+
+    </configuration>
+    <dependencies>
+        <dependency>
+            <groupId>com.dyescape</groupId>
+            <artifactId>kotlin-maven-symbol-processing</artifactId>footnote:[Add a dependency need to wire up KSP inside maven]
+            <version>1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.morphia.critter</groupId>
+            <artifactId>critter-maven</artifactId>footnote:[Include the critter processor]
+            <version>{version}</version>
+        </dependency>
+    </dependencies>
+</plugin>
+----
 
 == IDEA Users
 
