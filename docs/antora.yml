@@ -1,7 +1,6 @@
 name: critter
 title: Critter
 version: 4.4
-prerelease: -SNAPSHOT
 
 nav:
 - modules/ROOT/nav.adoc

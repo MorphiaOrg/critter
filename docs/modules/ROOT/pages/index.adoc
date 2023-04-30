@@ -34,7 +34,7 @@ lucky enough to have those).
 
 You can see working examples in the [tests](https://github.com/MorphiaOrg/critter/tree/master/tests).
 
-== Build Tools
+== Building with critter
 
 Critter supports a number of configuration options that can be passed to the maven or gradle plugins depending on your build.
 
@@ -89,9 +89,10 @@ project.
 
 === Kotlin
 
-To build your kotlin code, it's a slightly different approach.
+To build your kotlin code in maven, it's a slightly different approach.  The Kotlin support is built on KSP so it requires a few
+additions to the `kotlin-maven-plugin` setup:
 
-[source]
+[source,xml,subs="specialchars,macros,attributes"]
 ----
 <plugin>
     <groupId>org.jetbrains.kotlin</groupId>
@@ -100,31 +101,38 @@ To build your kotlin code, it's a slightly different approach.
     ...
 
     <configuration>
-        <javaParameters>true</javaParameters>
-        <jvmTarget>11</jvmTarget>
         <compilerPlugins>
-            <compilerPlugin>ksp</compilerPlugin>footnote:[Enable the KSP processor]
-        </compilerPlugins>
-
+            <compilerPlugin>ksp</compilerPlugin>
+        </compilerPlugins>footnote:[Enable the KSP processor]
     </configuration>
     <dependencies>
         <dependency>
             <groupId>com.dyescape</groupId>
-            <artifactId>kotlin-maven-symbol-processing</artifactId>footnote:[Add a dependency need to wire up KSP inside maven]
-            <version>1.5</version>
+            <artifactId>kotlin-maven-symbol-processing</artifactId>
+            <version>1.5</version>footnote:[Add a dependency need to wire up KSP inside maven]
         </dependency>
         <dependency>
             <groupId>dev.morphia.critter</groupId>
-            <artifactId>critter-maven</artifactId>footnote:[Include the critter processor]
-            <version>{version}</version>
+            <artifactId>critter-maven</artifactId>
+            <version>{version}</version>footnote:[Include the critter processor]
         </dependency>
     </dependencies>
 </plugin>
 ----
 
-== IDEA Users
+Gradle support similarly needs some configuration for KSP.  Add the following line to the `plugins` section of your gradle build:
 
-IDEA users will need to enable the plugin registry in the maven configuration options for IDEA to pick up the plugin.
+[source,kotlin,subs="specialchars,macros,attributes"]
+----
+    id("com.google.devtools.ksp") version "1.8.10-1.0.9"
+----
+
+With that done, one new addition to your `dependencies` and you're all set:
+
+[source,kotlin,subs="specialchars,macros,attributes"]
+----
+    ksp("dev.morphia.critter:dev.morphia.critter.gradle.plugin:{version}")
+----
 
 == Issues and support
 
