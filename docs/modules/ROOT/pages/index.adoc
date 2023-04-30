@@ -109,7 +109,7 @@ additions to the `kotlin-maven-plugin` setup:
         <dependency>
             <groupId>com.dyescape</groupId>
             <artifactId>kotlin-maven-symbol-processing</artifactId>
-            <version>1.5</version>footnote:[Add a dependency need to wire up KSP inside maven]
+            <version>1.5</version>footnote:[Add a dependency needed to wire up KSP inside maven]
         </dependency>
         <dependency>
             <groupId>dev.morphia.critter</groupId>
