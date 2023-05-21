@@ -10,7 +10,7 @@
 
     <groupId>dev.morphia.critter</groupId>
     <artifactId>critter</artifactId>
-    <version>4.4.4-SNAPSHOT</version>
+    <version>4.4.4</version>
     <packaging>pom</packaging>
 
     <name>critter</name>

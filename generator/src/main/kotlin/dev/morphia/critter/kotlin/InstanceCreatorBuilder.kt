@@ -46,26 +46,26 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
     private lateinit var entityName: ClassName
 
     override fun build() {
-        context.entities().values.forEach { source ->
-            this.source = source
-            entityName = ClassName.bestGuess(source.className())
-            creatorName = ClassName(source.codecPackageName(), "${source.name()}InstanceCreator")
-            creator = TypeSpec.classBuilder(creatorName)
-                .addAnnotation(
-                    AnnotationSpec.builder(Suppress::class.java)
-                        .addMember("\"UNCHECKED_CAST\"")
-                        .build()
-                )
-                .addModifiers(OPEN)
+        context.entities().values
+            .filter { source -> !source.isAbstract() }
+            .forEach { source ->
+                this.source = source
+                entityName = ClassName.bestGuess(source.className())
+                creatorName = ClassName(source.codecPackageName(), "${source.name()}InstanceCreator")
+                creator = TypeSpec.classBuilder(creatorName)
+                    .addAnnotation(
+                        AnnotationSpec.builder(Suppress::class.java)
+                            .addMember("\"UNCHECKED_CAST\"")
+                            .build()
+                    )
+                    .addModifiers(OPEN)
 
-            if (!source.isAbstract()) {
                 creator.addSuperinterface(MorphiaInstanceCreator::class.java)
                 getInstance()
                 set()
 
                 context.buildFile(creatorName.packageName, creator.build(), Conversions::class.java to "convert")
             }
-        }
     }
 
     private fun getInstance() {
@@ -144,6 +144,10 @@ class InstanceCreatorBuilder(val context: KotlinContext) : SourceBuilder {
             (it as KSDeclarationImpl).ktDeclaration.text
                 .split('\n')
                 .filter { it.contains("var ") || it.contains("val ") }
+                .map {
+                    var index = Integer.max(it.indexOf("var "), it.indexOf("val "))
+                    it.substring(index + 4)
+                }
                 .firstOrNull { it.contains("=") }
                 ?.substringAfter("=")
         } else null

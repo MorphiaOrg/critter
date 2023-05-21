@@ -32,6 +32,7 @@ class Invoice() {
             field = value?.withNano(0)
         }
 
+    @Reference(lazy = true, idOnly = true) var user: User? = null
     @Reference
     var person: Person? = null
     @Indexed(options = IndexOptions(name = "changed"))

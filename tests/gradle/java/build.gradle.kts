@@ -1,5 +1,5 @@
 plugins {
-    id("dev.morphia.critter") version "4.4.3-SNAPSHOT"
+    id("dev.morphia.critter") version "4.4.4-SNAPSHOT"
 }
 
 repositories {
