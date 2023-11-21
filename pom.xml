@@ -23,7 +23,7 @@
     </scm>
 
     <properties>
-        <testcontainers.version>1.19.2</testcontainers.version>
+        <testcontainers.version>1.19.3</testcontainers.version>
         <dokka.version>1.7.20</dokka.version>
         <gradle.version>7.6.1</gradle.version>
         <jacoco.version>0.8.1</jacoco.version>
