@@ -23,7 +23,7 @@
     </scm>
 
     <properties>
-        <bottlerocket.version>0.41.0</bottlerocket.version>
+        <bottlerocket.version>0.49.0</bottlerocket.version>
         <dokka.version>1.7.20</dokka.version>
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.18</kibble.version>
