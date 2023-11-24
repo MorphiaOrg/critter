@@ -28,7 +28,7 @@
         <jacoco.version>0.8.1</jacoco.version>
         <kibble.version>0.18</kibble.version>
         <kotlin.version>1.7.20</kotlin.version>
-        <kotlinpoet.version>1.10.2</kotlinpoet.version>
+        <kotlinpoet.version>1.15.1</kotlinpoet.version>
         <maven.version>3.9.5</maven.version>
         <morphia.version>2.2.9</morphia.version>
         <roaster.version>2.28.0.Final</roaster.version>
