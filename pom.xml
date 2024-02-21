@@ -29,7 +29,7 @@
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
         <kotlin.version>1.8.10</kotlin.version>
-        <kotlinpoet.version>1.13.0</kotlinpoet.version>
+        <kotlinpoet.version>1.15.3</kotlinpoet.version>
         <ksp-maven.version>1.4</ksp-maven.version>
         <ktlint.version>0.47.1</ktlint.version>
         <maven.version>3.9.6</maven.version>
