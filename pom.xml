@@ -28,7 +28,7 @@
         <gradle.version>7.6.1</gradle.version>
         <jacoco.version>0.8.1</jacoco.version>
         <javapoet.version>1.13.0</javapoet.version>
-        <kotlin.version>1.8.10</kotlin.version>
+        <kotlin.version>1.9.22</kotlin.version>
         <kotlinpoet.version>1.13.0</kotlinpoet.version>
         <ksp-maven.version>1.4</ksp-maven.version>
         <ktlint.version>0.47.1</ktlint.version>
